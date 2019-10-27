@@ -1,8 +1,8 @@
-# Install script for directory: /home/ken/catkin_ws/src/video_stream
+# Install script for directory: /home/ken/DiRA2020/src/video_stream
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/ken/catkin_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/ken/DiRA2020/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -38,17 +38,17 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ken/catkin_ws/build/video_stream/catkin_generated/installspace/video_stream.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ken/DiRA2020/build/video_stream/catkin_generated/installspace/video_stream.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/video_stream/cmake" TYPE FILE FILES
-    "/home/ken/catkin_ws/build/video_stream/catkin_generated/installspace/video_streamConfig.cmake"
-    "/home/ken/catkin_ws/build/video_stream/catkin_generated/installspace/video_streamConfig-version.cmake"
+    "/home/ken/DiRA2020/build/video_stream/catkin_generated/installspace/video_streamConfig.cmake"
+    "/home/ken/DiRA2020/build/video_stream/catkin_generated/installspace/video_streamConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/video_stream" TYPE FILE FILES "/home/ken/catkin_ws/src/video_stream/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/video_stream" TYPE FILE FILES "/home/ken/DiRA2020/src/video_stream/package.xml")
 endif()
 

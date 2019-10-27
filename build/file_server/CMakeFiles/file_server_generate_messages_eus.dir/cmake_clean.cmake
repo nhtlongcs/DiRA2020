@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/file_server_generate_messages_eus"
-  "/home/ken/catkin_ws/devel/share/roseus/ros/file_server/srv/GetBinaryFile.l"
-  "/home/ken/catkin_ws/devel/share/roseus/ros/file_server/manifest.l"
+  "/home/ken/DiRA2020/devel/share/roseus/ros/file_server/srv/GetBinaryFile.l"
+  "/home/ken/DiRA2020/devel/share/roseus/ros/file_server/manifest.l"
 )
 
 # Per-language clean rules from dependency scanning.

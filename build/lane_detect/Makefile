@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ken/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/ken/DiRA2020/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ken/catkin_ws/build
+CMAKE_BINARY_DIR = /home/ken/DiRA2020/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -137,14 +137,14 @@ list_install_components/fast: list_install_components
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/ken/catkin_ws/build/CMakeFiles /home/ken/catkin_ws/build/lane_detect/CMakeFiles/progress.marks
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ken/catkin_ws/build/CMakeFiles 0
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/ken/DiRA2020/build/CMakeFiles /home/ken/DiRA2020/build/lane_detect/CMakeFiles/progress.marks
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ken/DiRA2020/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/clean
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/clean
 .PHONY : clean
 
 # The main clean target
@@ -154,22 +154,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/preinstall
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/preinstall
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
 .PHONY : lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/rule
 
 # Convenience name for target.
@@ -179,12 +179,12 @@ sensor_msgs_generate_messages_py: lane_detect/CMakeFiles/sensor_msgs_generate_me
 
 # fast build rule for target.
 sensor_msgs_generate_messages_py/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_py.dir/build
 .PHONY : sensor_msgs_generate_messages_py/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
 .PHONY : lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/rule
 
 # Convenience name for target.
@@ -194,12 +194,12 @@ sensor_msgs_generate_messages_nodejs: lane_detect/CMakeFiles/sensor_msgs_generat
 
 # fast build rule for target.
 sensor_msgs_generate_messages_nodejs/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_nodejs.dir/build
 .PHONY : sensor_msgs_generate_messages_nodejs/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
 .PHONY : lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/rule
 
 # Convenience name for target.
@@ -209,12 +209,12 @@ geometry_msgs_generate_messages_cpp: lane_detect/CMakeFiles/geometry_msgs_genera
 
 # fast build rule for target.
 geometry_msgs_generate_messages_cpp/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/build
 .PHONY : geometry_msgs_generate_messages_cpp/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/lane_detect.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/lane_detect.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/lane_detect.dir/rule
 .PHONY : lane_detect/CMakeFiles/lane_detect.dir/rule
 
 # Convenience name for target.
@@ -224,12 +224,12 @@ lane_detect: lane_detect/CMakeFiles/lane_detect.dir/rule
 
 # fast build rule for target.
 lane_detect/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/build
 .PHONY : lane_detect/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
 .PHONY : lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/rule
 
 # Convenience name for target.
@@ -239,12 +239,12 @@ sensor_msgs_generate_messages_cpp: lane_detect/CMakeFiles/sensor_msgs_generate_m
 
 # fast build rule for target.
 sensor_msgs_generate_messages_cpp/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_cpp.dir/build
 .PHONY : sensor_msgs_generate_messages_cpp/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
 .PHONY : lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/rule
 
 # Convenience name for target.
@@ -254,12 +254,12 @@ sensor_msgs_generate_messages_eus: lane_detect/CMakeFiles/sensor_msgs_generate_m
 
 # fast build rule for target.
 sensor_msgs_generate_messages_eus/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_eus.dir/build
 .PHONY : sensor_msgs_generate_messages_eus/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
 .PHONY : lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/rule
 
 # Convenience name for target.
@@ -269,12 +269,12 @@ sensor_msgs_generate_messages_lisp: lane_detect/CMakeFiles/sensor_msgs_generate_
 
 # fast build rule for target.
 sensor_msgs_generate_messages_lisp/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build.make lane_detect/CMakeFiles/sensor_msgs_generate_messages_lisp.dir/build
 .PHONY : sensor_msgs_generate_messages_lisp/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/api_lane_detection.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/api_lane_detection.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/api_lane_detection.dir/rule
 .PHONY : lane_detect/CMakeFiles/api_lane_detection.dir/rule
 
 # Convenience name for target.
@@ -284,12 +284,12 @@ api_lane_detection: lane_detect/CMakeFiles/api_lane_detection.dir/rule
 
 # fast build rule for target.
 api_lane_detection/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/build
 .PHONY : api_lane_detection/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
 .PHONY : lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/rule
 
 # Convenience name for target.
@@ -299,12 +299,12 @@ geometry_msgs_generate_messages_py: lane_detect/CMakeFiles/geometry_msgs_generat
 
 # fast build rule for target.
 geometry_msgs_generate_messages_py/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_py.dir/build
 .PHONY : geometry_msgs_generate_messages_py/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
 .PHONY : lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/rule
 
 # Convenience name for target.
@@ -314,12 +314,12 @@ geometry_msgs_generate_messages_lisp: lane_detect/CMakeFiles/geometry_msgs_gener
 
 # fast build rule for target.
 geometry_msgs_generate_messages_lisp/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_lisp.dir/build
 .PHONY : geometry_msgs_generate_messages_lisp/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
 .PHONY : lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/rule
 
 # Convenience name for target.
@@ -329,12 +329,12 @@ geometry_msgs_generate_messages_nodejs: lane_detect/CMakeFiles/geometry_msgs_gen
 
 # fast build rule for target.
 geometry_msgs_generate_messages_nodejs/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_nodejs.dir/build
 .PHONY : geometry_msgs_generate_messages_nodejs/fast
 
 # Convenience name for target.
 lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
 .PHONY : lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/rule
 
 # Convenience name for target.
@@ -344,7 +344,7 @@ geometry_msgs_generate_messages_eus: lane_detect/CMakeFiles/geometry_msgs_genera
 
 # fast build rule for target.
 geometry_msgs_generate_messages_eus/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build.make lane_detect/CMakeFiles/geometry_msgs_generate_messages_eus.dir/build
 .PHONY : geometry_msgs_generate_messages_eus/fast
 
 src/carcontrol.o: src/carcontrol.cpp.o
@@ -353,7 +353,7 @@ src/carcontrol.o: src/carcontrol.cpp.o
 
 # target to build an object file
 src/carcontrol.cpp.o:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.o
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.o
 .PHONY : src/carcontrol.cpp.o
 
 src/carcontrol.i: src/carcontrol.cpp.i
@@ -362,7 +362,7 @@ src/carcontrol.i: src/carcontrol.cpp.i
 
 # target to preprocess a source file
 src/carcontrol.cpp.i:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.i
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.i
 .PHONY : src/carcontrol.cpp.i
 
 src/carcontrol.s: src/carcontrol.cpp.s
@@ -371,7 +371,7 @@ src/carcontrol.s: src/carcontrol.cpp.s
 
 # target to generate assembly for a file
 src/carcontrol.cpp.s:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.s
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/carcontrol.cpp.s
 .PHONY : src/carcontrol.cpp.s
 
 src/detectlane.o: src/detectlane.cpp.o
@@ -380,7 +380,7 @@ src/detectlane.o: src/detectlane.cpp.o
 
 # target to build an object file
 src/detectlane.cpp.o:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.o
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.o
 .PHONY : src/detectlane.cpp.o
 
 src/detectlane.i: src/detectlane.cpp.i
@@ -389,7 +389,7 @@ src/detectlane.i: src/detectlane.cpp.i
 
 # target to preprocess a source file
 src/detectlane.cpp.i:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.i
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.i
 .PHONY : src/detectlane.cpp.i
 
 src/detectlane.s: src/detectlane.cpp.s
@@ -398,7 +398,7 @@ src/detectlane.s: src/detectlane.cpp.s
 
 # target to generate assembly for a file
 src/detectlane.cpp.s:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.s
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/api_lane_detection.dir/build.make lane_detect/CMakeFiles/api_lane_detection.dir/src/detectlane.cpp.s
 .PHONY : src/detectlane.cpp.s
 
 src/main.o: src/main.cpp.o
@@ -407,7 +407,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -416,7 +416,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.i
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -425,7 +425,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.s
+	cd /home/ken/DiRA2020/build && $(MAKE) -f lane_detect/CMakeFiles/lane_detect.dir/build.make lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -473,6 +473,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

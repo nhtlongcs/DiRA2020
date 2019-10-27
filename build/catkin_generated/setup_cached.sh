@@ -7,4 +7,7 @@
 # new environment variables
 
 # modified environment variables
-export PWD="/home/ken/catkin_ws/build"
+export CMAKE_PREFIX_PATH="/home/ken/DiRA2020/devel:$CMAKE_PREFIX_PATH"
+export PWD="/home/ken/DiRA2020/build"
+export ROSLISP_PACKAGE_DIRECTORIES="/home/ken/DiRA2020/devel/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
+export ROS_PACKAGE_PATH="/home/ken/DiRA2020/src:$ROS_PACKAGE_PATH"

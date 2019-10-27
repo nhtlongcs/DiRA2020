@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/lane_detect.dir/src/main.cpp.o"
-  "/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect.pdb"
-  "/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect"
+  "/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect.pdb"
+  "/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect"
 )
 
 # Per-language clean rules from dependency scanning.

@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/ken/catkin_ws/devel/include/file_server/GetBinaryFile.h
+/home/ken/DiRA2020/devel/include/file_server/GetBinaryFile.h
 ros/service_traits.h
 -
 file_server/GetBinaryFileRequest.h
@@ -14,7 +14,7 @@ file_server/GetBinaryFileRequest.h
 file_server/GetBinaryFileResponse.h
 -
 
-/home/ken/catkin_ws/devel/include/file_server/GetBinaryFileRequest.h
+/home/ken/DiRA2020/devel/include/file_server/GetBinaryFileRequest.h
 string
 -
 vector
@@ -30,7 +30,7 @@ ros/builtin_message_traits.h
 ros/message_operations.h
 -
 
-/home/ken/catkin_ws/devel/include/file_server/GetBinaryFileResponse.h
+/home/ken/DiRA2020/devel/include/file_server/GetBinaryFileResponse.h
 string
 -
 vector
@@ -46,7 +46,7 @@ ros/builtin_message_traits.h
 ros/message_operations.h
 -
 
-/home/ken/catkin_ws/src/file_server/src/file_server.cpp
+/home/ken/DiRA2020/src/file_server/src/file_server.cpp
 ros/ros.h
 -
 ros/package.h

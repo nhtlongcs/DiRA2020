@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ken/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/ken/DiRA2020/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ken/catkin_ws/build
+CMAKE_BINARY_DIR = /home/ken/DiRA2020/build
 
 # Include any dependencies generated for this target.
 include lane_detect/CMakeFiles/lane_detect.dir/depend.make
@@ -58,17 +58,17 @@ include lane_detect/CMakeFiles/lane_detect.dir/progress.make
 include lane_detect/CMakeFiles/lane_detect.dir/flags.make
 
 lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o: lane_detect/CMakeFiles/lane_detect.dir/flags.make
-lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o: /home/ken/catkin_ws/src/lane_detect/src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ken/catkin_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o"
-	cd /home/ken/catkin_ws/build/lane_detect && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/lane_detect.dir/src/main.cpp.o -c /home/ken/catkin_ws/src/lane_detect/src/main.cpp
+lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o: /home/ken/DiRA2020/src/lane_detect/src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/ken/DiRA2020/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o"
+	cd /home/ken/DiRA2020/build/lane_detect && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/lane_detect.dir/src/main.cpp.o -c /home/ken/DiRA2020/src/lane_detect/src/main.cpp
 
 lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/lane_detect.dir/src/main.cpp.i"
-	cd /home/ken/catkin_ws/build/lane_detect && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ken/catkin_ws/src/lane_detect/src/main.cpp > CMakeFiles/lane_detect.dir/src/main.cpp.i
+	cd /home/ken/DiRA2020/build/lane_detect && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ken/DiRA2020/src/lane_detect/src/main.cpp > CMakeFiles/lane_detect.dir/src/main.cpp.i
 
 lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/lane_detect.dir/src/main.cpp.s"
-	cd /home/ken/catkin_ws/build/lane_detect && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ken/catkin_ws/src/lane_detect/src/main.cpp -o CMakeFiles/lane_detect.dir/src/main.cpp.s
+	cd /home/ken/DiRA2020/build/lane_detect && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ken/DiRA2020/src/lane_detect/src/main.cpp -o CMakeFiles/lane_detect.dir/src/main.cpp.s
 
 lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o.requires:
 
@@ -88,106 +88,106 @@ lane_detect_OBJECTS = \
 # External object files for target lane_detect
 lane_detect_EXTERNAL_OBJECTS =
 
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/build.make
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /home/ken/catkin_ws/devel/lib/libapi_lane_detection.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libcv_bridge.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_core.so.3.2.0
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.3.2.0
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_imgcodecs.so.3.2.0
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libimage_transport.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libmessage_filters.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libclass_loader.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/libPocoFoundation.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libdl.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroslib.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librospack.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libpython2.7.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_program_options.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libtinyxml2.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroscpp.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_signals.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole_log4cxx.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole_backend_interface.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_regex.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libxmlrpcpp.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroscpp_serialization.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librostime.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libcpp_common.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_system.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_thread.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_chrono.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_date_time.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_atomic.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libpthread.so
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudabgsegm.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaobjdetect.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudastereo.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_stitching.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_superres.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_videostab.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_aruco.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_bgsegm.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_bioinspired.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ccalib.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dnn_objdetect.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dpm.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_face.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_freetype.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_fuzzy.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_hdf.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_hfs.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_img_hash.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_line_descriptor.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_optflow.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_reg.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_rgbd.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_saliency.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_sfm.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_stereo.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_structured_light.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_surface_matching.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_tracking.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xfeatures2d.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ximgproc.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xobjdetect.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xphoto.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudafeatures2d.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaoptflow.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudalegacy.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudawarping.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_shape.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_phase_unwrapping.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_video.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_datasets.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_plot.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_text.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dnn.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_highgui.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ml.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_videoio.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_imgcodecs.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_objdetect.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_calib3d.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_features2d.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_flann.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_photo.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaimgproc.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudafilters.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaarithm.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_imgproc.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_core.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudev.so.3.4.7
-/home/ken/catkin_ws/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ken/catkin_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/ken/catkin_ws/devel/lib/lane_detect/lane_detect"
-	cd /home/ken/catkin_ws/build/lane_detect && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lane_detect.dir/link.txt --verbose=$(VERBOSE)
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/src/main.cpp.o
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/build.make
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /home/ken/DiRA2020/devel/lib/libapi_lane_detection.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libcv_bridge.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_core.so.3.2.0
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.3.2.0
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libopencv_imgcodecs.so.3.2.0
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libimage_transport.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libmessage_filters.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libclass_loader.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/libPocoFoundation.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libdl.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroslib.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librospack.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libpython2.7.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_program_options.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libtinyxml2.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroscpp.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_signals.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole_log4cxx.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librosconsole_backend_interface.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/liblog4cxx.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_regex.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libxmlrpcpp.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libroscpp_serialization.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/librostime.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /opt/ros/melodic/lib/libcpp_common.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_system.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_thread.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_chrono.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_date_time.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libboost_atomic.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libpthread.so
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudabgsegm.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaobjdetect.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudastereo.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_stitching.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_superres.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_videostab.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_aruco.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_bgsegm.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_bioinspired.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ccalib.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dnn_objdetect.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dpm.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_face.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_freetype.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_fuzzy.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_hdf.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_hfs.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_img_hash.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_line_descriptor.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_optflow.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_reg.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_rgbd.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_saliency.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_sfm.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_stereo.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_structured_light.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_surface_matching.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_tracking.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xfeatures2d.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ximgproc.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xobjdetect.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_xphoto.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudafeatures2d.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaoptflow.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudalegacy.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudawarping.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_shape.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_phase_unwrapping.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_video.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_datasets.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_plot.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_text.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_dnn.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_highgui.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_ml.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_videoio.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_imgcodecs.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_objdetect.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_calib3d.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_features2d.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_flann.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_photo.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaimgproc.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudafilters.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudaarithm.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_imgproc.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_core.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: /usr/local/lib/libopencv_cudev.so.3.4.7
+/home/ken/DiRA2020/devel/lib/lane_detect/lane_detect: lane_detect/CMakeFiles/lane_detect.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/ken/DiRA2020/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/ken/DiRA2020/devel/lib/lane_detect/lane_detect"
+	cd /home/ken/DiRA2020/build/lane_detect && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/lane_detect.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
-lane_detect/CMakeFiles/lane_detect.dir/build: /home/ken/catkin_ws/devel/lib/lane_detect/lane_detect
+lane_detect/CMakeFiles/lane_detect.dir/build: /home/ken/DiRA2020/devel/lib/lane_detect/lane_detect
 
 .PHONY : lane_detect/CMakeFiles/lane_detect.dir/build
 
@@ -196,10 +196,10 @@ lane_detect/CMakeFiles/lane_detect.dir/requires: lane_detect/CMakeFiles/lane_det
 .PHONY : lane_detect/CMakeFiles/lane_detect.dir/requires
 
 lane_detect/CMakeFiles/lane_detect.dir/clean:
-	cd /home/ken/catkin_ws/build/lane_detect && $(CMAKE_COMMAND) -P CMakeFiles/lane_detect.dir/cmake_clean.cmake
+	cd /home/ken/DiRA2020/build/lane_detect && $(CMAKE_COMMAND) -P CMakeFiles/lane_detect.dir/cmake_clean.cmake
 .PHONY : lane_detect/CMakeFiles/lane_detect.dir/clean
 
 lane_detect/CMakeFiles/lane_detect.dir/depend:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/catkin_ws/src /home/ken/catkin_ws/src/lane_detect /home/ken/catkin_ws/build /home/ken/catkin_ws/build/lane_detect /home/ken/catkin_ws/build/lane_detect/CMakeFiles/lane_detect.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/DiRA2020/src /home/ken/DiRA2020/src/lane_detect /home/ken/DiRA2020/build /home/ken/DiRA2020/build/lane_detect /home/ken/DiRA2020/build/lane_detect/CMakeFiles/lane_detect.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : lane_detect/CMakeFiles/lane_detect.dir/depend
 

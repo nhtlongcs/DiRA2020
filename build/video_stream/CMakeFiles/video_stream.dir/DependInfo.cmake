@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/ken/catkin_ws/src/video_stream/src/main.cpp" "/home/ken/catkin_ws/build/video_stream/CMakeFiles/video_stream.dir/src/main.cpp.o"
+  "/home/ken/DiRA2020/src/video_stream/src/main.cpp" "/home/ken/DiRA2020/build/video_stream/CMakeFiles/video_stream.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -19,7 +19,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/usr/local/include"
   "/usr/local/include/opencv"
-  "/home/ken/catkin_ws/src/video_stream/include"
+  "/home/ken/DiRA2020/src/video_stream/include"
   "/opt/ros/melodic/include"
   "/opt/ros/melodic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
   "/usr/include/opencv"

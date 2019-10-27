@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/ken/catkin_ws/src/file_server/src/file_server.cpp" "/home/ken/catkin_ws/build/file_server/CMakeFiles/file_server.dir/src/file_server.cpp.o"
+  "/home/ken/DiRA2020/src/file_server/src/file_server.cpp" "/home/ken/DiRA2020/build/file_server/CMakeFiles/file_server.dir/src/file_server.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -17,7 +17,7 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "/home/ken/catkin_ws/devel/include"
+  "/home/ken/DiRA2020/devel/include"
   "/opt/ros/melodic/include"
   "/opt/ros/melodic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
   )

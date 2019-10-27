@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/file_server_generate_messages_nodejs"
-  "/home/ken/catkin_ws/devel/share/gennodejs/ros/file_server/srv/GetBinaryFile.js"
+  "/home/ken/DiRA2020/devel/share/gennodejs/ros/file_server/srv/GetBinaryFile.js"
 )
 
 # Per-language clean rules from dependency scanning.

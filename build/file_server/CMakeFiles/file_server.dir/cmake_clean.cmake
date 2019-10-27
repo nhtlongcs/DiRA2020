@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/file_server.dir/src/file_server.cpp.o"
-  "/home/ken/catkin_ws/devel/lib/file_server/file_server.pdb"
-  "/home/ken/catkin_ws/devel/lib/file_server/file_server"
+  "/home/ken/DiRA2020/devel/lib/file_server/file_server.pdb"
+  "/home/ken/DiRA2020/devel/lib/file_server/file_server"
 )
 
 # Per-language clean rules from dependency scanning.

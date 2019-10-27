@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ken/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/ken/DiRA2020/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ken/catkin_ws/build
+CMAKE_BINARY_DIR = /home/ken/DiRA2020/build
 
 # Utility rule file for file_server_genpy.
 
@@ -63,10 +63,10 @@ file_server/CMakeFiles/file_server_genpy.dir/build: file_server_genpy
 .PHONY : file_server/CMakeFiles/file_server_genpy.dir/build
 
 file_server/CMakeFiles/file_server_genpy.dir/clean:
-	cd /home/ken/catkin_ws/build/file_server && $(CMAKE_COMMAND) -P CMakeFiles/file_server_genpy.dir/cmake_clean.cmake
+	cd /home/ken/DiRA2020/build/file_server && $(CMAKE_COMMAND) -P CMakeFiles/file_server_genpy.dir/cmake_clean.cmake
 .PHONY : file_server/CMakeFiles/file_server_genpy.dir/clean
 
 file_server/CMakeFiles/file_server_genpy.dir/depend:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/catkin_ws/src /home/ken/catkin_ws/src/file_server /home/ken/catkin_ws/build /home/ken/catkin_ws/build/file_server /home/ken/catkin_ws/build/file_server/CMakeFiles/file_server_genpy.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/DiRA2020/src /home/ken/DiRA2020/src/file_server /home/ken/DiRA2020/build /home/ken/DiRA2020/build/file_server /home/ken/DiRA2020/build/file_server/CMakeFiles/file_server_genpy.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : file_server/CMakeFiles/file_server_genpy.dir/depend
 

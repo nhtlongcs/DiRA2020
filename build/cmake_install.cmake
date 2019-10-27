@@ -1,8 +1,8 @@
-# Install script for directory: /home/ken/catkin_ws/src
+# Install script for directory: /home/ken/DiRA2020/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/ken/catkin_ws/install")
+  set(CMAKE_INSTALL_PREFIX "/home/ken/DiRA2020/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -49,91 +49,91 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/_setup_util.py")
+   "/home/ken/DiRA2020/install/_setup_util.py")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE PROGRAM FILES "/home/ken/catkin_ws/build/catkin_generated/installspace/_setup_util.py")
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE PROGRAM FILES "/home/ken/DiRA2020/build/catkin_generated/installspace/_setup_util.py")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/env.sh")
+   "/home/ken/DiRA2020/install/env.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE PROGRAM FILES "/home/ken/catkin_ws/build/catkin_generated/installspace/env.sh")
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE PROGRAM FILES "/home/ken/DiRA2020/build/catkin_generated/installspace/env.sh")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/setup.bash;/home/ken/catkin_ws/install/local_setup.bash")
+   "/home/ken/DiRA2020/install/setup.bash;/home/ken/DiRA2020/install/local_setup.bash")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE FILE FILES
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/setup.bash"
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/local_setup.bash"
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE FILE FILES
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/setup.bash"
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/local_setup.bash"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/setup.sh;/home/ken/catkin_ws/install/local_setup.sh")
+   "/home/ken/DiRA2020/install/setup.sh;/home/ken/DiRA2020/install/local_setup.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE FILE FILES
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/setup.sh"
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/local_setup.sh"
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE FILE FILES
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/setup.sh"
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/local_setup.sh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/setup.zsh;/home/ken/catkin_ws/install/local_setup.zsh")
+   "/home/ken/DiRA2020/install/setup.zsh;/home/ken/DiRA2020/install/local_setup.zsh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE FILE FILES
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/setup.zsh"
-    "/home/ken/catkin_ws/build/catkin_generated/installspace/local_setup.zsh"
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE FILE FILES
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/setup.zsh"
+    "/home/ken/DiRA2020/build/catkin_generated/installspace/local_setup.zsh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/ken/catkin_ws/install/.rosinstall")
+   "/home/ken/DiRA2020/install/.rosinstall")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/ken/catkin_ws/install" TYPE FILE FILES "/home/ken/catkin_ws/build/catkin_generated/installspace/.rosinstall")
+file(INSTALL DESTINATION "/home/ken/DiRA2020/install" TYPE FILE FILES "/home/ken/DiRA2020/build/catkin_generated/installspace/.rosinstall")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/ken/catkin_ws/build/gtest/cmake_install.cmake")
-  include("/home/ken/catkin_ws/build/file_server/cmake_install.cmake")
-  include("/home/ken/catkin_ws/build/lane_detect/cmake_install.cmake")
-  include("/home/ken/catkin_ws/build/video_stream/cmake_install.cmake")
+  include("/home/ken/DiRA2020/build/gtest/cmake_install.cmake")
+  include("/home/ken/DiRA2020/build/file_server/cmake_install.cmake")
+  include("/home/ken/DiRA2020/build/lane_detect/cmake_install.cmake")
+  include("/home/ken/DiRA2020/build/video_stream/cmake_install.cmake")
 
 endif()
 
@@ -145,5 +145,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/ken/catkin_ws/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/ken/DiRA2020/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

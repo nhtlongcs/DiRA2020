@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ken/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/ken/DiRA2020/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ken/catkin_ws/build
+CMAKE_BINARY_DIR = /home/ken/DiRA2020/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -137,14 +137,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/ken/catkin_ws/build/CMakeFiles /home/ken/catkin_ws/build/video_stream/CMakeFiles/progress.marks
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ken/catkin_ws/build/CMakeFiles 0
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/ken/DiRA2020/build/CMakeFiles /home/ken/DiRA2020/build/video_stream/CMakeFiles/progress.marks
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ken/DiRA2020/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/clean
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/clean
 .PHONY : clean
 
 # The main clean target
@@ -154,22 +154,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/preinstall
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/preinstall
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 video_stream/CMakeFiles/video_stream.dir/rule:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/CMakeFiles/video_stream.dir/rule
+	cd /home/ken/DiRA2020/build && $(MAKE) -f CMakeFiles/Makefile2 video_stream/CMakeFiles/video_stream.dir/rule
 .PHONY : video_stream/CMakeFiles/video_stream.dir/rule
 
 # Convenience name for target.
@@ -179,7 +179,7 @@ video_stream: video_stream/CMakeFiles/video_stream.dir/rule
 
 # fast build rule for target.
 video_stream/fast:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/build
+	cd /home/ken/DiRA2020/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/build
 .PHONY : video_stream/fast
 
 src/main.o: src/main.cpp.o
@@ -188,7 +188,7 @@ src/main.o: src/main.cpp.o
 
 # target to build an object file
 src/main.cpp.o:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.o
+	cd /home/ken/DiRA2020/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.o
 .PHONY : src/main.cpp.o
 
 src/main.i: src/main.cpp.i
@@ -197,7 +197,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.i
+	cd /home/ken/DiRA2020/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -206,7 +206,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	cd /home/ken/catkin_ws/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.s
+	cd /home/ken/DiRA2020/build && $(MAKE) -f video_stream/CMakeFiles/video_stream.dir/build.make video_stream/CMakeFiles/video_stream.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 # Help Target
@@ -237,6 +237,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

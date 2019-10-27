@@ -1,7 +1,7 @@
 # generated from genmsg/cmake/pkg-genmsg.context.in
 
 messages_str = ""
-services_str = "/home/ken/catkin_ws/src/file_server/srv/GetBinaryFile.srv"
+services_str = "/home/ken/DiRA2020/src/file_server/srv/GetBinaryFile.srv"
 pkg_name = "file_server"
 dependencies_str = "std_msgs"
 langs = "gencpp;geneus;genlisp;gennodejs;genpy"

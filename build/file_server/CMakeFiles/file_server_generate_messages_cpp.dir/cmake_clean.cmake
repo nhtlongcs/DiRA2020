@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/file_server_generate_messages_cpp"
-  "/home/ken/catkin_ws/devel/include/file_server/GetBinaryFile.h"
+  "/home/ken/DiRA2020/devel/include/file_server/GetBinaryFile.h"
 )
 
 # Per-language clean rules from dependency scanning.

@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/ken/catkin_ws/src/lane_detect/include/carcontrol.h
+/home/ken/DiRA2020/src/lane_detect/include/carcontrol.h
 opencv2/highgui/highgui.hpp
 -
 opencv2/imgproc/imgproc.hpp
@@ -16,7 +16,7 @@ opencv2/opencv.hpp
 ros/ros.h
 -
 std_msgs/Float32.h
-/home/ken/catkin_ws/src/lane_detect/include/std_msgs/Float32.h
+/home/ken/DiRA2020/src/lane_detect/include/std_msgs/Float32.h
 vector
 -
 math.h
@@ -24,9 +24,9 @@ math.h
 iostream
 -
 detectlane.h
-/home/ken/catkin_ws/src/lane_detect/include/detectlane.h
+/home/ken/DiRA2020/src/lane_detect/include/detectlane.h
 
-/home/ken/catkin_ws/src/lane_detect/include/detectlane.h
+/home/ken/DiRA2020/src/lane_detect/include/detectlane.h
 opencv2/highgui/highgui.hpp
 -
 opencv2/imgproc/imgproc.hpp
@@ -44,7 +44,7 @@ algorithm
 iostream
 -
 
-/home/ken/catkin_ws/src/lane_detect/src/main.cpp
+/home/ken/DiRA2020/src/lane_detect/src/main.cpp
 ros/ros.h
 -
 image_transport/image_transport.h
@@ -58,9 +58,9 @@ string
 opencv2/highgui/highgui.hpp
 -
 detectlane.h
-/home/ken/catkin_ws/src/lane_detect/src/detectlane.h
+/home/ken/DiRA2020/src/lane_detect/src/detectlane.h
 carcontrol.h
-/home/ken/catkin_ws/src/lane_detect/src/carcontrol.h
+/home/ken/DiRA2020/src/lane_detect/src/carcontrol.h
 
 /opt/ros/melodic/include/cv_bridge/cv_bridge.h
 sensor_msgs/Image.h

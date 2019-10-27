@@ -43,33 +43,33 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ken/catkin_ws/src
+CMAKE_SOURCE_DIR = /home/ken/DiRA2020/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ken/catkin_ws/build
+CMAKE_BINARY_DIR = /home/ken/DiRA2020/build
 
 # Utility rule file for file_server_generate_messages_py.
 
 # Include the progress variables for this target.
 include file_server/CMakeFiles/file_server_generate_messages_py.dir/progress.make
 
-file_server/CMakeFiles/file_server_generate_messages_py: /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
-file_server/CMakeFiles/file_server_generate_messages_py: /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py
+file_server/CMakeFiles/file_server_generate_messages_py: /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
+file_server/CMakeFiles/file_server_generate_messages_py: /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py
 
 
-/home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py: /opt/ros/melodic/lib/genpy/gensrv_py.py
-/home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py: /home/ken/catkin_ws/src/file_server/srv/GetBinaryFile.srv
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/ken/catkin_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating Python code from SRV file_server/GetBinaryFile"
-	cd /home/ken/catkin_ws/build/file_server && ../catkin_generated/env_cached.sh /usr/bin/python2 /opt/ros/melodic/share/genpy/cmake/../../../lib/genpy/gensrv_py.py /home/ken/catkin_ws/src/file_server/srv/GetBinaryFile.srv -Istd_msgs:/opt/ros/melodic/share/std_msgs/cmake/../msg -p file_server -o /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv
+/home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py: /opt/ros/melodic/lib/genpy/gensrv_py.py
+/home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py: /home/ken/DiRA2020/src/file_server/srv/GetBinaryFile.srv
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/ken/DiRA2020/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating Python code from SRV file_server/GetBinaryFile"
+	cd /home/ken/DiRA2020/build/file_server && ../catkin_generated/env_cached.sh /usr/bin/python2 /opt/ros/melodic/share/genpy/cmake/../../../lib/genpy/gensrv_py.py /home/ken/DiRA2020/src/file_server/srv/GetBinaryFile.srv -Istd_msgs:/opt/ros/melodic/share/std_msgs/cmake/../msg -p file_server -o /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv
 
-/home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py: /opt/ros/melodic/lib/genpy/genmsg_py.py
-/home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py: /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/ken/catkin_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating Python srv __init__.py for file_server"
-	cd /home/ken/catkin_ws/build/file_server && ../catkin_generated/env_cached.sh /usr/bin/python2 /opt/ros/melodic/share/genpy/cmake/../../../lib/genpy/genmsg_py.py -o /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv --initpy
+/home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py: /opt/ros/melodic/lib/genpy/genmsg_py.py
+/home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py: /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/ken/DiRA2020/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating Python srv __init__.py for file_server"
+	cd /home/ken/DiRA2020/build/file_server && ../catkin_generated/env_cached.sh /usr/bin/python2 /opt/ros/melodic/share/genpy/cmake/../../../lib/genpy/genmsg_py.py -o /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv --initpy
 
 file_server_generate_messages_py: file_server/CMakeFiles/file_server_generate_messages_py
-file_server_generate_messages_py: /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
-file_server_generate_messages_py: /home/ken/catkin_ws/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py
+file_server_generate_messages_py: /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/_GetBinaryFile.py
+file_server_generate_messages_py: /home/ken/DiRA2020/devel/lib/python2.7/dist-packages/file_server/srv/__init__.py
 file_server_generate_messages_py: file_server/CMakeFiles/file_server_generate_messages_py.dir/build.make
 
 .PHONY : file_server_generate_messages_py
@@ -80,10 +80,10 @@ file_server/CMakeFiles/file_server_generate_messages_py.dir/build: file_server_g
 .PHONY : file_server/CMakeFiles/file_server_generate_messages_py.dir/build
 
 file_server/CMakeFiles/file_server_generate_messages_py.dir/clean:
-	cd /home/ken/catkin_ws/build/file_server && $(CMAKE_COMMAND) -P CMakeFiles/file_server_generate_messages_py.dir/cmake_clean.cmake
+	cd /home/ken/DiRA2020/build/file_server && $(CMAKE_COMMAND) -P CMakeFiles/file_server_generate_messages_py.dir/cmake_clean.cmake
 .PHONY : file_server/CMakeFiles/file_server_generate_messages_py.dir/clean
 
 file_server/CMakeFiles/file_server_generate_messages_py.dir/depend:
-	cd /home/ken/catkin_ws/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/catkin_ws/src /home/ken/catkin_ws/src/file_server /home/ken/catkin_ws/build /home/ken/catkin_ws/build/file_server /home/ken/catkin_ws/build/file_server/CMakeFiles/file_server_generate_messages_py.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ken/DiRA2020/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ken/DiRA2020/src /home/ken/DiRA2020/src/file_server /home/ken/DiRA2020/build /home/ken/DiRA2020/build/file_server /home/ken/DiRA2020/build/file_server/CMakeFiles/file_server_generate_messages_py.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : file_server/CMakeFiles/file_server_generate_messages_py.dir/depend
 
