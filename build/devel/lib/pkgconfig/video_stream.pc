@@ -1,0 +1,8 @@
+prefix=/home/ken/catkin_ws/build/devel
+
+Name: video_stream
+Description: Description of video_stream
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ken/catkin_ws/build/devel/lib 
+Requires: 

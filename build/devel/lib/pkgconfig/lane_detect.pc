@@ -1,0 +1,8 @@
+prefix=/home/ken/catkin_ws/build/devel
+
+Name: lane_detect
+Description: Description of lane_detect
+Version: 0.0.0
+Cflags: -I/home/ken/catkin_ws/src/lane_detect/include
+Libs: -L/home/ken/catkin_ws/build/devel/lib -lapi_lane_detection
+Requires: roscpp
