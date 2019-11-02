@@ -9,9 +9,7 @@
 #include "carcontrol.h"
 
 int cnt;
-bool STREAM = true;
 
-VideoCapture capture("video.avi");
 DetectLane *detect;
 CarControl *car;
 int skipFrame = 1;
@@ -39,19 +37,6 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     }
 }
 
-void videoProcess()
-{
-    Mat src;
-    while (true)
-    {
-        capture >> src;
-        if (src.empty()) break;
-        imshow("View", src);
-        detect->calculateError(src);
-        waitKey(30);
-    }
-}
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "image_listener");
@@ -60,15 +45,13 @@ int main(int argc, char **argv)
     cnt = 0;
     detect = new DetectLane();
     car = new CarControl();
-    if (STREAM) {
-        cv::startWindowThread();
+	
+    cv::startWindowThread();
 
-        ros::NodeHandle nh;
-        image_transport::ImageTransport it(nh);
-        image_transport::Subscriber sub = it.subscribe("team1/camera/rgb", 1, imageCallback);
-        ros::spin();
-    } else {
-        videoProcess();
-    }
+    ros::NodeHandle nh;
+    image_transport::ImageTransport it(nh);
+    image_transport::Subscriber sub = it.subscribe("team1/camera/rgb", 1, imageCallback);
+    ros::spin();
+    
     cv::destroyAllWindows();
 }
