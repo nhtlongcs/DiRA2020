@@ -3,8 +3,9 @@
 #include "utils.h"
 using namespace cv;
 
-LaneLine::LaneLine()
+LaneLine::LaneLine(bool debug)
 : isFound_{false}
+, debug{debug}
 {
 }
 
@@ -15,12 +16,12 @@ LaneLine::~LaneLine()
 void LaneLine::update(const cv::Mat& lineImage)
 {
     this->lineImage = lineImage.clone();
+    if (debug)
+    {
+        cv::cvtColor(lineImage, debugImage, cv::COLOR_GRAY2BGR);
+    }
 
     updateListPoint();
-}
-
-bool LaneLine::init()
-{
 }
 
 bool LaneLine::isFound() const
@@ -32,6 +33,7 @@ void LaneLine::show(cv::Mat& drawImage) const
 {
     if (isFound_ == true)
     {
+        std::cout <<"show";
         cv::Scalar color = getLaneColor();
 
         circle(drawImage, beginPoint, 1, color, 20, 8, 0);
@@ -73,7 +75,7 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat& trackingImage, cv::P
         if(nonZero >= maxCount)
         {
             maxCount = nonZero;
-            maxPoint = Point(bin * BIN_WIDTH / 2, binImage.rows / 2);
+            maxPoint = Point((bin + 0.5) * BIN_WIDTH, binImage.rows / 2);
         }
     }
 
@@ -92,10 +94,14 @@ void LaneLine::updateListPointUp()
     Point nextPoint = Point{beginPoint.x,beginPoint.y-H_TRACKING};
     listPoint.clear();
     
+    std::cout << "ImageSize: " << lineImage.size;
+
     while(!isOutOfImage(nextPoint))
     {
         Rect roiTracking = getROITracking(nextPoint);
         cv::Mat trackingImage = lineImage(roiTracking);
+
+        cv::rectangle(debugImage, roiTracking, cv::Scalar{0,0,255}, 1);
 
         int maxNonZero = 0;
         Point maxPoint;
@@ -105,9 +111,12 @@ void LaneLine::updateListPointUp()
             break;
         }
         
-        nextPoint = maxPoint;
+        nextPoint = maxPoint + Point{roiTracking.x, roiTracking.y};
         listPoint.insert(listPoint.begin(), nextPoint);
-        nextPoint.y -= H_TRACKING;
+        nextPoint.y -= H_TRACKING / 2;
+
+        cv::imshow("update", debugImage);
+        cv::waitKey(0);
     }
 }
 
@@ -139,8 +148,10 @@ void LaneLine::updateListPoint()
 {
     if (!isFound_)
     {
-        return;
+        init();
     }
+
+    std::cout <<"init";
 
     updateListPointUp();
     updateListPointDown();

@@ -10,19 +10,19 @@
 #define RIGHT 2
 
 #define H_TRACKING 16
-#define W_TRACKING 50
+#define W_TRACKING 25
 #define N_BINS 10
 
 
 class LaneLine
 {
 public:
-    LaneLine();
+    LaneLine(bool debug=true);
     ~LaneLine();
 
     void update(const cv::Mat& lineImage);
     bool isFound() const;
-    virtual bool init();
+    virtual bool init() = 0;
     virtual int getType() const = 0;
     void show(cv::Mat& drawImage) const;
     
@@ -37,12 +37,13 @@ protected:
     void updateListPointDown();
 
 protected:
+    cv::Mat debugImage;
     cv::Mat lineImage;
     cv::Point beginPoint;
     cv::Point endPoint;
     std::vector<cv::Point> listPoint;
     std::shared_ptr<LineParams> lineParams;
-    bool isFound_;
+    bool isFound_, debug;
 };
 
 class LeftLane : public LaneLine

@@ -6,6 +6,7 @@ DetectLane::DetectLane()
 , depth{}
 , leftLane{nullptr}
 , rightLane{nullptr}
+, debug{debug}
 {
     
     // setUseOptimized(true);
@@ -96,6 +97,9 @@ Point DetectLane::calculateError() {
     Mat birdview = birdviewTransformation(binary);
     Mat morphBirdview = morphological(birdview);
     imshow("birdview", birdview);
+
+    leftLane->update(birdview);
+    leftLane->show(this->rgb);
 
     int turn = detectSigns(this->rgb);
 
@@ -303,14 +307,14 @@ Mat DetectLane::birdviewTransformation(const Mat& src) {
     Point2f srcVertices[4];
     srcVertices[0] = Point(0, skyline);
     srcVertices[1] = Point(W, skyline);
-    srcVertices[2] = Point(W, H);
-    srcVertices[3] = Point(0, H);
-
+    srcVertices[2] = Point(0, H);
+    srcVertices[3] = Point(W, H);
+ 
     Point2f dstVertices[4];
     dstVertices[0] = Point(0, 0);
-    dstVertices[1] = Point(birdwidth, 0);
-    dstVertices[2] = Point(birdwidth - 105, birdheight);
-    dstVertices[3] = Point(105, birdheight);
+    dstVertices[1] = Point(birdwidth, skyline);
+    dstVertices[2] = Point(skyline, birdheight);
+    dstVertices[3] = Point(birdwidth - skyline, birdheight);
 
     Mat M = getPerspectiveTransform(srcVertices, dstVertices);
     Mat birdview(birdwidth, birdheight, CV_8UC3);

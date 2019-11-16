@@ -48,6 +48,7 @@ private:
 
     cv::Mat depth;
     cv::Mat rgb;
+    cv::Mat debug;
 
     int minThreshold[3] = {0, 0, 180};
     int maxThreshold[3] = {179, 30, 255};
@@ -63,8 +64,8 @@ private:
 
     const int offsetX = 160;
     const int offsetY = 180;
-    const int birdwidth = 240;
-    const int birdheight = 320;
-    const int skyline = 85;
+    const int birdwidth = 300;
+    const int birdheight = 330;
+    const int skyline = 95;
 };
 #endif
