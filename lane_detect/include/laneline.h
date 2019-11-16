@@ -25,7 +25,7 @@ public:
     virtual bool init() = 0;
     virtual int getType() const = 0;
     void show(cv::Mat& drawImage) const;
-    
+    std::shared_ptr<LineParams> getLineParams() const;
 protected:
     virtual cv::Scalar getLaneColor() const = 0;
     bool isOutOfImage(cv::Point point) const;

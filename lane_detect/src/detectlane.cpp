@@ -98,9 +98,31 @@ Point DetectLane::calculateError() {
     Mat morphBirdview = morphological(birdview);
     imshow("birdview", birdview);
 
-    leftLane->update(birdview);
-    leftLane->show(this->rgb);
+    cv::Mat birdviewColor;
+    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
 
+    leftLane->update(birdview);
+    rightLane->update(birdview);
+
+    // return {};
+
+    // leftLane->show(birdviewColor);
+    // rightLane->show(birdviewColor);
+
+    // auto leftParams = leftLane->getLineParams();
+    // auto rightParams = rightLane->getLineParams();
+    
+    // for (int y = 0; y < birdviewColor.rows; y++)
+    // {
+    //     float xLeft = getXByY(*leftParams, y);
+    //     float xRight = getXByY(*rightParams, y);
+    //     int xMid = static_cast<int>((xLeft + xRight) / 2);
+    //     cv::circle(birdviewColor, Point{xMid, y}, 5, cv::Scalar{0,0,255}, -1);
+    // }
+
+    // cv::imshow("Lanes", birdviewColor);
+    // cv::waitKey(0);
+    
     int turn = detectSigns(this->rgb);
 
     Point currentCarPosition = Hough(ROI(binary), this->rgb);

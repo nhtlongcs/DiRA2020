@@ -33,22 +33,22 @@ void LaneLine::show(cv::Mat& drawImage) const
 {
     if (isFound_ == true)
     {
-        std::cout <<"show";
         cv::Scalar color = getLaneColor();
 
         circle(drawImage, beginPoint, 1, color, 20, 8, 0);
-        for (int i = 0; i < listPoint.size(); i++)
+        for (int y = 0; y < drawImage.rows; y++)
         {
-            circle(drawImage, listPoint[i], 1, color, 8, 8, 0);
-            for (int y = 0; y < drawImage.rows; y++)
-            {
-                int xDraw = getXByY(*lineParams, y);
-                Point drawLine = Point(xDraw, y);
-                circle(drawImage, drawLine, 1, color, 1, 1, 0);
-            }
+            int x = getXByY(*lineParams, y);
+            circle(drawImage, Point2i{x, y}, 5, color, -1, 1, 0);
         }
     }
 }
+
+std::shared_ptr<LineParams> LaneLine::getLineParams() const
+{
+    return lineParams;
+}
+
 
 bool LaneLine::isOutOfImage(cv::Point point) const
 {
@@ -92,16 +92,18 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat& trackingImage, cv::P
 void LaneLine::updateListPointUp()
 {
     Point nextPoint = Point{beginPoint.x,beginPoint.y-H_TRACKING};
-    listPoint.clear();
     
-    std::cout << "ImageSize: " << lineImage.size;
-
-    while(!isOutOfImage(nextPoint))
+    cv::Rect lineImageRect{ 0, 0, lineImage.cols, lineImage.rows};
+    while(true)
     {
         Rect roiTracking = getROITracking(nextPoint);
+        if ((roiTracking & lineImageRect) != roiTracking)
+        {
+            break;
+        }
         cv::Mat trackingImage = lineImage(roiTracking);
 
-        cv::rectangle(debugImage, roiTracking, cv::Scalar{0,0,255}, 1);
+        cv::rectangle(debugImage, roiTracking, getLaneColor(), 1);
 
         int maxNonZero = 0;
         Point maxPoint;
@@ -112,23 +114,32 @@ void LaneLine::updateListPointUp()
         }
         
         nextPoint = maxPoint + Point{roiTracking.x, roiTracking.y};
-        listPoint.insert(listPoint.begin(), nextPoint);
+        listPoint.push_back(nextPoint);
         nextPoint.y -= H_TRACKING / 2;
 
-        cv::imshow("update", debugImage);
-        cv::waitKey(0);
+        cv::imshow("Lanes", debugImage);
+        cv::waitKey(1);
     }
 }
 
 void LaneLine::updateListPointDown()
 {
     Point nextPoint = Point{beginPoint.x,beginPoint.y + H_TRACKING};
-    listPoint.clear();
     
-    while(!isOutOfImage(nextPoint))
+    const cv::Rect lineImageRect{ 0, 0, lineImage.cols, lineImage.rows};
+
+    while(true)
     {
         Rect roiTracking = getROITracking(nextPoint);
+
+        if ((roiTracking & lineImageRect) != roiTracking)
+        {
+            break;
+        }
+
         cv::Mat trackingImage = lineImage(roiTracking);
+
+        cv::rectangle(debugImage, roiTracking, getLaneColor(), 1);
 
         int maxNonZero = 0;
         Point maxPoint;
@@ -140,7 +151,10 @@ void LaneLine::updateListPointDown()
         
         nextPoint = maxPoint;
         listPoint.insert(listPoint.begin(), nextPoint);
-        nextPoint.y += H_TRACKING;
+        nextPoint.y += H_TRACKING / 2;
+
+        cv::imshow("Lanes", debugImage);
+        cv::waitKey(1);
     }
 }
 
@@ -151,9 +165,8 @@ void LaneLine::updateListPoint()
         init();
     }
 
-    std::cout <<"init";
-
     updateListPointUp();
+
     updateListPointDown();
 
     isFound_ = listPoint.size() > 3;
@@ -163,11 +176,7 @@ void LaneLine::updateListPoint()
         beginPoint = listPoint[3]; 
         endPoint = listPoint.back();
 
-        lineParams = calcLineParams(listPoint) ;
-        for(int i=0; i<listPoint.size();i++)
-        {
-            listPoint[i].x = getXByY(*lineParams, listPoint[i].y);
-        }
+        lineParams = calcLineParams(listPoint);
     }
     else
     {
@@ -181,12 +190,14 @@ void LaneLine::updateListPoint()
 
 bool LeftLane::init()
 {
+    listPoint.clear();
+
     for(int center_y = lineImage.rows-1-H_TRACKING/2; center_y>H_TRACKING/2; center_y -= H_TRACKING)
     {
         int maxValue = 0;
         cv::Point maxPoint;
 
-        for(int center_x=W_TRACKING/2; center_x<lineImage.cols/2; center_x+=W_TRACKING)
+        for(int center_x=W_TRACKING/2 + 1; center_x<lineImage.cols/2; center_x+=W_TRACKING)
         {
             cv::Rect roiTracking = getROITracking(Point(center_x, center_y));
             cv::Mat trackingImage = lineImage(roiTracking);
@@ -226,12 +237,14 @@ cv::Scalar LeftLane::getLaneColor() const
 
 bool RightLane::init()
 {
+    listPoint.clear();
+
     for(int center_y = lineImage.rows-1-H_TRACKING/2; center_y>H_TRACKING/2; center_y -= H_TRACKING)
     {
         int maxNonZero = 0;
         Point maxPoint;
 
-        for(int center_x=lineImage.cols/2+W_TRACKING/2; center_x<lineImage.cols-W_TRACKING/2; center_x+=W_TRACKING)
+        for(int center_x=lineImage.cols/2+W_TRACKING/2; center_x<lineImage.cols-W_TRACKING/2 - 1; center_x+=W_TRACKING)
         {
             cv::Rect roiTracking = getROITracking(Point(center_x, center_y));
             cv::Mat trackingImage = lineImage(roiTracking);

@@ -66,38 +66,39 @@ void imageCallback2(const sensor_msgs::ImageConstPtr& msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "image_listener");
-    ros::NodeHandle nh;
-    
-    cv::Mat image = cv::imread("/home/ken/input2.jpg", cv::IMREAD_ANYCOLOR);
-    std::cout << "OK";
-
-    cv::namedWindow("Threshold");
-    detect = new DetectLane();
-    detect->updateRGB(image);
-
-    detect->calculateError();
     // ros::init(argc, argv, "image_listener");
     // ros::NodeHandle nh;
-    // image_transport::ImageTransport it(nh);
+    
+    // cv::Mat image = cv::imread("/home/ken/input2.jpg", cv::IMREAD_ANYCOLOR);
+    // std::cout << "OK";
 
     // cv::namedWindow("Threshold");
-    // cv::namedWindow("RGB");
-    // cv::namedWindow("depth");
-    // cnt = 0;
     // detect = new DetectLane();
-    // car = new CarControl();
-    // ros::Rate r(10);
+    // detect->updateRGB(image);
 
-    // image_transport::Subscriber sub2 = it.subscribe("team1/camera/depth", 1, imageCallback2);
-    // image_transport::Subscriber sub = it.subscribe("team1/camera/rgb", 1, imageCallback);
+    // detect->calculateError();
+    
+    ros::init(argc, argv, "image_listener");
+    ros::NodeHandle nh;
+    image_transport::ImageTransport it(nh);
 
-    // while (ros::ok()) {
-    //     ros::spinOnce();
+    cv::namedWindow("Threshold");
+    cv::namedWindow("RGB");
+    cv::namedWindow("depth");
+    cnt = 0;
+    detect = new DetectLane();
+    car = new CarControl();
+    ros::Rate r(10);
 
-    //     detect->processDepth();
-    //     car->driverCar(detect->calculateError(), 30);
-    //     cv::waitKey(1);
-    // } 
-    // cv::destroyAllWindows();
+    image_transport::Subscriber sub2 = it.subscribe("team1/camera/depth", 1, imageCallback2);
+    image_transport::Subscriber sub = it.subscribe("team1/camera/rgb", 1, imageCallback);
+
+    while (ros::ok()) {
+        ros::spinOnce();
+
+        detect->processDepth();
+        car->driverCar(detect->calculateError(), 30);
+        cv::waitKey(1);
+    } 
+    cv::destroyAllWindows();
 }
