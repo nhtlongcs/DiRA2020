@@ -1,8 +1,11 @@
 #include "detectlane.h"
+#include "laneline.h"
 
 DetectLane::DetectLane()
 : rgb{}
 , depth{}
+, leftLane{nullptr}
+, rightLane{nullptr}
 {
     
     // setUseOptimized(true);
@@ -17,9 +20,15 @@ DetectLane::DetectLane()
     cvCreateTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
     cvCreateTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
     cvCreateTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
+
+    leftLane = new LeftLane();
+    rightLane = new RightLane();
 }
 
-DetectLane::~DetectLane(){} 
+DetectLane::~DetectLane(){
+    delete leftLane;
+    delete rightLane;
+} 
 
 void DetectLane::updateDepth(const Mat& src)
 {

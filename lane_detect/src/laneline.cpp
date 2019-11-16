@@ -3,7 +3,7 @@
 #include "utils.h"
 using namespace cv;
 
-LaneLine::LaneLine(int type)
+LaneLine::LaneLine()
 : isFound_{false}
 {
 }

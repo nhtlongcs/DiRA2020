@@ -12,11 +12,15 @@
 #include <vector>
 #include <math.h>
 #include <algorithm>
+#include <memory>
 #include <iostream>
 
 using namespace std;
 using namespace cv;
 using namespace cv::ximgproc::segmentation;
+
+class LaneLine;
+
 class DetectLane
 {
 public:
@@ -37,6 +41,10 @@ private:
     void drawLine(float slope, float yintercept, Mat& HoughTransform);
     Point Hough(const Mat& img, const Mat& src);
     int detectSigns(const Mat& src);
+
+
+    LaneLine* leftLane;
+    LaneLine* rightLane;
 
     cv::Mat depth;
     cv::Mat rgb;

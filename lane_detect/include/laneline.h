@@ -17,7 +17,7 @@
 class LaneLine
 {
 public:
-    LaneLine(int type);
+    LaneLine();
     ~LaneLine();
 
     void update(const cv::Mat& lineImage);
@@ -49,7 +49,7 @@ class LeftLane : public LaneLine
 {
 public:
     virtual bool init() override;
-    virtual int getType() const;
+    virtual int getType() const override;
     virtual cv::Scalar getLaneColor() const override;
 
 protected:
@@ -59,7 +59,7 @@ class RightLane : public LaneLine
 {
 public:
     virtual bool init() override;
-    virtual int getType() const;
+    virtual int getType() const override;
     virtual cv::Scalar getLaneColor() const override;
 
 private:
