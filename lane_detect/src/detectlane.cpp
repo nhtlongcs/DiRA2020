@@ -1,12 +1,15 @@
 #include "detectlane.h"
 #include "laneline.h"
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+
+using namespace cv;
+using namespace std;
 
 DetectLane::DetectLane()
-: rgb{}
-, depth{}
-, leftLane{nullptr}
+: leftLane{nullptr}
 , rightLane{nullptr}
-, debug{debug}
+, midLane{nullptr}
 {
     
     // setUseOptimized(true);
@@ -14,16 +17,17 @@ DetectLane::DetectLane()
  
     // cvCreateTrackbar("Hough", "Threshold", &hough_lowerbound, max_houghThreshold);
     //cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
-    cvCreateTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
-    cvCreateTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
-    cvCreateTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
-    cvCreateTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
-    cvCreateTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
-    cvCreateTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
-    cvCreateTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
+    // cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
+    // cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
+    // cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
+    // cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
+    // cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
+    // cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
+    // cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
 
     leftLane = new LeftLane();
     rightLane = new RightLane();
+    midLane = new MidLane(*leftLane, *rightLane);
 }
 
 DetectLane::~DetectLane(){
@@ -31,51 +35,51 @@ DetectLane::~DetectLane(){
     delete rightLane;
 } 
 
-void DetectLane::updateDepth(const Mat& src)
+void DetectLane::updateDepth(const cv::Mat& src)
 {
     this->depth = src.clone();
 }
 
-void DetectLane::updateRGB(const Mat& src)
+void DetectLane::updateRGB(const cv::Mat& src)
 {
     this->rgb = src.clone();
 }
 
 
 void DetectLane::processDepth(){
-    if (this->depth.empty())
-    {
-        return;
-    }
-    imshow("depth", this->depth);
+    // if (this->depth.empty())
+    // {
+    //     return;
+    // }
+    // imshow("depth", this->depth);
 
 
-    Mat samples(this->depth.rows * this->depth.cols, 3, CV_32F);
-    for( int y = 0; y < this->depth.rows; y++ )
-        for( int x = 0; x < this->depth.cols; x++ )
-        for( int z = 0; z < 3; z++)
-            samples.at<float>(y + x*this->depth.rows, z) = this->depth.at<Vec3b>(y,x)[z];
+    // Mat samples(this->depth.rows * this->depth.cols, 3, CV_32F);
+    // for( int y = 0; y < this->depth.rows; y++ )
+    //     for( int x = 0; x < this->depth.cols; x++ )
+    //     for( int z = 0; z < 3; z++)
+    //         samples.at<float>(y + x*this->depth.rows, z) = this->depth.at<Vec3b>(y,x)[z];
 
-    int clusterCount = lowThreshold;
-    Mat labels;
-    int attempts = 5;
-    Mat centers;
-    kmeans(samples, clusterCount, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
+    // int clusterCount = lowThreshold;
+    // Mat labels;
+    // int attempts = 5;
+    // Mat centers;
+    // kmeans(samples, clusterCount, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
 
 
-    Mat new_image( this->depth.size(), this->depth.type() );
-    for( int y = 0; y < this->depth.rows; y++ )
-        for( int x = 0; x < this->depth.cols; x++ )
-        { 
-        int cluster_idx = labels.at<int>(y + x*this->depth.rows,0);
-        new_image.at<Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
-        new_image.at<Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
-        new_image.at<Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
-        }
+    // Mat new_image( this->depth.size(), this->depth.type() );
+    // for( int y = 0; y < this->depth.rows; y++ )
+    //     for( int x = 0; x < this->depth.cols; x++ )
+    //     { 
+    //     int cluster_idx = labels.at<int>(y + x*this->depth.rows,0);
+    //     new_image.at<Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
+    //     new_image.at<Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
+    //     new_image.at<Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
+    //     }
 
-    Mat birdviewdepth = birdviewTransformation(new_image);
-    imshow("birdviewdepth",birdviewdepth);
-    imshow( "clustered image", new_image );
+    // Mat birdviewdepth = birdviewTransformation(new_image);
+    // imshow("birdviewdepth",birdviewdepth);
+    // imshow( "clustered image", new_image );
  
 
 }
@@ -103,11 +107,13 @@ Point DetectLane::calculateError() {
 
     leftLane->update(birdview);
     rightLane->update(birdview);
+    midLane->update(birdview);
 
     // return {};
 
-    // leftLane->show(birdviewColor);
-    // rightLane->show(birdviewColor);
+    leftLane->show(birdviewColor);
+    rightLane->show(birdviewColor);
+    midLane->show(birdviewColor);
 
     // auto leftParams = leftLane->getLineParams();
     // auto rightParams = rightLane->getLineParams();
@@ -120,21 +126,20 @@ Point DetectLane::calculateError() {
     //     cv::circle(birdviewColor, Point{xMid, y}, 5, cv::Scalar{0,0,255}, -1);
     // }
 
-    // cv::imshow("Lanes", birdviewColor);
-    // cv::waitKey(0);
+    cv::imshow("Lanes", birdviewColor);
     
-    int turn = detectSigns(this->rgb);
+    // int turn = detectSigns(this->rgb);
 
-    Point currentCarPosition = Hough(ROI(binary), this->rgb);
+    // Point currentCarPosition = Hough(ROI(binary), this->rgb);
 
-    currentCarPosition.x += turn * 120;
+    // currentCarPosition.x += turn * 120;
 
-    return currentCarPosition;
+    // return currentCarPosition;
 }
 
 Mat DetectLane::shadow(const Mat& src) {
     Mat shadow, hsv;
-    cvtColor(src, hsv, CV_BGR2HSV);
+    cvtColor(src, hsv, cv::COLOR_BGR2HSV);
     inRange(hsv, Scalar(minLaneInShadow[0], minLaneInShadow[1], minLaneInShadow[2]),
                     Scalar(maxLaneInShadow[1], maxLaneInShadow[1], maxLaneInShadow[2]), shadow);
     return shadow;
@@ -144,7 +149,7 @@ int DetectLane::detectSigns(const Mat& src) {
     Mat blue;
     int turnFactor = 0;
 
-    cvtColor(src, blue, CV_BGR2HSV);
+    cvtColor(src, blue, cv::COLOR_BGR2HSV);
     inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
     imshow("blue", blue);
 

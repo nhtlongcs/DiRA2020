@@ -1,23 +1,7 @@
 #ifndef DETECTLANE_H
 #define DETECTLANE_H
 
-#include "opencv2/ximgproc/segmentation.hpp"
 #include "opencv2/core.hpp"
-
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv.hpp>
-
-#include <ros/ros.h>
-#include <vector>
-#include <math.h>
-#include <algorithm>
-#include <memory>
-#include <iostream>
-
-using namespace std;
-using namespace cv;
-using namespace cv::ximgproc::segmentation;
 
 class LaneLine;
 
@@ -27,24 +11,25 @@ public:
     DetectLane();
     ~DetectLane();
     
-    Point calculateError();
+    cv::Point calculateError();
     void processDepth();
-    void updateDepth(const Mat& depth);
-    void updateRGB(const Mat& rgb);
+    void updateDepth(const cv::Mat& depth);
+    void updateRGB(const cv::Mat& rgb);
 private:
-    Mat preprocess(const Mat& src);
-    Mat shadow(const Mat& src);
-    Mat birdviewTransformation(const Mat& src);
-    Mat morphological(const Mat& img);
-    Mat ROI(const Mat& src);
+    cv::Mat preprocess(const cv::Mat& src);
+    cv::Mat shadow(const cv::Mat& src);
+    cv::Mat birdviewTransformation(const cv::Mat& src);
+    cv::Mat morphological(const cv::Mat& img);
+    cv::Mat ROI(const cv::Mat& src);
 
-    void drawLine(float slope, float yintercept, Mat& HoughTransform);
-    Point Hough(const Mat& img, const Mat& src);
-    int detectSigns(const Mat& src);
+    void drawLine(float slope, float yintercept, cv::Mat& HoughTransform);
+    cv::Point Hough(const cv::Mat& img, const cv::Mat& src);
+    int detectSigns(const cv::Mat& src);
 
 
     LaneLine* leftLane;
     LaneLine* rightLane;
+    LaneLine* midLane;
 
     cv::Mat depth;
     cv::Mat rgb;
