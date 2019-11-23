@@ -1,11 +1,10 @@
 #include <algorithm>
 #include "laneline.h"
 #include "utils.h"
-using namespace cv;
 
 LaneLine::LaneLine(bool debug)
-: isFound_{false}
-, debug{debug}
+: isDebug{debug}
+, lineParams{nullptr}
 {
 }
 
@@ -16,46 +15,139 @@ LaneLine::~LaneLine()
 void LaneLine::update(const cv::Mat& lineImage)
 {
     this->lineImage = lineImage.clone();
-    if (debug)
+    lineImageRect = cv::Rect{ 0, 0, lineImage.cols, lineImage.rows};
+
+    if (isDebug)
     {
         cv::cvtColor(lineImage, debugImage, cv::COLOR_GRAY2BGR);
     }
 
-    updateListPoint();
-}
-
-bool LaneLine::isFound() const
-{
-    return this->isFound_;
-}
-
-void LaneLine::show(cv::Mat& drawImage) const
-{
-    if (isFound_ == true)
+    if (isFound())
     {
-        cv::Scalar color = getLaneColor();
+        track();
+    }
+    else
+    {
+        reset();
+        detect();
+    }
+}
 
-        circle(drawImage, beginPoint, 1, color, 20, 8, 0);
-        for (int y = 0; y < drawImage.rows; y++)
+void LaneLine::reset()
+{
+    listPoint.clear();
+    lineParams = nullptr;
+}
+
+void LaneLine::track()
+{
+    auto iterPoint = listPoint.begin();
+    while (iterPoint != listPoint.end())
+    {
+        if (!updateNewCenter(lineImage, *iterPoint, nullptr))
         {
-            int x = getXByY(*lineParams, y);
-            circle(drawImage, Point2i{x, y}, 5, color, -1, 1, 0);
+            iterPoint = listPoint.erase(iterPoint);
+        } else
+        {
+            iterPoint++;
+        }
+    }
+
+    if (listPoint.size() > minPoint)
+    {
+        lineParams = calcLineParams(listPoint);
+    }
+
+    listPoint = getPointsFromParams(lineParams);
+}
+
+void LaneLine::detect()
+{
+    cv::Point beginPoint;
+    if (findBeginPoint(beginPoint))
+    {
+        std::vector<cv::Point> points;
+        std::vector<cv::Point>&& pointsUp = findPoints(beginPoint, 1);
+        std::vector<cv::Point>&& pointsDown = findPoints(beginPoint, -1);
+        std::move(pointsUp.begin(), pointsUp.end(), std::back_inserter(points));
+        std::move(pointsDown.begin(), pointsDown.end(), std::back_inserter(points));
+
+        if (points.size() > minPoint)
+        {
+            lineParams = calcLineParams(points);
+            listPoint = getPointsFromParams(lineParams);
         }
     }
 }
 
-std::shared_ptr<LineParams> LaneLine::getLineParams() const
+LineParams LaneLine::getLineParams() const
 {
-    return lineParams;
+    return *(this->lineParams);
 }
 
+void LaneLine::setLineParams(std::shared_ptr<LineParams> params)
+{
+    this->lineParams = params;
+}
 
-bool LaneLine::isOutOfImage(cv::Point point) const
+cv::Rect LaneLine::getDetectBeginPointRegion() const
+{
+    return cv::Rect{0, 0, lineImage.cols, lineImage.rows};
+}
+
+std::vector<cv::Point> LaneLine::getPointsFromParams(const std::shared_ptr<LineParams> params) const
+{
+    std::vector<cv::Point> points;
+    if (params)
+    {
+        for (int y = 0; y < lineImage.rows; y++)
+        {
+            cv::Point point{getXByY(*lineParams, y), y};
+            if (!isOutOfImage(point))
+            {
+                points.push_back(point);
+            }
+        }
+    }
+    return points;
+}
+
+bool LaneLine::isFound() const
+{
+    return listPoint.size() > minPoint;
+}
+
+void LaneLine::show(cv::Mat& drawImage) const
+{
+    if (isFound())
+    {
+        const cv::Scalar&& color = getLaneColor();
+        cv::Point beginPoint;
+        getBeginPoint(beginPoint);
+        circle(drawImage, beginPoint , 20, color, -1, 8, 0);
+        for (const auto& point : listPoint)
+        {
+            circle(drawImage, point, 5, color, -1, 1, 0);
+        }
+    }
+}
+
+bool LaneLine::getBeginPoint(cv::Point& returnPoint) const
+{
+    if (isFound() && listPoint.size() > beginPointIndex)
+    {
+        returnPoint = *(listPoint.rbegin() + beginPointIndex);
+        return true;
+    }
+    return false;
+}
+
+bool LaneLine::isOutOfImage(const cv::Point& point) const
 {
     return point.x < 0 || point.x >= lineImage.cols || point.y < 0 || point.y >= lineImage.rows;
 }
 
-cv::Rect LaneLine::getROITracking(cv::Point centerPoint)
+cv::Rect LaneLine::getROITracking(cv::Point centerPoint) const
 {
     return cv::Rect{centerPoint.x - W_TRACKING/2, centerPoint.y - H_TRACKING/2, W_TRACKING, H_TRACKING};
 }
@@ -75,7 +167,7 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat& trackingImage, cv::P
         if(nonZero >= maxCount)
         {
             maxCount = nonZero;
-            maxPoint = Point((bin + 0.5) * BIN_WIDTH, binImage.rows / 2);
+            maxPoint = cv::Point2i{int((bin + 0.5) * BIN_WIDTH), int(binImage.rows / 2)};
         }
     }
 
@@ -89,132 +181,31 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat& trackingImage, cv::P
     return true;
 }
 
-void LaneLine::updateListPointUp()
+bool LaneLine::findBeginPoint(cv::Point& returnPoint) const
 {
-    Point nextPoint = Point{beginPoint.x,beginPoint.y-H_TRACKING};
-    
-    cv::Rect lineImageRect{ 0, 0, lineImage.cols, lineImage.rows};
-    while(true)
+    cv::Rect&& regionRect = getDetectBeginPointRegion();
+
+    const cv::Mat region = lineImage(regionRect);
+
+    for(int center_y = region.rows-1-H_TRACKING/2; center_y>H_TRACKING/2; center_y -= H_TRACKING)
     {
-        Rect roiTracking = getROITracking(nextPoint);
-        if ((roiTracking & lineImageRect) != roiTracking)
-        {
-            break;
-        }
-        cv::Mat trackingImage = lineImage(roiTracking);
-
-        cv::rectangle(debugImage, roiTracking, getLaneColor(), 1);
-
         int maxNonZero = 0;
-        Point maxPoint;
-        bool found = findPointHasBiggestValueInBin(trackingImage, maxPoint, maxNonZero);
-        if (!found)
-        {
-            break;
-        }
-        
-        nextPoint = maxPoint + Point{roiTracking.x, roiTracking.y};
-        listPoint.push_back(nextPoint);
-        nextPoint.y -= H_TRACKING / 2;
-
-        cv::imshow("Lanes", debugImage);
-        cv::waitKey(1);
-    }
-}
-
-void LaneLine::updateListPointDown()
-{
-    Point nextPoint = Point{beginPoint.x,beginPoint.y + H_TRACKING};
-    
-    const cv::Rect lineImageRect{ 0, 0, lineImage.cols, lineImage.rows};
-
-    while(true)
-    {
-        Rect roiTracking = getROITracking(nextPoint);
-
-        if ((roiTracking & lineImageRect) != roiTracking)
-        {
-            break;
-        }
-
-        cv::Mat trackingImage = lineImage(roiTracking);
-
-        cv::rectangle(debugImage, roiTracking, getLaneColor(), 1);
-
-        int maxNonZero = 0;
-        Point maxPoint;
-        bool found = findPointHasBiggestValueInBin(trackingImage, maxPoint, maxNonZero);
-        if (!found)
-        {
-            break;
-        }
-        
-        nextPoint = maxPoint;
-        listPoint.insert(listPoint.begin(), nextPoint);
-        nextPoint.y += H_TRACKING / 2;
-
-        cv::imshow("Lanes", debugImage);
-        cv::waitKey(1);
-    }
-}
-
-void LaneLine::updateListPoint()
-{
-    if (!isFound_)
-    {
-        init();
-    }
-
-    updateListPointUp();
-
-    updateListPointDown();
-
-    isFound_ = listPoint.size() > 3;
-
-    if (isFound_)
-    {
-        beginPoint = listPoint[3]; 
-        endPoint = listPoint.back();
-
-        lineParams = calcLineParams(listPoint);
-    }
-    else
-    {
-        beginPoint = Point{-1,-1};
-        endPoint = Point{-1, -1};
-        listPoint.clear();
-    }
-}
-
-//////////////////////////////////////////
-
-bool LeftLane::init()
-{
-    listPoint.clear();
-
-    for(int center_y = lineImage.rows-1-H_TRACKING/2; center_y>H_TRACKING/2; center_y -= H_TRACKING)
-    {
-        int maxValue = 0;
         cv::Point maxPoint;
 
-        for(int center_x=W_TRACKING/2 + 1; center_x<lineImage.cols/2; center_x+=W_TRACKING)
+        for(int center_x=W_TRACKING/2 + 1; center_x<region.cols-W_TRACKING/2 - 1; center_x+=W_TRACKING)
         {
-            cv::Rect roiTracking = getROITracking(Point(center_x, center_y));
-            cv::Mat trackingImage = lineImage(roiTracking);
-
-            cv::Point maxPointResult;
-            int maxValueResult = 0;
-            bool found = findPointHasBiggestValueInBin(trackingImage, maxPointResult, maxValueResult);
-            if (found)
+            cv::Point center{center_x, center_y};
+            int nonZeroValue = 0;
+            updateNewCenter(region, center, &nonZeroValue);
+            if (nonZeroValue > maxNonZero)
             {
-                maxPoint = maxPointResult + Point{roiTracking.x, roiTracking.y};
-                maxValue = maxValueResult;
+                maxNonZero = nonZeroValue;
+                maxPoint = center;
             }
         }
         
-        if(maxValue > 0) {
-            beginPoint = maxPoint;
-            isFound_ = true;
+        if(maxNonZero > maxNonZeroThreshold) {
+            returnPoint = regionRect.tl() + maxPoint;
             return true;
         }
     }
@@ -222,9 +213,59 @@ bool LeftLane::init()
     return false;
 }
 
-int LeftLane::getType() const
+std::vector<cv::Point> LaneLine::findPoints(const cv::Point& beginPoint, int direct) const
 {
-    return LEFT;
+    std::vector<cv::Point> result;
+    cv::Point nextPoint{beginPoint.x, beginPoint.y + direct * H_TRACKING / 2};
+
+    while (true)
+    {
+        if (!updateNewCenter(lineImage, nextPoint, nullptr))
+        {
+            break;
+        }
+        result.push_back(nextPoint);
+        nextPoint.y += direct * H_TRACKING / 2;
+    }
+    return result;
+}
+
+bool LaneLine::updateNewCenter(const cv::Mat& region, cv::Point& center, int * const nonZeroValue) const
+{
+    const cv::Rect roiTracking = getROITracking(center);
+
+    // if (isDebug)
+    // {
+    //     cv::rectangle(debugImage, roiTracking, getLaneColor(), 3);
+    //     cv::imshow("Debug", debugImage);
+    //     cv::waitKey(0);
+    // }
+
+    if ((roiTracking & lineImageRect) != roiTracking)
+    {
+        return false;
+    }
+    const cv::Mat trackingImage = region(roiTracking);
+
+    cv::Point maxPointResult;
+    int value = 0;
+    bool found = findPointHasBiggestValueInBin(trackingImage, maxPointResult, value);
+    if (found)
+    {
+        center = roiTracking.tl() + maxPointResult;
+        if (nonZeroValue)
+        {
+            *nonZeroValue = value;
+        }
+    }
+    return found;
+}
+
+//////////////////////////////////////////
+
+cv::Rect LeftLane::getDetectBeginPointRegion() const
+{
+    return cv::Rect{0, 0, lineImage.cols / 2, lineImage.rows};
 }
 
 cv::Scalar LeftLane::getLaneColor() const
@@ -235,54 +276,90 @@ cv::Scalar LeftLane::getLaneColor() const
 
 //////////////////////////////////////////
 
-bool RightLane::init()
+cv::Rect RightLane::getDetectBeginPointRegion() const
 {
-    listPoint.clear();
-
-    for(int center_y = lineImage.rows-1-H_TRACKING/2; center_y>H_TRACKING/2; center_y -= H_TRACKING)
-    {
-        int maxNonZero = 0;
-        Point maxPoint;
-
-        for(int center_x=lineImage.cols/2+W_TRACKING/2; center_x<lineImage.cols-W_TRACKING/2 - 1; center_x+=W_TRACKING)
-        {
-            cv::Rect roiTracking = getROITracking(Point(center_x, center_y));
-            cv::Mat trackingImage = lineImage(roiTracking);
-
-            const int BIN_WIDTH = trackingImage.cols / N_BINS;
-            for(int bin = 0; bin < N_BINS; bin++)
-            {
-                cv::Rect binROI{bin * BIN_WIDTH, 0, BIN_WIDTH, trackingImage.rows};
-                cv::Mat binImage = trackingImage(binROI);
-                int nonZero = countNonZero(binImage);
-                
-                if(nonZero>=maxNonZero)
-                {
-                    maxNonZero = nonZero;
-                    maxPoint = Point(
-                        roiTracking.x + bin * BIN_WIDTH / 2,
-                        roiTracking.y + binImage.rows / 2
-                    );
-                }
-            }                                                  
-        }
-        
-        if(maxNonZero > 0) {
-            beginPoint = maxPoint;
-            isFound_ = true;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-int RightLane::getType() const
-{
-    return RIGHT;
+    return cv::Rect{lineImage.cols / 2, 0, lineImage.cols / 2, lineImage.rows};
 }
 
 cv::Scalar RightLane::getLaneColor() const
 {
     return cv::Scalar{255, 0, 0};
 }
+
+///////////////////////////////////////////////
+
+MidLane::MidLane(LaneLine& leftLane, LaneLine& rightLane)
+: LaneLine::LaneLine{true}
+, leftLane{leftLane}
+, rightLane{rightLane}
+, laneSize{0}
+{
+}
+
+void MidLane::detect()
+{
+    // NOTE: left and right lanes should be updated before midlane!!!
+    if (!leftLane.isFound() && !rightLane.isFound())
+    {
+        // I'm blind!
+        return;
+    }
+
+    if (leftLane.isFound() && rightLane.isFound())
+    {
+        detectIfHaveBothLanes();
+    } else if (laneSize != 0)
+    {
+        lineParams = std::make_shared<LineParams>();
+        if (leftLane.isFound())
+        {
+            const auto& leftParams = leftLane.getLineParams();
+            std::copy(leftParams.begin(), leftParams.end(), (*lineParams).begin());
+            (*lineParams)[2] += laneSize;
+        } else
+        {
+            const auto& rightParams = rightLane.getLineParams();
+            std::copy(rightParams.begin(), rightParams.end(), (*lineParams).begin());
+            (*lineParams)[2] -= laneSize;
+        }
+    } else
+    {
+        // Cannot recover lane due to unknow lane size
+        return;
+    }
+
+    if (lineParams)
+    {
+        listPoint = getPointsFromParams(lineParams);
+    }
+
+}
+
+void MidLane::detectIfHaveBothLanes()
+{
+    const auto& leftParams = leftLane.getLineParams();
+    const auto& rightParams = rightLane.getLineParams();
+    lineParams = std::make_shared<LineParams>();
+    for (size_t i = 0; i < (*lineParams).size(); i++)
+    {
+        (*lineParams)[i] = (leftParams[i] + rightParams[i]) / 2;
+    }
+
+    cv::Point leftBegin, rightBegin;
+    leftLane.getBeginPoint(leftBegin);
+    rightLane.getBeginPoint(rightBegin);
+    laneSize = rightBegin.x - leftBegin.x;
+}
+
+cv::Scalar MidLane::getLaneColor() const
+{
+    return cv::Scalar{0, 0, 255};
+}
+
+// std::vector<cv::Point> MidLane::findListPoint() const
+// {
+//     // bool leftFound = leftLane.getBeginPoint(leftPoint);
+//     // bool rightFound = rightLane.getBeginPoint(rightPoint);
+//     // if (leftFound &&)
+// }
+
