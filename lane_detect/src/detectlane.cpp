@@ -9,30 +9,31 @@ using namespace std;
 DetectLane::DetectLane()
 : leftLane{nullptr}
 , rightLane{nullptr}
-, midLane{nullptr}
+, laneWidth{0}
+, frameCount{0}
+// , midLane{nullptr}
 {
     
     // setUseOptimized(true);
     // setNumThreads(4);
  
     // cvCreateTrackbar("Hough", "Threshold", &hough_lowerbound, max_houghThreshold);
-    //cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
-    // cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
-    // cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
-    // cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
-    // cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
-    // cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
-    // cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
-    // cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
+    // cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
+    cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
+    cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
+    cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
+    cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
+    cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
+    cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
+    cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
 
-    leftLane = new LeftLane();
-    rightLane = new RightLane();
-    midLane = new MidLane(*leftLane, *rightLane);
+    leftLane = std::make_shared<LeftLane>();
+    rightLane = std::make_shared<RightLane>();
+
+    // midLane = new MidLane(*leftLane, *rightLane);
 }
 
 DetectLane::~DetectLane(){
-    delete leftLane;
-    delete rightLane;
 } 
 
 void DetectLane::updateDepth(const cv::Mat& src)
@@ -45,8 +46,41 @@ void DetectLane::updateRGB(const cv::Mat& src)
     this->rgb = src.clone();
 }
 
+void DetectLane::detect()
+{
+    if (this->rgb.empty())
+    {
+        return;
+    }
 
-void DetectLane::processDepth(){
+    cv::imshow("RGB", this->rgb);
+
+    Mat binary = preprocess(this->rgb);
+
+    Mat shadowMask = shadow(this->rgb);
+    bitwise_or(binary, shadowMask, binary);
+    imshow("binary", binary);
+    
+    cv::Mat birdview = birdviewTransformation(binary);
+    // Mat morphBirdview = morphological(birdview);
+
+    leftLane->update(birdview);
+    rightLane->update(birdview);
+
+    cv::Mat birdviewColor;
+    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
+
+    show(birdviewColor);
+}
+
+void DetectLane::show(cv::Mat& colorBirdview) const
+{
+    leftLane->show(colorBirdview);
+    rightLane->show(colorBirdview);
+    cv::imshow("Lanes", colorBirdview);
+}
+
+void DetectLane::processDepth() {
     // if (this->depth.empty())
     // {
     //     return;
@@ -84,51 +118,36 @@ void DetectLane::processDepth(){
 
 }
 
-Point DetectLane::calculateError() {
-    if (this->rgb.empty())
+Point DetectLane::calculateError(cv::Point carPos) {
+    
+    cv::Point beginLeft, beginRight;
+    if (leftLane->getBeginPoint(beginLeft) && rightLane->getBeginPoint(beginRight))
     {
-        return Point{birdheight / 2, birdwidth};
+        if (abs(beginLeft.x - beginRight.x) < 20)
+        {
+            leftLane->reset();
+            rightLane->reset();
+            return carPos;
+        } else
+        {
+            cv::Point midPoint = (beginLeft + beginRight) / 2;
+            if (frameCount < 20)
+            {
+                laneWidth = abs(beginLeft.x - beginRight.x);
+            }
+            return midPoint;
+        }
+    } else if (leftLane->getBeginPoint(beginLeft))
+    {
+        return {beginLeft.x + laneWidth / 2, beginLeft.y};
+    } else if (rightLane->getBeginPoint(beginRight))
+    {
+        return {beginRight.x - laneWidth / 2, beginRight.y};
+    } else
+    {
+        return carPos;
     }
-    imshow("rgb", this->rgb);
     
-
-    Mat binary = preprocess(this->rgb);
-
-    Mat shadowMask = shadow(this->rgb);
-    bitwise_or(binary, shadowMask, binary);
-    imshow("binary", binary);
-    
-    Mat birdview = birdviewTransformation(binary);
-    Mat morphBirdview = morphological(birdview);
-    imshow("birdview", birdview);
-
-    cv::Mat birdviewColor;
-    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
-
-    leftLane->update(birdview);
-    rightLane->update(birdview);
-    midLane->update(birdview);
-
-    // return {};
-
-    leftLane->show(birdviewColor);
-    rightLane->show(birdviewColor);
-    midLane->show(birdviewColor);
-
-    // auto leftParams = leftLane->getLineParams();
-    // auto rightParams = rightLane->getLineParams();
-    
-    // for (int y = 0; y < birdviewColor.rows; y++)
-    // {
-    //     float xLeft = getXByY(*leftParams, y);
-    //     float xRight = getXByY(*rightParams, y);
-    //     int xMid = static_cast<int>((xLeft + xRight) / 2);
-    //     cv::circle(birdviewColor, Point{xMid, y}, 5, cv::Scalar{0,0,255}, -1);
-    // }
-
-    cv::imshow("Lanes", birdviewColor);
-    
-    // int turn = detectSigns(this->rgb);
 
     // Point currentCarPosition = Hough(ROI(binary), this->rgb);
 
@@ -145,80 +164,6 @@ Mat DetectLane::shadow(const Mat& src) {
     return shadow;
 }
 
-int DetectLane::detectSigns(const Mat& src) {
-    Mat blue;
-    int turnFactor = 0;
-
-    cvtColor(src, blue, cv::COLOR_BGR2HSV);
-    inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
-    imshow("blue", blue);
-
-    Mat canvas = Mat::zeros(src.size(), CV_8UC3);
-    vector<vector<Point>> contours;
-    findContours(blue, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
-
-    if (!contours.empty()) {
-        
-        vector<vector<Point>> contoursPoly((int)contours.size());
-        vector<Rect> boundRect((int)contours.size());
-
-        for (int i = 0; i < (int)contours.size(); ++i) {
-            approxPolyDP(contours[i], contoursPoly[i], 3, true);
-            boundRect[i] = boundingRect(contoursPoly[i]);    
-        }
-
-        int maxArea = 0, bestRect;
-        for (int i = 0; i < (int)boundRect.size(); ++i) {
-            int boundRect_W = abs(boundRect[i].tl().x - boundRect[i].br().x);
-            int boundRect_H = abs(boundRect[i].tl().y - boundRect[i].br().y);
-            if (boundRect_W * boundRect_H > maxArea) {
-                maxArea = boundRect_W * boundRect_H;
-                bestRect = i;
-            }
-        }
-
-        if (maxArea < 125) goto skip;
-
-        Point topLeft = boundRect[bestRect].tl();
-        Point bottomRight = boundRect[bestRect].br();
-        rectangle(canvas, topLeft, bottomRight, Scalar(0, 0, 255), 2, 8, 0);
-
-        int rectW = abs(topLeft.x - bottomRight.x) * 4;
-        int rectH = abs(topLeft.y - bottomRight.y) * 4;
-        Mat zoom(rectW, rectH, CV_8UC1);
-        Point2f boundingBox[4], zoomBox[4];
-        
-        boundingBox[0] = topLeft;
-        boundingBox[1] = Point(bottomRight.x, topLeft.y);
-        boundingBox[2] = bottomRight;
-        boundingBox[3] = Point(topLeft.x, bottomRight.y);
-
-        zoomBox[0] = Point(0, 0);
-        zoomBox[1] = Point(rectW, 0);
-        zoomBox[2] = Point(rectW, rectH);
-        zoomBox[3] = Point(0, rectH);
-
-        Mat M = getPerspectiveTransform(boundingBox, zoomBox);
-        warpPerspective(blue, zoom, M, zoom.size(), INTER_LINEAR, BORDER_CONSTANT);
-
-        int cntLeftOnes = 0, cntRightOnes = 0;
-        for (int i = 0; i < rectW; ++i)
-            for (int j = 0; j < rectH; ++j) 
-                if ((int)zoom.at<uchar>(i, j) == 255) {
-                    if (i < rectW / 2) ++cntLeftOnes;
-                        else ++cntRightOnes;
-                }
-
-        cntLeftOnes = cntLeftOnes * cntLeftOnes;
-        cntRightOnes = cntRightOnes * cntRightOnes;
-        turnFactor = cntLeftOnes > cntRightOnes ? 1 : -1;   
-    }
-
-    skip: 
-    addWeighted(src, 0.5, canvas, 1, 1, canvas);
-    imshow("SignsDetector", canvas);
-    return turnFactor;
-}
 
 Point DetectLane::Hough(const Mat& img, const Mat& src) {
     vector<Vec4f> lines;
@@ -344,9 +289,9 @@ Mat DetectLane::birdviewTransformation(const Mat& src) {
     dstVertices[3] = Point(birdwidth - skyline, birdheight);
 
     Mat M = getPerspectiveTransform(srcVertices, dstVertices);
-    Mat birdview(birdwidth, birdheight, CV_8UC3);
-    warpPerspective(src, birdview, M, birdview.size(), INTER_LINEAR, BORDER_CONSTANT);
+    Mat resultBirdview(birdwidth, birdheight, CV_8UC3);
+    warpPerspective(src, resultBirdview, M, resultBirdview.size(), INTER_LINEAR, BORDER_CONSTANT);
 
-    // imshow("birdview", birdview);
-    return birdview;
+    // imshow("resultBirdview", resultBirdview);
+    return resultBirdview;
 }
