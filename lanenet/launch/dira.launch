@@ -1,0 +1,18 @@
+<launch>
+    <arg name="image_topic" default="/team1/camera/rgb/compressed"/>
+    <arg name="weight_path" default="$(find lanenet)/model/tusimple_lanenet/tusimple_lanenet_vgg.ckpt"/>
+
+
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+		<param name="port" value="9090"/>
+	</include>
+
+    <node name="file_server" pkg="file_server" type="file_server" output="screen"/>
+
+    <!-- <node name="rqt_graph" pkg="rqt_graph" type="rqt_graph" output="screen" /> -->
+
+    <node pkg="lanenet" type="lanenet_node.py" name="lanenet_node" output="screen">
+        <param name="image_topic" value="$(arg image_topic)" />
+        <param name="weight_path" value="$(arg weight_path)" />
+    </node>
+</launch>
