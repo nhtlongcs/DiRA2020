@@ -5,6 +5,7 @@
 LaneLine::LaneLine(bool debug)
 : isDebug{debug}
 , lineParams{nullptr}
+, count_detect{0}
 {
 }
 
@@ -41,28 +42,38 @@ void LaneLine::reset()
 
 void LaneLine::track()
 {
-    auto iterPoint = listPoint.begin();
-    while (iterPoint != listPoint.end())
+    auto iter = listPoint.begin();
+    while (iter != listPoint.end())
     {
-        if (!updateNewCenter(lineImage, *iterPoint, nullptr))
+        if (!updateNewCenter(lineImage, *iter, nullptr))
         {
-            iterPoint = listPoint.erase(iterPoint);
+            iter = listPoint.erase(iter);
         } else
         {
-            iterPoint++;
+            iter++;
         }
     }
 
     if (listPoint.size() > minPoint)
     {
         lineParams = calcLineParams(listPoint);
+        listPoint = getPointsFromParams(lineParams);
+    } else {
+        reset();
     }
 
-    listPoint = getPointsFromParams(lineParams);
+    // for (const auto& point : listPoint)
+    // {
+    //     cv::circle(debugImage, point, 3, getLaneColor(), -1);
+    // }
+    // cv::imshow("debug tracking", debugImage);
+    // cv::waitKey(1);
+
 }
 
 void LaneLine::detect()
 {
+    count_detect++;
     cv::Point beginPoint;
     if (findBeginPoint(beginPoint))
     {
@@ -85,10 +96,10 @@ LineParams LaneLine::getLineParams() const
     return *(this->lineParams);
 }
 
-void LaneLine::setLineParams(std::shared_ptr<LineParams> params)
-{
-    this->lineParams = params;
-}
+// void LaneLine::setLineParams(std::shared_ptr<LineParams> params)
+// {
+//     this->lineParams = params;
+// }
 
 cv::Rect LaneLine::getDetectBeginPointRegion() const
 {
@@ -125,10 +136,7 @@ void LaneLine::show(cv::Mat& drawImage) const
         cv::Point beginPoint;
         getBeginPoint(beginPoint);
         circle(drawImage, beginPoint , 20, color, -1, 8, 0);
-        for (const auto& point : listPoint)
-        {
-            circle(drawImage, point, 5, color, -1, 1, 0);
-        }
+        showLinePoints(drawImage);
     }
 }
 
@@ -225,7 +233,7 @@ std::vector<cv::Point> LaneLine::findPoints(const cv::Point& beginPoint, int dir
             break;
         }
         result.push_back(nextPoint);
-        nextPoint.y += direct * H_TRACKING / 2;
+        nextPoint.y += direct * H_TRACKING / 3;
     }
     return result;
 }
@@ -236,9 +244,9 @@ bool LaneLine::updateNewCenter(const cv::Mat& region, cv::Point& center, int * c
 
     // if (isDebug)
     // {
-    //     cv::rectangle(debugImage, roiTracking, getLaneColor(), 3);
+    //     cv::rectangle(debugImage, roiTracking, getLaneColor(), 1);
     //     cv::imshow("Debug", debugImage);
-    //     cv::waitKey(0);
+    //     cv::waitKey(1);
     // }
 
     if ((roiTracking & lineImageRect) != roiTracking)
@@ -273,6 +281,18 @@ cv::Scalar LeftLane::getLaneColor() const
     return cv::Scalar{0, 255, 0}; // Green
 }
 
+void LeftLane::printDetectCount() const{
+    std::cout << "Left lane detect count: " << count_detect << std::endl;
+}
+
+void LeftLane::showLinePoints(cv::Mat& drawImage) const
+{
+    for (size_t i = 0; i < listPoint.size(); i+=20)
+    {
+        circle(drawImage, listPoint[i], 5, getLaneColor(), -1, 1, 0);
+    }
+}
+
 
 //////////////////////////////////////////
 
@@ -286,75 +306,87 @@ cv::Scalar RightLane::getLaneColor() const
     return cv::Scalar{255, 0, 0};
 }
 
+void RightLane::printDetectCount() const{
+    std::cout << "Right lane detect count: " << count_detect << std::endl;
+}
+
+void RightLane::showLinePoints(cv::Mat& drawImage) const
+{
+    for (size_t i = 7; i < listPoint.size(); i+=20)
+    {
+        circle(drawImage, listPoint[i], 5, getLaneColor(), -1, 1, 0);
+    }
+}
+
 ///////////////////////////////////////////////
 
-MidLane::MidLane(LaneLine& leftLane, LaneLine& rightLane)
-: LaneLine::LaneLine{true}
-, leftLane{leftLane}
-, rightLane{rightLane}
-, laneSize{0}
-{
-}
+// MidLane::MidLane(LaneLine& leftLane, LaneLine& rightLane)
+// : LaneLine::LaneLine{true}
+// , leftLane{leftLane}
+// , rightLane{rightLane}
+// , laneSize{0}
+// {
+// }
 
-void MidLane::detect()
-{
-    // NOTE: left and right lanes should be updated before midlane!!!
-    if (!leftLane.isFound() && !rightLane.isFound())
-    {
-        // I'm blind!
-        return;
-    }
+// void MidLane::detect()
+// {
+//     // NOTE: left and right lanes should be updated before midlane!!!
+//     if (!leftLane.isFound() && !rightLane.isFound())
+//     {
+//         // I'm blind!
+//         return;
+//     }
 
-    if (leftLane.isFound() && rightLane.isFound())
-    {
-        detectIfHaveBothLanes();
-    } else if (laneSize != 0)
-    {
-        lineParams = std::make_shared<LineParams>();
-        if (leftLane.isFound())
-        {
-            const auto& leftParams = leftLane.getLineParams();
-            std::copy(leftParams.begin(), leftParams.end(), (*lineParams).begin());
-            (*lineParams)[2] += laneSize;
-        } else
-        {
-            const auto& rightParams = rightLane.getLineParams();
-            std::copy(rightParams.begin(), rightParams.end(), (*lineParams).begin());
-            (*lineParams)[2] -= laneSize;
-        }
-    } else
-    {
-        // Cannot recover lane due to unknow lane size
-        return;
-    }
+//     if (leftLane.isFound() && rightLane.isFound())
+//     {
+//         detectIfHaveBothLanes();
+//     } else if (laneSize != 0)
+//     {
+//         lineParams = std::make_shared<LineParams>();
+//         if (leftLane.isFound())
+//         {
+//             const auto& leftParams = leftLane.getLineParams();
+//             std::copy(leftParams.begin(), leftParams.end(), (*lineParams).begin());
+//             (*lineParams)[2] += laneSize;
+//         } else
+//         {
+//             const auto& rightParams = rightLane.getLineParams();
+//             std::copy(rightParams.begin(), rightParams.end(), (*lineParams).begin());
+//             (*lineParams)[2] -= laneSize;
+//         }
+//     } else
+//     {
+//         // Cannot recover lane due to unknow lane size
+//         return;
+//     }
 
-    if (lineParams)
-    {
-        listPoint = getPointsFromParams(lineParams);
-    }
+//     if (lineParams)
+//     {
+//         listPoint = getPointsFromParams(lineParams);
+//     }
 
-}
+// }
 
-void MidLane::detectIfHaveBothLanes()
-{
-    const auto& leftParams = leftLane.getLineParams();
-    const auto& rightParams = rightLane.getLineParams();
-    lineParams = std::make_shared<LineParams>();
-    for (size_t i = 0; i < (*lineParams).size(); i++)
-    {
-        (*lineParams)[i] = (leftParams[i] + rightParams[i]) / 2;
-    }
+// void MidLane::detectIfHaveBothLanes()
+// {
+//     const auto& leftParams = leftLane.getLineParams();
+//     const auto& rightParams = rightLane.getLineParams();
+//     lineParams = std::make_shared<LineParams>();
+//     for (size_t i = 0; i < (*lineParams).size(); i++)
+//     {
+//         (*lineParams)[i] = (leftParams[i] + rightParams[i]) / 2;
+//     }
 
-    cv::Point leftBegin, rightBegin;
-    leftLane.getBeginPoint(leftBegin);
-    rightLane.getBeginPoint(rightBegin);
-    laneSize = rightBegin.x - leftBegin.x;
-}
+//     cv::Point leftBegin, rightBegin;
+//     leftLane.getBeginPoint(leftBegin);
+//     rightLane.getBeginPoint(rightBegin);
+//     laneSize = rightBegin.x - leftBegin.x;
+// }
 
-cv::Scalar MidLane::getLaneColor() const
-{
-    return cv::Scalar{0, 0, 255};
-}
+// cv::Scalar MidLane::getLaneColor() const
+// {
+//     return cv::Scalar{0, 0, 255};
+// }
 
 // std::vector<cv::Point> MidLane::findListPoint() const
 // {

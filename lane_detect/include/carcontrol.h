@@ -22,6 +22,7 @@ public:
     CarControl();
     ~CarControl();
     void driverCar(const Point& cur, float velocity);
+    cv::Point getCarPos() const;
 
 private:
     ros::NodeHandle node_obj1;

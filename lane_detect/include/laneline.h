@@ -22,14 +22,15 @@ public:
     bool isOutOfImage(const cv::Point& point) const;
     void show(cv::Mat& drawImage) const;
 
-    virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
+    // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
     LineParams getLineParams() const;
     bool getBeginPoint(cv::Point& returnPoint) const;
+    virtual void reset();
 protected:
     void track();
-    virtual void reset();
     virtual void detect();
-
+    virtual void printDetectCount() const = 0;
+    virtual void showLinePoints(cv::Mat& drawImage) const = 0;
 
     virtual cv::Rect getDetectBeginPointRegion() const;
     std::vector<cv::Point> getPointsFromParams(const std::shared_ptr<LineParams> params) const;
@@ -55,7 +56,9 @@ protected:
     // const size_t maxNonZeroThreshold = W_TRACKING / N_BINS * H_TRACKING;
     const size_t maxNonZeroThreshold = 10;
     const size_t minPoint = 10;
-    const size_t beginPointIndex = 20;
+    const size_t beginPointIndex = 40;
+
+    size_t count_detect;
 };
 
 class LeftLane : public LaneLine
@@ -63,8 +66,11 @@ class LeftLane : public LaneLine
 public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
+    virtual void printDetectCount() const;
 
 protected:
+    virtual void showLinePoints(cv::Mat& drawImage) const override;
+
 };
 
 class RightLane : public LaneLine
@@ -72,24 +78,27 @@ class RightLane : public LaneLine
 public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
-private:
-};
-
-class MidLane : public LaneLine
-{
-public:
-    MidLane(LaneLine& leftLane, LaneLine& rightLane);
-    virtual cv::Scalar getLaneColor() const override;
-
+    virtual void printDetectCount() const;
 protected:
-    virtual void detect() override;
-    void detectIfHaveBothLanes();
-
-
+    virtual void showLinePoints(cv::Mat& drawImage) const override;
 private:
-    size_t laneSize;
-    LaneLine& leftLane;
-    LaneLine& rightLane;
 };
+
+// class MidLane : public LaneLine
+// {
+// public:
+//     MidLane(LaneLine& leftLane, LaneLine& rightLane);
+//     virtual cv::Scalar getLaneColor() const override;
+
+// protected:
+//     virtual void detect() override;
+//     void detectIfHaveBothLanes();
+
+
+// private:
+//     size_t laneSize;
+//     LaneLine& leftLane;
+//     LaneLine& rightLane;
+// };
 
 #endif

@@ -10,6 +10,11 @@ CarControl::CarControl()
 
 CarControl::~CarControl() {}
 
+cv::Point CarControl::getCarPos() const
+{
+    return this->carPos;
+}
+
 float CarControl::errorAngle(const Point &dst)
 {
     float X = dst.x - carPos.x;
