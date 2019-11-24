@@ -13,13 +13,13 @@ public:
     ~DetectLane();
 
     void detect();
-    void show(cv::Mat& colorBirdview) const;
+    void show() const;
     void updateDepth(const cv::Mat& depth);
     void updateRGB(const cv::Mat& rgb);
 
-    // std::shared_ptr<LaneLine> getLeftLane();
-    // std::shared_ptr<LaneLine> getRightLane();
-    cv::Point calculateError(cv::Point carPos);
+    int getLaneWidth() const;
+    std::shared_ptr<LaneLine> getLeftLane() const;
+    std::shared_ptr<LaneLine> getRightLane() const;
     
 private:
     void processDepth();
@@ -33,6 +33,7 @@ private:
     void drawLine(float slope, float yintercept, cv::Mat& HoughTransform);
     cv::Point Hough(const cv::Mat& img, const cv::Mat& src);
 
+    bool isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const;
 
     std::shared_ptr<LaneLine> leftLane;
     std::shared_ptr<LaneLine> rightLane;
@@ -40,6 +41,7 @@ private:
     cv::Mat depth;
     cv::Mat rgb;
     cv::Mat debug;
+    cv::Mat birdview;
 
     int minThreshold[3] = {0, 0, 180};
     int maxThreshold[3] = {179, 30, 255};
@@ -51,13 +53,13 @@ private:
     int votes = 60;
     int minLinlength = 60;
     int maxLineGap = 5;
-    int laneWidth = 0;
+    size_t sumLaneWidth = 0;
     size_t frameCount = 0;
 
     const int offsetX = 160;
     const int offsetY = 180;
     const int birdwidth = 300;
     const int birdheight = 330;
-    const int skyline = 95;
+    const int skyline = 100;
 };
 #endif

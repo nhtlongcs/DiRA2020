@@ -25,8 +25,13 @@ public:
     // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
     LineParams getLineParams() const;
     bool getBeginPoint(cv::Point& returnPoint) const;
+    bool getDrivePoint(cv::Point& returnPoint) const;
     virtual void reset();
+    bool recover(const std::shared_ptr<LaneLine>& lane, int laneWidth);
 protected:
+    std::vector<cv::Point> moveByGradient(int distance) const;
+    std::vector<cv::Point> calcGradient() const;
+    virtual cv::Point calcPerpendicular(const cv::Point& point) const = 0;
     void track();
     virtual void detect();
     virtual void printDetectCount() const = 0;
@@ -55,8 +60,10 @@ protected:
 
     // const size_t maxNonZeroThreshold = W_TRACKING / N_BINS * H_TRACKING;
     const size_t maxNonZeroThreshold = 10;
-    const size_t minPoint = 10;
+    const size_t minPointTrack = 70;
+    const size_t minPointDetect = 10;
     const size_t beginPointIndex = 40;
+    const size_t dirvePointIndex = beginPointIndex + 10;
 
     size_t count_detect;
 };
@@ -67,7 +74,7 @@ public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
     virtual void printDetectCount() const;
-
+    virtual cv::Point calcPerpendicular(const cv::Point& point) const override;
 protected:
     virtual void showLinePoints(cv::Mat& drawImage) const override;
 
@@ -79,6 +86,7 @@ public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
     virtual void printDetectCount() const;
+    virtual cv::Point calcPerpendicular(const cv::Point& point) const override;
 protected:
     virtual void showLinePoints(cv::Mat& drawImage) const override;
 private:

@@ -2,10 +2,11 @@
 
 CarControl::CarControl()
 {
-    carPos.x = 160;
+    carPos.x = 165;
     carPos.y = 180;
     steer_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_angle",10);
     speed_publisher = node_obj2.advertise<std_msgs::Float32>("team1/set_speed",10);
+    cam_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_camera_angle",10);
 }
 
 CarControl::~CarControl() {}
@@ -23,11 +24,18 @@ float CarControl::errorAngle(const Point &dst)
     return angle;
 }
 
+void CarControl::steerCamera(float angle)
+{
+    std_msgs::Float32 angleMsg;
+    angleMsg.data = angle;
+    cam_publisher.publish(angleMsg);
+}
+
 void CarControl::driverCar(const Point& cur, float velocity)
 {
     std_msgs::Float32 angle;
     std_msgs::Float32 speed;
-    carPos.x = 160;   
+    carPos.x = 165;   
     float error = -errorAngle(cur);
     
     //PID controller
@@ -35,7 +43,8 @@ void CarControl::driverCar(const Point& cur, float velocity)
     t_kI += error;
     t_kD = error - preError;
     angle.data = kP * t_kP + kI * t_kI + kD * t_kD;
-    speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
+    // speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
+    speed.data = velocity;
     preError = error;
 
     steer_publisher.publish(angle);

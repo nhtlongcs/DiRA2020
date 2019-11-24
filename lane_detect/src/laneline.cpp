@@ -54,12 +54,13 @@ void LaneLine::track()
         }
     }
 
-    if (listPoint.size() > minPoint)
+    if (listPoint.size() > minPointTrack)
     {
         lineParams = calcLineParams(listPoint);
         listPoint = getPointsFromParams(lineParams);
     } else {
         reset();
+        detect();
     }
 
     // for (const auto& point : listPoint)
@@ -83,7 +84,7 @@ void LaneLine::detect()
         std::move(pointsUp.begin(), pointsUp.end(), std::back_inserter(points));
         std::move(pointsDown.begin(), pointsDown.end(), std::back_inserter(points));
 
-        if (points.size() > minPoint)
+        if (points.size() > minPointDetect)
         {
             lineParams = calcLineParams(points);
             listPoint = getPointsFromParams(lineParams);
@@ -125,7 +126,17 @@ std::vector<cv::Point> LaneLine::getPointsFromParams(const std::shared_ptr<LineP
 
 bool LaneLine::isFound() const
 {
-    return listPoint.size() > minPoint;
+    return listPoint.size() > minPointTrack && lineParams != nullptr;
+}
+
+std::vector<cv::Point> LaneLine::calcGradient() const
+{
+    std::vector<cv::Point> gradients;
+    for (int i = 0; i < listPoint.size() - 1; i++)
+    {
+        gradients.push_back(listPoint[i+1] - listPoint[i]);
+    }
+    return gradients;
 }
 
 void LaneLine::show(cv::Mat& drawImage) const
@@ -145,6 +156,16 @@ bool LaneLine::getBeginPoint(cv::Point& returnPoint) const
     if (isFound() && listPoint.size() > beginPointIndex)
     {
         returnPoint = *(listPoint.rbegin() + beginPointIndex);
+        return true;
+    }
+    return false;
+}
+
+bool LaneLine::getDrivePoint(cv::Point& returnPoint) const
+{
+    if (isFound() && listPoint.size() > dirvePointIndex)
+    {
+        returnPoint = *(listPoint.rbegin() + dirvePointIndex);
         return true;
     }
     return false;
@@ -269,6 +290,57 @@ bool LaneLine::updateNewCenter(const cv::Mat& region, cv::Point& center, int * c
     return found;
 }
 
+std::vector<cv::Point> LaneLine::moveByGradient(int distance) const
+{
+    std::vector<cv::Point> copyListPoint = listPoint;
+    std::vector<cv::Point> gradients = calcGradient();
+    for (int i = 0; i < listPoint.size() - 1; i++)
+    {
+        copyListPoint[i] += calcPerpendicular(gradients[i]) * distance;
+    }
+    return copyListPoint;
+}
+
+
+bool LaneLine::recover(const std::shared_ptr<LaneLine>& lane, int laneWidth) 
+{
+    if (!lane->isFound() || laneWidth < 0)
+    {
+        return false;
+    }
+
+    // if (isDebug)
+    // {
+    //     lane->show(debugImage);
+    //     cv::imshow("Debug", debugImage);
+    //     cv::waitKey(1);
+    // }
+
+    std::vector<cv::Point>&& movedPoints = lane->moveByGradient(laneWidth);
+
+    // if (isDebug)
+    // {
+    //     for (auto& p : movedPoints)
+    //     {
+    //         cv::circle(debugImage, p, 5, cv::Scalar{0,255,255}, -1);
+    //     }
+    //     cv::imshow("Debug", debugImage);
+    //     cv::waitKey(1);
+    // }
+
+
+    auto newParams = calcLineParams(movedPoints);
+    if (newParams)
+    {
+        lineParams = newParams;
+        listPoint = getPointsFromParams(lineParams);
+        return true;
+    } else
+    {
+        return false;
+    }
+}
+
 //////////////////////////////////////////
 
 cv::Rect LeftLane::getDetectBeginPointRegion() const
@@ -293,6 +365,10 @@ void LeftLane::showLinePoints(cv::Mat& drawImage) const
     }
 }
 
+cv::Point LeftLane::calcPerpendicular(const cv::Point& point) const
+{
+    return cv::Point{point.y, -point.x} / sqrt(point.y*point.y + point.x*point.x);
+}
 
 //////////////////////////////////////////
 
@@ -316,6 +392,11 @@ void RightLane::showLinePoints(cv::Mat& drawImage) const
     {
         circle(drawImage, listPoint[i], 5, getLaneColor(), -1, 1, 0);
     }
+}
+
+cv::Point RightLane::calcPerpendicular(const cv::Point& point) const
+{
+    return {-point.y, point.x};
 }
 
 ///////////////////////////////////////////////
