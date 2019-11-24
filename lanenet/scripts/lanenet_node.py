@@ -20,7 +20,7 @@ import rospy
 from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
-from lane_detector.msg import Lane_Image
+from lanenet.msg import Lane_Image
 
 
 CFG = global_config.cfg

@@ -547,4 +547,9 @@ healthchecksdb
 MigrationBackup/
 
 # End of https://www.gitignore.io/api/c++,ros,python,visualstudio,visualstudiocode
-.vscode
+.vscode/
+.idea/
+
+# Ignore models
+lanenet/model/*
+!lanenet/model/README.md
