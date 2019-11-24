@@ -9,8 +9,8 @@ using namespace std;
 DetectLane::DetectLane()
 : leftLane{nullptr}
 , rightLane{nullptr}
-, laneWidth{0}
 , frameCount{0}
+, sumLaneWidth{0}
 // , midLane{nullptr}
 {
     
@@ -46,12 +46,18 @@ void DetectLane::updateRGB(const cv::Mat& src)
     this->rgb = src.clone();
 }
 
+bool DetectLane::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
+{
+    return abs(leftBegin.x - rightBegin.x) < 50;
+}
+
 void DetectLane::detect()
 {
     if (this->rgb.empty())
     {
         return;
     }
+
 
     cv::imshow("RGB", this->rgb);
 
@@ -61,23 +67,43 @@ void DetectLane::detect()
     bitwise_or(binary, shadowMask, binary);
     imshow("binary", binary);
     
-    cv::Mat birdview = birdviewTransformation(binary);
+    birdview = birdviewTransformation(binary);
     // Mat morphBirdview = morphological(birdview);
 
     leftLane->update(birdview);
     rightLane->update(birdview);
 
-    cv::Mat birdviewColor;
-    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
+    if (leftLane->isFound() && rightLane->isFound())
+    {
+        cv::Point leftBegin, rightBegin;
+        leftLane->getBeginPoint(leftBegin);
+        rightLane->getBeginPoint(rightBegin);
 
-    show(birdviewColor);
+        if (isNeedRedetect(leftBegin, rightBegin))
+        {
+            leftLane->reset();
+            rightLane->reset();
+        }
+        else
+        {
+            frameCount++;
+            sumLaneWidth += abs(leftBegin.x - rightBegin.x);
+        }
+    }
+
 }
 
-void DetectLane::show(cv::Mat& colorBirdview) const
+void DetectLane::show() const
 {
-    leftLane->show(colorBirdview);
-    rightLane->show(colorBirdview);
-    cv::imshow("Lanes", colorBirdview);
+    if (birdview.empty())
+    {
+        return;
+    }
+    cv::Mat birdviewColor;
+    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
+    leftLane->show(birdviewColor);
+    rightLane->show(birdviewColor);
+    cv::imshow("Lanes", birdviewColor);
 }
 
 void DetectLane::processDepth() {
@@ -116,44 +142,6 @@ void DetectLane::processDepth() {
     // imshow( "clustered image", new_image );
  
 
-}
-
-Point DetectLane::calculateError(cv::Point carPos) {
-    
-    cv::Point beginLeft, beginRight;
-    if (leftLane->getBeginPoint(beginLeft) && rightLane->getBeginPoint(beginRight))
-    {
-        if (abs(beginLeft.x - beginRight.x) < 20)
-        {
-            leftLane->reset();
-            rightLane->reset();
-            return carPos;
-        } else
-        {
-            cv::Point midPoint = (beginLeft + beginRight) / 2;
-            if (frameCount < 20)
-            {
-                laneWidth = abs(beginLeft.x - beginRight.x);
-            }
-            return midPoint;
-        }
-    } else if (leftLane->getBeginPoint(beginLeft))
-    {
-        return {beginLeft.x + laneWidth / 2, beginLeft.y};
-    } else if (rightLane->getBeginPoint(beginRight))
-    {
-        return {beginRight.x - laneWidth / 2, beginRight.y};
-    } else
-    {
-        return carPos;
-    }
-    
-
-    // Point currentCarPosition = Hough(ROI(binary), this->rgb);
-
-    // currentCarPosition.x += turn * 120;
-
-    // return currentCarPosition;
 }
 
 Mat DetectLane::shadow(const Mat& src) {
@@ -294,4 +282,23 @@ Mat DetectLane::birdviewTransformation(const Mat& src) {
 
     // imshow("resultBirdview", resultBirdview);
     return resultBirdview;
+}
+
+int DetectLane::getLaneWidth() const
+{
+    if (this->frameCount == 0)
+    {
+        return 0;
+    }
+    return this->sumLaneWidth / this->frameCount;
+}
+
+std::shared_ptr<LaneLine> DetectLane::getLeftLane() const
+{
+    return this->leftLane;
+}
+
+std::shared_ptr<LaneLine> DetectLane::getRightLane() const
+{
+    return this->rightLane;
 }

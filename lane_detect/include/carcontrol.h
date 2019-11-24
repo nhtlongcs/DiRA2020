@@ -22,6 +22,7 @@ public:
     CarControl();
     ~CarControl();
     void driverCar(const Point& cur, float velocity);
+    void steerCamera(float angle);
     cv::Point getCarPos() const;
 
 private:
@@ -29,6 +30,7 @@ private:
     ros::NodeHandle node_obj2;
     ros::Publisher steer_publisher;
     ros::Publisher speed_publisher;
+    ros::Publisher cam_publisher;
     Point carPos;
     float errorAngle(const Point &dst);
     float laneWidth = 40;
