@@ -28,6 +28,11 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
     sign = signDetect->detect();
     bool object = objectDetect->detect();
     
+    if (object)
+    {
+        ROS_INFO("object!!!");
+    }
+
     if (sign != 0)
     {
         // NOTE: test only
@@ -67,7 +72,7 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
         if (sign == 0)
         {
             driveSpeed = maxSpeed;
-            drivePoint = driveStraight();
+            drivePoint = driveStraight(object);
         } else if (sign < 0)
         {
             drivePoint = turnLeft();
@@ -85,7 +90,7 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
                 {
                     driveSpeed = maxSpeed;
                 }
-                drivePoint = driveStraight();
+                drivePoint = driveStraight(object);
             } else
             {
                 driveSpeed = minSpeed;
@@ -109,7 +114,7 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
                 {
                     driveSpeed = maxSpeed;
                 }
-                drivePoint = driveStraight();
+                drivePoint = driveStraight(object);
             } else
             {
                 drivePoint = turnLeft();
@@ -156,13 +161,18 @@ cv::Point Planning::driveCloseToRight()
     return {rightDrive.x - 30, rightDrive.y};
 }
 
-cv::Point Planning::driveStraight()
+cv::Point Planning::driveStraight(bool object)
 {
     // ROS_INFO("DRIVE STRAIGHT");
-    cv::Point leftDrive, rightDrive;
-    laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-    laneDetect->getRightLane()->getDrivePoint(rightDrive);
-    return (leftDrive + rightDrive) / 2;
+    // cv::Point leftDrive, rightDrive;
+    // laneDetect->getLeftLane()->getDrivePoint(leftDrive);
+    // laneDetect->getRightLane()->getDrivePoint(rightDrive);
+    // return (leftDrive + rightDrive) / 2;
+    if (object)
+    {
+        return driveCloseToLeft();
+    }
+    return driveCloseToRight();
 }
 
 cv::Point Planning::turnLeft()
@@ -170,7 +180,7 @@ cv::Point Planning::turnLeft()
     // ROS_INFO("TURN LEFT");
     if (laneDetect->getRightLane()->recover(laneDetect->getLeftLane(), laneDetect->getLaneWidth()))
     {
-        return driveStraight();
+        return driveStraight(false);
     }
     return driveCloseToLeft();
 }
@@ -180,7 +190,7 @@ cv::Point Planning::turnRight()
     // ROS_INFO("TURN RIGHT");
     if (laneDetect->getLeftLane()->recover(laneDetect->getRightLane(), laneDetect->getLaneWidth()))
     {
-        return driveStraight();
+        return driveStraight(false);
     }
     return driveCloseToRight();
 }

@@ -20,7 +20,7 @@ public:
 private:
     cv::Point driveCloseToLeft();
     cv::Point driveCloseToRight();
-    cv::Point driveStraight();
+    cv::Point driveStraight(bool object);
     cv::Point turnLeft();
     cv::Point turnRight();
 

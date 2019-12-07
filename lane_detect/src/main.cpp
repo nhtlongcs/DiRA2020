@@ -107,6 +107,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
 
         planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
+        laneDetect->show(&drivePoint);
         car->driverCar(drivePoint, driveSpeed);
         cv::waitKey(1);
 
