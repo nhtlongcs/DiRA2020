@@ -113,44 +113,6 @@ void DetectLane::show(const cv::Point* drivePoint) const
     cv::imshow("Lanes", birdviewColor);
 }
 
-void DetectLane::processDepth() {
-    // if (this->depth.empty())
-    // {
-    //     return;
-    // }
-    // imshow("depth", this->depth);
-
-
-    // Mat samples(this->depth.rows * this->depth.cols, 3, CV_32F);
-    // for( int y = 0; y < this->depth.rows; y++ )
-    //     for( int x = 0; x < this->depth.cols; x++ )
-    //     for( int z = 0; z < 3; z++)
-    //         samples.at<float>(y + x*this->depth.rows, z) = this->depth.at<Vec3b>(y,x)[z];
-
-    // int clusterCount = lowThreshold;
-    // Mat labels;
-    // int attempts = 5;
-    // Mat centers;
-    // kmeans(samples, clusterCount, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, KMEANS_PP_CENTERS, centers );
-
-
-    // Mat new_image( this->depth.size(), this->depth.type() );
-    // for( int y = 0; y < this->depth.rows; y++ )
-    //     for( int x = 0; x < this->depth.cols; x++ )
-    //     { 
-    //     int cluster_idx = labels.at<int>(y + x*this->depth.rows,0);
-    //     new_image.at<Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
-    //     new_image.at<Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
-    //     new_image.at<Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
-    //     }
-
-    // Mat birdviewdepth = birdviewTransformation(new_image);
-    // imshow("birdviewdepth",birdviewdepth);
-    // imshow( "clustered image", new_image );
- 
-
-}
-
 Mat DetectLane::shadow(const Mat& src) {
     Mat shadow, hsv;
     cvtColor(src, hsv, cv::COLOR_BGR2HSV);

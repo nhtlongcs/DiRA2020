@@ -13,5 +13,6 @@ std::shared_ptr<LineParams> calcLineParams(const std::vector<cv::Point>& listPoi
 
 int getXByY(const LineParams& params, double y);
 
+cv::Mat kmean(cv::Mat image, int kCluster);
 
 #endif

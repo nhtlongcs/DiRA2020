@@ -8,6 +8,7 @@
 
 #include "detectlane.h"
 #include "detectsign.h"
+#include "detectobject.h"
 #include "carcontrol.h"
 #include "laneline.h"
 
@@ -20,6 +21,7 @@ bool STREAM = true;
 // VideoCapture capture("video.avi");
 DetectLane * laneDetector;
 DetectSign * signDetector;
+DetectObject * objectDetector;
 CarControl *car;
 int skipFrame = 1;
 
@@ -83,6 +85,8 @@ void planning(cv::Point& drivePoint, int& driveSpeed)
 
     prevSign = sign;
     sign = signDetector->detect();
+    bool object = objectDetector->detect();
+    
     if (sign != 0)
     {
         // NOTE: test only
@@ -190,7 +194,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     try
     {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        if(cv_ptr->image.rows > 0)
+        if(!cv_ptr->image.empty())
         {
             laneDetector->updateRGB(cv_ptr->image);
             signDetector->updateRGB(cv_ptr->image);
@@ -208,9 +212,11 @@ void imageCallback2(const sensor_msgs::ImageConstPtr& msg)
     try
     {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        if(cv_ptr->image.rows > 0)
+        if(!cv_ptr->image.empty())
         {
-            laneDetector->updateDepth(cv_ptr->image);
+            // laneDetector->updateDepth(cv_ptr->image);
+            objectDetector->update(cv_ptr->image);
+            signDetector->updateDepth(cv_ptr->image);
         } 
     }
     catch (cv_bridge::Exception& e)
@@ -235,6 +241,7 @@ int main(int argc, char **argv)
     cv::namedWindow("depth");
     laneDetector = new DetectLane();
     signDetector = new DetectSign(left_path, right_path);
+    objectDetector = new DetectObject();
     car = new CarControl();
 
     ros::Rate rate(RATE);
@@ -261,4 +268,5 @@ int main(int argc, char **argv)
     delete signDetector;
     delete car;
     delete laneDetector;
+    delete objectDetector;
 }

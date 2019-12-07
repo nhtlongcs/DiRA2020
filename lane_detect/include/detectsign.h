@@ -9,6 +9,7 @@ class DetectSign
 public:
     DetectSign(const std::string& leftPath, const std::string& rightPath);
     void updateRGB(const cv::Mat& rgb);
+    void updateDepth(const cv::Mat& depth);
     int detect();
 
 private:
@@ -17,6 +18,7 @@ private:
 
 private:
     cv::Mat rgb;
+    cv::Mat depth;
 
     cv::Mat LEFT_TEMPLATE, RIGHT_TEMPLATE;
     

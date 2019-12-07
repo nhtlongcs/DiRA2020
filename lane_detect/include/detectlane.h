@@ -22,8 +22,6 @@ public:
     std::shared_ptr<LaneLine> getRightLane() const;
 
 private:
-    void processDepth();
-
     cv::Mat preprocess(const cv::Mat& src);
     cv::Mat shadow(const cv::Mat& src);
     cv::Mat birdviewTransformation(const cv::Mat& src);

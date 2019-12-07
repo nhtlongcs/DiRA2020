@@ -31,6 +31,7 @@ add_library(api_lane_detection
   src/utils.cpp
   src/detectlane.cpp
   src/detectsign.cpp
+  src/detectobject.cpp
   src/carcontrol.cpp
 )
 

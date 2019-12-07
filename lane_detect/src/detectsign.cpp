@@ -1,9 +1,10 @@
 #include "detectsign.h"
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
 #include <vector>
 #include <string>
 #include <exception>
-
+#include "utils.h"
 using namespace cv;
 using namespace std;
 
@@ -67,10 +68,38 @@ void DetectSign::updateRGB(const cv::Mat& rgb)
     this->rgb = rgb.clone();
 }
 
+void DetectSign::updateDepth(const cv::Mat& depth)
+{
+    this->depth = depth.clone();
+}
+
 int DetectSign::detectOneFrame()
 {
     Mat blue;
     int turnFactor = 0;
+
+    // new method 
+
+    Mat gray;
+    cvtColor(this->depth, gray, COLOR_BGR2GRAY);
+    // gray = kmean(gray,2);
+    medianBlur(gray, gray, 5);
+    Canny( gray, gray, 0, 100*3, 3 );
+    vector<Vec3f> circles;
+    HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
+                 gray.rows/16, // change this value to detect circles with different distances to each other
+                 100, 30, 1, 30 // change the last two parameters
+                                // (min_radius & max_radius) to detect larger circles
+                 );
+    for( size_t i = 0; i < circles.size(); i++ )
+    {
+        Vec3i c = circles[i];
+        circle( gray, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
+        circle( gray, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
+    }
+    imshow("detected circles", gray);
+
+    // new method
 
     cvtColor(rgb, blue, cv::COLOR_BGR2HSV);
     inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
