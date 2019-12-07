@@ -58,7 +58,6 @@ void DetectLane::detect()
         return;
     }
 
-
     cv::imshow("RGB", this->rgb);
 
     Mat binary = preprocess(this->rgb);
@@ -69,6 +68,8 @@ void DetectLane::detect()
     
     birdview = birdviewTransformation(binary);
     // Mat morphBirdview = morphological(birdview);
+
+    birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
 
     leftLane->update(birdview);
     rightLane->update(birdview);
@@ -93,7 +94,7 @@ void DetectLane::detect()
 
 }
 
-void DetectLane::show() const
+void DetectLane::show(const cv::Point* drivePoint) const
 {
     if (birdview.empty())
     {
@@ -103,6 +104,12 @@ void DetectLane::show() const
     cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
     leftLane->show(birdviewColor);
     rightLane->show(birdviewColor);
+
+    if (drivePoint)
+    {
+        cv::circle(birdviewColor, *drivePoint, 25, cv::Scalar{0, 255, 255}, -1);
+    }
+
     cv::imshow("Lanes", birdviewColor);
 }
 

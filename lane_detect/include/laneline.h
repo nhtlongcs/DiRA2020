@@ -30,7 +30,7 @@ public:
     bool recover(const std::shared_ptr<LaneLine>& lane, int laneWidth);
 protected:
     std::vector<cv::Point> moveByGradient(int distance) const;
-    std::vector<cv::Point> calcGradient() const;
+    std::vector<cv::Point> calcGradient(const std::vector<cv::Point>& points) const;
     virtual cv::Point calcPerpendicular(const cv::Point& point) const = 0;
     void track();
     virtual void detect();
@@ -63,7 +63,7 @@ protected:
     const size_t minPointTrack = 70;
     const size_t minPointDetect = 10;
     const size_t beginPointIndex = 40;
-    const size_t dirvePointIndex = beginPointIndex + 10;
+    const size_t dirvePointIndex = beginPointIndex + 70;
 
     size_t count_detect;
 };

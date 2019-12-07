@@ -129,7 +129,7 @@ bool LaneLine::isFound() const
     return listPoint.size() > minPointTrack && lineParams != nullptr;
 }
 
-std::vector<cv::Point> LaneLine::calcGradient() const
+std::vector<cv::Point> LaneLine::calcGradient(const std::vector<cv::Point>& points) const
 {
     std::vector<cv::Point> gradients;
     for (int i = 0; i < listPoint.size() - 1; i++)
@@ -292,13 +292,13 @@ bool LaneLine::updateNewCenter(const cv::Mat& region, cv::Point& center, int * c
 
 std::vector<cv::Point> LaneLine::moveByGradient(int distance) const
 {
-    std::vector<cv::Point> copyListPoint = listPoint;
-    std::vector<cv::Point> gradients = calcGradient();
-    for (int i = 0; i < listPoint.size() - 1; i++)
+    std::vector<cv::Point> points = getPointsFromParams(lineParams);
+    std::vector<cv::Point> gradients = calcGradient(points);
+    for (int i = 0; i < points.size() - 1; i++)
     {
-        copyListPoint[i] += calcPerpendicular(gradients[i]) * distance;
+        points[i] += calcPerpendicular(gradients[i]) * distance;
     }
-    return copyListPoint;
+    return points;
 }
 
 
@@ -334,7 +334,7 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine>& lane, int laneWidth)
     {
         lineParams = newParams;
         listPoint = getPointsFromParams(lineParams);
-        return true;
+        return isFound();
     } else
     {
         return false;

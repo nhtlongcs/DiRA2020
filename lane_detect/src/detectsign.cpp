@@ -20,7 +20,7 @@ static double matching(cv::Mat image, cv::Mat templ)
     cv::Mat result(result_rows, result_cols, CV_32FC1);
 
     int match_method = CV_TM_SQDIFF;
-    matchTemplate(image, templ, result, CV_TM_SQDIFF);
+    matchTemplate(image, templ, result, match_method);
     //   normalize( result, result, 0, 1, NORM_MINMAX, -1, Mat() );
 
     /// Localizing the best match with minMaxLoc
@@ -67,12 +67,8 @@ void DetectSign::updateRGB(const cv::Mat& rgb)
     this->rgb = rgb.clone();
 }
 
-int DetectSign::detect() {
-    if (rgb.empty())
-    {
-        return 0;
-    }
-
+int DetectSign::detectOneFrame()
+{
     Mat blue;
     int turnFactor = 0;
 
@@ -97,7 +93,7 @@ int DetectSign::detect() {
         int i_max = -1, max_type = 0;
 
         for (int i = 0; i < (int)boundRect.size(); ++i) {
-            if (boundRect[i].area() < 5*5) {
+            if (boundRect[i].area() < 20*20) {
                 continue;
             }
 
@@ -139,8 +135,19 @@ int DetectSign::detect() {
         }
     }
 
+    return turnFactor;
+}
+
+int DetectSign::detect() {
+    if (rgb.empty())
+    {
+        return 0;
+    }
+
+    int sign = detectOneFrame();
+
     recentDetects.pop_front();
-    recentDetects.push_back(turnFactor);
+    recentDetects.push_back(sign);
 
     int cntLeft = std::count(recentDetects.begin(), recentDetects.end(), -1);
     int cntRight = std::count(recentDetects.begin(), recentDetects.end(), 1);

@@ -12,6 +12,10 @@ public:
     int detect();
 
 private:
+    int detectOneFrame();
+    
+
+private:
     cv::Mat rgb;
 
     cv::Mat LEFT_TEMPLATE, RIGHT_TEMPLATE;
@@ -23,7 +27,6 @@ private:
 
     int frameCount = 0;
     int minBlue[3] = {100, 90, 35};
-    // int minBlue[3] = {85, 35, 0};
     int maxBlue[3] = {240, 255, 255};
 };
 

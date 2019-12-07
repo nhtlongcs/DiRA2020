@@ -12,6 +12,7 @@
 #include "laneline.h"
 
 #define MAX_SPEED 30
+// #define MIN_SPEED MAX_SPEED
 #define MIN_SPEED 5
 
 bool STREAM = true;
@@ -22,6 +23,22 @@ DetectSign * signDetector;
 CarControl *car;
 int skipFrame = 1;
 
+cv::Point driveCloseToLeft(std::shared_ptr<LaneLine> leftLane, int laneWidth)
+{
+    ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
+    cv::Point leftDrive;
+    leftLane->getDrivePoint(leftDrive);
+    return {leftDrive.x + 30, leftDrive.y};
+}
+
+cv::Point driveCloseToRight(std::shared_ptr<LaneLine> rightLane, int laneWidth)
+{
+    ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
+    cv::Point rightDrive;
+    rightLane->getDrivePoint(rightDrive);
+    return {rightDrive.x - 30, rightDrive.y};
+}
+
 cv::Point driveStraight(std::shared_ptr<LaneLine> leftLane, std::shared_ptr<LaneLine> rightLane)
 {
     ROS_INFO("DRIVE STRAIGHT");
@@ -31,28 +48,12 @@ cv::Point driveStraight(std::shared_ptr<LaneLine> leftLane, std::shared_ptr<Lane
     return (leftDrive + rightDrive) / 2;
 }
 
-cv::Point driveCloseToLeft(std::shared_ptr<LaneLine> leftLane, int laneWidth)
-{
-    ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
-    cv::Point leftDrive;
-    leftLane->getDrivePoint(leftDrive);
-    return {leftDrive.x + 10, leftDrive.y};
-}
-
-cv::Point driveCloseToRight(std::shared_ptr<LaneLine> rightLane, int laneWidth)
-{
-    ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
-    cv::Point rightDrive;
-    rightLane->getDrivePoint(rightDrive);
-    return {rightDrive.x - 10, rightDrive.y};
-}
-
 cv::Point turnLeft(std::shared_ptr<LaneLine> leftLane, std::shared_ptr<LaneLine> rightLane)
 {
     ROS_INFO("TURN LEFT");
     if (rightLane->recover(leftLane, laneDetector->getLaneWidth()))
     {
-        return driveStraight(leftLane, rightLane) - cv::Point{120, 0}; // turn factor
+        return driveStraight(leftLane, rightLane);// - cv::Point{120, 0}; // turn factor
     }
     return driveCloseToLeft(leftLane, laneDetector->getLaneWidth());
 }
@@ -62,12 +63,15 @@ cv::Point turnRight(std::shared_ptr<LaneLine> leftLane, std::shared_ptr<LaneLine
     ROS_INFO("TURN RIGHT");
     if (leftLane->recover(rightLane, laneDetector->getLaneWidth()))
     {
-        return driveStraight(leftLane, rightLane) + cv::Point{120, 0}; // turn factor
+        return driveStraight(leftLane, rightLane);// + cv::Point{120, 0}; // turn factor
     }
     return driveCloseToRight(rightLane, laneDetector->getLaneWidth());
 }
 
-static int countTurning = 20, prevSign = 0, sign = 0;
+static const int RATE = 15;
+static int delay = RATE; // delay 1s
+static int countTurning = RATE * 3; // turn in 3s
+static int prevSign = 0, sign = 0;
 
 void planning(cv::Point& drivePoint, int& driveSpeed)
 {
@@ -79,13 +83,19 @@ void planning(cv::Point& drivePoint, int& driveSpeed)
 
     prevSign = sign;
     sign = signDetector->detect();
+    if (sign != 0)
+    {
+        // NOTE: test only
+        sign = -1;
+    }
 
     if (sign != 0)
     {
         ROS_INFO("Turn %d", sign);
         if (sign != prevSign)
         {
-            countTurning = 20;
+            countTurning = RATE * 3;
+            delay = RATE;
         }
         driveSpeed = MIN_SPEED;
         leftLane->reset();
@@ -95,7 +105,15 @@ void planning(cv::Point& drivePoint, int& driveSpeed)
     else if (countTurning > 0)
     {
         sign = prevSign;
-        countTurning--;
+        if (delay > 0)
+        {
+            ROS_INFO("DELAY...");
+            delay--;
+        } else
+        {
+            ROS_INFO("TURNING...");
+            countTurning--;
+        }
     }
     
 
@@ -219,7 +237,7 @@ int main(int argc, char **argv)
     signDetector = new DetectSign(left_path, right_path);
     car = new CarControl();
 
-    ros::Rate rate(15);
+    ros::Rate rate(RATE);
 
     int driveSpeed = MAX_SPEED;
     cv::Point drivePoint = car->getCarPos();
@@ -233,7 +251,7 @@ int main(int argc, char **argv)
         laneDetector->detect();
         planning(drivePoint, driveSpeed);
         car->driverCar(drivePoint, driveSpeed);
-        laneDetector->show();
+        laneDetector->show(&drivePoint);
         cv::waitKey(1);
 
         rate.sleep();

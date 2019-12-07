@@ -13,14 +13,14 @@ public:
     ~DetectLane();
 
     void detect();
-    void show() const;
+    void show(const cv::Point* drivePoint=nullptr) const;
     void updateDepth(const cv::Mat& depth);
     void updateRGB(const cv::Mat& rgb);
 
     int getLaneWidth() const;
     std::shared_ptr<LaneLine> getLeftLane() const;
     std::shared_ptr<LaneLine> getRightLane() const;
-    
+
 private:
     void processDepth();
 
