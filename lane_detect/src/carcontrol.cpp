@@ -1,5 +1,8 @@
 #include "carcontrol.h"
 
+#define MAX_SPEED 40
+#define MIN_SPEED 10
+
 CarControl::CarControl()
 {
     carPos.x = 165;
@@ -14,6 +17,16 @@ CarControl::~CarControl() {}
 cv::Point CarControl::getCarPos() const
 {
     return this->carPos;
+}
+
+int CarControl::getMaxSpeed() const
+{
+    return MAX_SPEED;
+}
+
+int CarControl::getMinSpeed() const
+{
+    return MIN_SPEED;
 }
 
 float CarControl::errorAngle(const Point &dst)

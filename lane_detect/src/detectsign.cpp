@@ -37,22 +37,11 @@ static double matching(cv::Mat image, cv::Mat templ)
 }
 
 
-DetectSign::DetectSign(const std::string& leftPath, const std::string& rightPath)
+DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate)
 : recentDetects{MAX_FRAME_COUNT, 0}
+, LEFT_TEMPLATE{leftTemplate}
+, RIGHT_TEMPLATE{rightTemplate}
 {
-    LEFT_TEMPLATE = cv::imread(leftPath, cv::IMREAD_GRAYSCALE);
-    RIGHT_TEMPLATE = cv::imread(rightPath, cv::IMREAD_GRAYSCALE);
-
-    if (LEFT_TEMPLATE.empty())
-    {
-        std::cerr << "Left sign not found" << std::endl;
-    }
-
-    if (RIGHT_TEMPLATE.empty())
-    {
-        std::cerr << "Right sign not found" << std::endl;
-    }
-
     cv::createTrackbar("MinBlue H", "Threshold", &minBlue[0], 179);
     cv::createTrackbar("MinBlue S", "Threshold", &minBlue[1], 255);
     cv::createTrackbar("MinBlue V", "Threshold", &minBlue[2], 255);

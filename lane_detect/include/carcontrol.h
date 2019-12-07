@@ -22,6 +22,8 @@ public:
     CarControl();
     ~CarControl();
     void driverCar(const Point& cur, float velocity);
+    int getMaxSpeed() const;
+    int getMinSpeed() const;
     void steerCamera(float angle);
     cv::Point getCarPos() const;
 
