@@ -25,11 +25,14 @@ private:
     int MAX_DIFF = 0;
     const int MAX_FRAME_COUNT = 7;
     std::list<int> recentDetects;
-
-
+    int canny = 255;
+    int votes = 22;
     int frameCount = 0;
-    int minBlue[3] = {100, 90, 35};
-    int maxBlue[3] = {240, 255, 255};
+    // int minBlue[3] = {100, 90, 35};
+    int minBlue[3] = {77, 10, 20};
+    int maxBlue[3] = {170, 142, 60};
+
+    int maxPercent = 30;
 };
 
 

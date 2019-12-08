@@ -42,6 +42,12 @@ DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate
 , LEFT_TEMPLATE{leftTemplate}
 , RIGHT_TEMPLATE{rightTemplate}
 {
+    cv::createTrackbar("canny", "Threshold", &canny, 255);
+    cv::createTrackbar("votes", "Threshold", &votes, 255);
+    
+
+    cv::createTrackbar("Sign percent", "Threshold", &maxPercent, 100);
+
     cv::createTrackbar("MinBlue H", "Threshold", &minBlue[0], 179);
     cv::createTrackbar("MinBlue S", "Threshold", &minBlue[1], 255);
     cv::createTrackbar("MinBlue V", "Threshold", &minBlue[2], 255);
@@ -64,96 +70,123 @@ void DetectSign::updateDepth(const cv::Mat& depth)
 
 int DetectSign::detectOneFrame()
 {
+    if (this->depth.empty())
+    {
+        return 0;
+    }
+
     Mat blue;
     int turnFactor = 0;
 
     // new method 
 
-    Mat gray;
-    cvtColor(this->depth, gray, COLOR_BGR2GRAY);
-    // gray = kmean(gray,2);
-    medianBlur(gray, gray, 5);
-    Canny( gray, gray, 0, 100*3, 3 );
-    vector<Vec3f> circles;
-    HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
-                 gray.rows/16, // change this value to detect circles with different distances to each other
-                 100, 30, 1, 30 // change the last two parameters
-                                // (min_radius & max_radius) to detect larger circles
-                 );
-    for( size_t i = 0; i < circles.size(); i++ )
-    {
-        Vec3i c = circles[i];
-        circle( gray, Point(c[0], c[1]), c[2], Scalar(0,0,255), 3, LINE_AA);
-        circle( gray, Point(c[0], c[1]), 2, Scalar(0,255,0), 3, LINE_AA);
-    }
-    imshow("detected circles", gray);
+    cvtColor(rgb, blue, cv::COLOR_BGR2HSV);
 
+    inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
+
+
+    Mat gray;
+    gray = kmean(this->depth,2);
+
+    cvtColor(gray, gray, CV_BGR2GRAY);
+    cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
+
+    vector<Vec3f> circles;
+
+    HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
+          1,   // accumulator resolution (size of the image / 2)
+          300,  // minimum distance between two circles
+          canny, // Canny high threshold
+          votes, // minimum number of votes
+          0, 100); // min and max radius
+    for (size_t i = 0; i < circles.size(); i++)
+    {
+        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        // circle center
+        circle(this->depth, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+        // circle outline
+        circle(this->depth, center, radius, Scalar(0, 0, 255), 3, 8, 0);
+        cv::Rect roi(center.x-radius, center.y-radius, radius*2, radius*2 );
+
+        if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi )
+        {
+            cv::Mat roiImg( blue, roi);
+            float percent = cv::countNonZero(roiImg) * 100.0f/ (roiImg.rows * roiImg.cols);
+            imshow("blue", roiImg);
+            imshow("detected circles", this->depth);    
+            if (percent > maxPercent) 
+            {
+                std::cout << "SIGN DETECTED\n";
+                return 1;
+            }
+        }
+    }
+    
     // new method
 
-    cvtColor(rgb, blue, cv::COLOR_BGR2HSV);
-    inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
-    imshow("blue", blue);
+    return 0;
 
-    vector<vector<Point>> contours;
-    findContours(blue, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
-
-    if (!contours.empty()) {
+    // vector<vector<Point>> contours;
+    // findContours(blue, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+    // drawContours(blue,contours,-1, (255,0,0), 2);
+    // if (!contours.empty()) {
         
-        vector<vector<Point>> contoursPoly((int)contours.size());
-        vector<Rect> boundRect((int)contours.size());
+    //     vector<vector<Point>> contoursPoly((int)contours.size());
+    //     vector<Rect> boundRect((int)contours.size());
 
-        for (int i = 0; i < (int)contours.size(); ++i) {
-            approxPolyDP(contours[i], contoursPoly[i], 3, true);
-            boundRect[i] = boundingRect(contoursPoly[i]);    
-        }
+    //     for (int i = 0; i < (int)contours.size(); ++i) {
+    //         approxPolyDP(contours[i], contoursPoly[i], 3, true);
+    //         boundRect[i] = boundingRect(contoursPoly[i]);    
+    //     }
 
-        float maxPercent = 0;
-        int i_max = -1, max_type = 0;
+    //     float maxPercent = 0;
+    //     int i_max = -1, max_type = 0;
 
-        for (int i = 0; i < (int)boundRect.size(); ++i) {
-            if (boundRect[i].area() < 20*20) {
-                continue;
-            }
+    //     for (int i = 0; i < (int)boundRect.size(); ++i) {
+    //         if (boundRect[i].area() < 20*20) {
+    //             continue;
+    //         }
 
-            cv::Mat mask = Mat::zeros(blue.size(), CV_8UC1);
-            drawContours(mask, contours, i, Scalar(255), CV_FILLED);
-            cv::Mat crop = cv::Mat::zeros(blue.size(), CV_8UC1);
-            blue.copyTo(crop, mask);
+    //         cv::Mat mask = Mat::zeros(blue.size(), CV_8UC1);
+    //         drawContours(mask, contours, i, Scalar(255), CV_FILLED);
+    //         cv::Mat crop = cv::Mat::zeros(blue.size(), CV_8UC1);
+    //         blue.copyTo(crop, mask);
 
-            cv::Mat resized;
-            cv::resize(crop(boundRect[i]), resized, cv::Size(), SIZE_X / boundRect[i].width, SIZE_X / boundRect[i].height);
-            cv::GaussianBlur(resized, resized, cv::Size(5, 5), 0, 0);
+    //         cv::Mat resized;
+    //         cv::resize(crop(boundRect[i]), resized, cv::Size(), SIZE_X / boundRect[i].width, SIZE_X / boundRect[i].height);
+    //         cv::GaussianBlur(resized, resized, cv::Size(5, 5), 0, 0);
 
-            {
-                double val = matching(resized, LEFT_TEMPLATE);
-                double percent = 1.0 - val / MAX_DIFF;
-                if (percent > maxPercent)
-                {
-                    i_max = i;
-                    maxPercent = percent;
-                    max_type = -1;
-                }
-            }
+    //         {
+    //             double val = matching(resized, LEFT_TEMPLATE);
+    //             double percent = 1.0 - val / MAX_DIFF;
+    //             if (percent > maxPercent)
+    //             {
+    //                 i_max = i;
+    //                 maxPercent = percent;
+    //                 max_type = -1;
+    //             }
+    //         }
 
-            {
-                double val = matching(resized, RIGHT_TEMPLATE);
-                double percent = 1.0 - val / MAX_DIFF;
-                if (percent > maxPercent)
-                {
-                    i_max = i;
-                    maxPercent = percent;
-                    max_type = 1;
-                }
-            }
-        }
+    //         {
+    //             double val = matching(resized, RIGHT_TEMPLATE);
+    //             double percent = 1.0 - val / MAX_DIFF;
+    //             if (percent > maxPercent)
+    //             {
+    //                 i_max = i;
+    //                 maxPercent = percent;
+    //                 max_type = 1;
+    //             }
+    //         }
+    //     }
 
-        if (maxPercent >= 0.70)
-        {
-            turnFactor = max_type;
-        }
-    }
+    //     if (maxPercent >= 0.70)
+    //     {
+    //         turnFactor = max_type;
+    //     }
+    // }
 
-    return turnFactor;
+    // return turnFactor;
 }
 
 int DetectSign::detect() {
