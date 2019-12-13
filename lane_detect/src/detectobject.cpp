@@ -71,7 +71,7 @@ bool DetectObject::detect()
     cv::imshow("foreground", fgMask);
 
     float percent = cv::countNonZero(fgMask) * 100.0f/ (fgMask.rows * fgMask.cols);
-    std::cout << percent << std::endl;
+    std::cout << "percent :" << percent << std::endl;
     if ( percent >= detectThreshold)
     {
         std::cout << "OBJECTTTTT" << std::endl;

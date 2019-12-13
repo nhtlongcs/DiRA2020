@@ -1,5 +1,7 @@
 #include "detectlane.h"
 #include "laneline.h"
+#include "utils.h"
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -229,29 +231,6 @@ Mat DetectLane::preprocess(const Mat& src) {
     return binary;
 }
 
-Mat DetectLane::birdviewTransformation(const Mat& src) {
-    int W = src.size().width;
-    int H = src.size().height;
-
-    Point2f srcVertices[4];
-    srcVertices[0] = Point(0, skyline);
-    srcVertices[1] = Point(W, skyline);
-    srcVertices[2] = Point(0, H);
-    srcVertices[3] = Point(W, H);
- 
-    Point2f dstVertices[4];
-    dstVertices[0] = Point(0, 0);
-    dstVertices[1] = Point(birdwidth, skyline);
-    dstVertices[2] = Point(skyline, birdheight);
-    dstVertices[3] = Point(birdwidth - skyline, birdheight);
-
-    Mat M = getPerspectiveTransform(srcVertices, dstVertices);
-    Mat resultBirdview(birdwidth, birdheight, CV_8UC3);
-    warpPerspective(src, resultBirdview, M, resultBirdview.size(), INTER_LINEAR, BORDER_CONSTANT);
-
-    // imshow("resultBirdview", resultBirdview);
-    return resultBirdview;
-}
 
 int DetectLane::getLaneWidth() const
 {

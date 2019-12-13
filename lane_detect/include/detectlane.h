@@ -24,7 +24,6 @@ public:
 private:
     cv::Mat preprocess(const cv::Mat& src);
     cv::Mat shadow(const cv::Mat& src);
-    cv::Mat birdviewTransformation(const cv::Mat& src);
     cv::Mat morphological(const cv::Mat& img);
     cv::Mat ROI(const cv::Mat& src);
 

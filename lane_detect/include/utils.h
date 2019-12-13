@@ -15,4 +15,6 @@ int getXByY(const LineParams& params, double y);
 
 cv::Mat kmean(cv::Mat image, int kCluster);
 
+cv::Mat birdviewTransformation(const cv::Mat& src);
+
 #endif

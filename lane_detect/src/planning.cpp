@@ -36,7 +36,7 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
     if (sign != 0)
     {
         // NOTE: test only
-        sign = -1;
+        sign = 1;
     }
 
     if (sign != 0)

@@ -5,11 +5,17 @@
 
 CarControl::CarControl()
 {
+
+    cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
+    cv::createTrackbar("kP", "PID config", &kP, 20);
+    cv::createTrackbar("kI", "PID config", &kI, 20);
+    cv::createTrackbar("kD", "PID config", &kD, 20);
+    
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_angle",10);
-    speed_publisher = node_obj2.advertise<std_msgs::Float32>("team1/set_speed",10);
-    cam_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_camera_angle",10);
+    steer_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_angle",20);
+    speed_publisher = node_obj2.advertise<std_msgs::Float32>("team1/set_speed",20);
+    cam_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_camera_angle",20);
 }
 
 CarControl::~CarControl() {}
@@ -50,12 +56,11 @@ void CarControl::driverCar(const Point& cur, float velocity)
     std_msgs::Float32 speed;
     carPos.x = 165;   
     float error = -errorAngle(cur);
-    
     //PID controller
     t_kP = error;
     t_kI += error;
     t_kD = error - preError;
-    angle.data = kP * t_kP + kI * t_kI + kD * t_kD;
+    angle.data = kP * t_kP + (kI/100000.) * t_kI + kD * t_kD;
     // speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
     speed.data = velocity;
     preError = error;

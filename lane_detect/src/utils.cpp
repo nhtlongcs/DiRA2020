@@ -1,5 +1,7 @@
 #include "utils.h"
 #include <eigen3/Eigen/Dense>
+#include <opencv2/opencv.hpp>
+
 using namespace Eigen;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,4 +88,34 @@ cv::Mat kmean(cv::Mat image, int clusterCount) {
         new_image.at<cv::Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
         }
     return new_image;
+}
+
+
+cv::Mat birdviewTransformation(const cv::Mat& src) {
+    const int offsetX = 160;
+    const int offsetY = 180;
+    const int birdwidth = 300;
+    const int birdheight = 330;
+    const int skyline = 100;
+
+    int W = src.size().width;
+    int H = src.size().height;
+
+    cv::Point2f srcVertices[4];
+    srcVertices[0] = cv::Point(0, skyline);
+    srcVertices[1] = cv::Point(W, skyline);
+    srcVertices[2] = cv::Point(0, H);
+    srcVertices[3] = cv::Point(W, H);
+ 
+    cv::Point2f dstVertices[4];
+    dstVertices[0] = cv::Point(0, 0);
+    dstVertices[1] = cv::Point(birdwidth, skyline);
+    dstVertices[2] = cv::Point(skyline, birdheight);
+    dstVertices[3] = cv::Point(birdwidth - skyline, birdheight);
+
+    cv::Mat M = getPerspectiveTransform(srcVertices, dstVertices);
+    cv::Mat resultBirdview(birdwidth, birdheight, CV_8UC3);
+    warpPerspective(src, resultBirdview, M, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+
+    return resultBirdview;
 }
