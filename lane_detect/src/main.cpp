@@ -62,6 +62,24 @@ void imageDepthCallback(const sensor_msgs::ImageConstPtr& msg)
     }
 }
 
+void imageBinaryCallback(const sensor_msgs::ImageConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    Mat out;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        if(!cv_ptr->image.empty())
+        {
+            planner->updateBinary(cv_ptr->image);
+        }
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
+    }
+}
+
 int main(int argc, char **argv)
 {    
     ros::init(argc, argv, "image_listener");
@@ -99,6 +117,7 @@ int main(int argc, char **argv)
 
     image_transport::Subscriber sub = it.subscribe("team1/camera/rgb", 1, imageColorCallback);
     image_transport::Subscriber sub2 = it.subscribe("team1/camera/depth", 1, imageDepthCallback);
+    image_transport::Subscriber sub_binary = it.subscribe("lane_detect/lane_seg", 1, imageBinaryCallback);
 
     cv::Point drivePoint = car->getCarPos();
     int driveSpeed = car->getMaxSpeed();

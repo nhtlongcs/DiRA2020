@@ -14,6 +14,7 @@ public:
 
     void detect();
     void show(const cv::Point* drivePoint=nullptr) const;
+    void updateBinary(const cv::Mat& binary);
     void updateDepth(const cv::Mat& depth);
     void updateRGB(const cv::Mat& rgb);
 
@@ -35,6 +36,7 @@ private:
     std::shared_ptr<LaneLine> leftLane;
     std::shared_ptr<LaneLine> rightLane;
 
+    cv::Mat binary;
     cv::Mat depth;
     cv::Mat rgb;
     cv::Mat debug;

@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 set(OpenCV_STATIC OFF)
-find_package(  OpenCV 3.4.3 REQUIRED )
+find_package(  OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 catkin_package(

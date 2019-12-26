@@ -3,6 +3,9 @@
 #include "detectlane.h"
 #include "detectsign.h"
 #include "laneline.h"
+#include <iostream>
+
+using namespace std;
 
 #include <ros/ros.h>
 
@@ -25,9 +28,11 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
     auto rightLane = laneDetect->getRightLane();
 
     prevSign = sign;
-    sign = signDetect->detect();
-    bool object = objectDetect->detect();
+    // sign = signDetect->detect();
+    // bool object = objectDetect->detect();
     
+    bool object = false;
+
     if (object)
     {
         ROS_INFO("object!!!");
@@ -131,6 +136,12 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
     {
         // ROS_INFO("BOTH LANES NOT FOUND!");
     }
+}
+
+void Planning::updateBinary(cv::Mat binaryImage)
+{
+    // cerr << "Check\n";
+    this->laneDetect->updateBinary(binaryImage);
 }
 
 void Planning::updateColor(cv::Mat colorImage)

@@ -38,6 +38,11 @@ DetectLane::DetectLane()
 DetectLane::~DetectLane(){
 } 
 
+void DetectLane::updateBinary(const cv::Mat& src)
+{
+    this->binary = src.clone();
+}
+
 void DetectLane::updateDepth(const cv::Mat& src)
 {
     this->depth = src.clone();
@@ -60,18 +65,23 @@ void DetectLane::detect()
         return;
     }
 
+    if(this->binary.empty())
+    {
+        return;
+    }
+
     cv::imshow("RGB", this->rgb);
 
-    Mat binary = preprocess(this->rgb);
+    // Mat binary = preprocess(this->rgb);
 
-    Mat shadowMask = shadow(this->rgb);
-    bitwise_or(binary, shadowMask, binary);
-    imshow("binary", binary);
+    // Mat shadowMask = shadow(this->rgb);
+    // bitwise_or(binary, shadowMask, binary);
+    imshow("binary", this->binary);
     
-    birdview = birdviewTransformation(binary);
+    birdview = birdviewTransformation(this->binary);
     // Mat morphBirdview = morphological(birdview);
 
-    birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
+    // birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
 
     leftLane->update(birdview);
     rightLane->update(birdview);

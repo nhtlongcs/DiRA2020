@@ -12,6 +12,7 @@ class Planning
 public:
     Planning(DetectLane* laneDetect, DetectObject* objectDetect, DetectSign* signDetect, int rate = 15);
 
+    void updateBinary(cv::Mat binaryImage);
     void updateColor(cv::Mat colorImage);
     void updateDepth(cv::Mat depthImage);
 

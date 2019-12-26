@@ -98,7 +98,7 @@ bool DetectObject::detect()
     {
         return false;
     }
-    this->depth = birdviewTransformation(this->depth);
+    // this->depth = birdviewTransformation(this->depth);
     
     cv::rectangle(this->depth, objectROI, cv::Scalar{0, 0, 255}, 2);
     cv::Mat objectROIImage = this->depth;
