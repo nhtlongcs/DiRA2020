@@ -10,7 +10,7 @@ public:
     DetectObject();
     void update(const cv::Mat& depth);
     bool detect();
-
+    bool estimator(const cv::Mat& binaryROI);
 private:
     cv::Mat depth;
     cv::Rect objectROI;
