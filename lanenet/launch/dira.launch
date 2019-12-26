@@ -1,5 +1,5 @@
 <launch>
-    <arg name="image_topic" default="/team1/camera/rgb/compressed"/>
+    <arg name="image_topic" default="/hcmus_avengers/camera/rgb/compressed"/>
     <arg name="weight_path" default="$(find lanenet)/model/tusimple_lanenet/tusimple_lanenet_vgg.ckpt"/>
 
 

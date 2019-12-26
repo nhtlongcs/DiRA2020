@@ -62,7 +62,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "virtual_camera");
   ros::NodeHandle nh;
 
-  std::string camera_name = "/team1/camera/rgb";
+  std::string camera_name = "/hcmus_avengers/camera/rgb";
   image_transport::ImageTransport it(nh);
   colorPub = it.advertise(camera_name + "/image_raw", 1);
   depthPub = it.advertise("depth_output", 1);
@@ -70,8 +70,8 @@ int main(int argc, char **argv)
 
   caminfo = new camera_info_manager::CameraInfoManager(nh, camera_name, camurl);
 
-  image_transport::SubscriberFilter color_sub(it, "/team1/camera/rgb", 1);
-  image_transport::SubscriberFilter depth_sub(it, "/team1/camera/depth", 1);
+  image_transport::SubscriberFilter color_sub(it, "/hcmus_avengers/camera/rgb", 1);
+  image_transport::SubscriberFilter depth_sub(it, "/hcmus_avengers/camera/depth", 1);
 
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> MySyncPolicy;
   message_filters::Synchronizer< MySyncPolicy > sync{MySyncPolicy( 5 ), color_sub, depth_sub};

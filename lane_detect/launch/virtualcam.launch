@@ -6,10 +6,10 @@
   1280x1024 versus 640x480.  This affects the pipeline.
   -->
   <arg name="high_res_rgb" default="false"/>
-  <arg name="cloud_input_ns" value="/team1/camera/rgb_downsampled" if="$(arg high_res_rgb)"/>
-  <arg name="cloud_input_ns" value="/team1/camera/rgb" unless="$(arg high_res_rgb)"/>
+  <arg name="cloud_input_ns" value="/hcmus_avengers/camera/rgb_downsampled" if="$(arg high_res_rgb)"/>
+  <arg name="cloud_input_ns" value="/hcmus_avengers/camera/rgb" unless="$(arg high_res_rgb)"/>
 
-  <arg name="camera" value="/team1/camera" />
+  <arg name="camera" value="/hcmus_avengers/camera" />
 
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
 		<param name="port" value="9090"/>
@@ -29,7 +29,7 @@
 
   <!-- Debayer and undistort the rgb image
        TODO: this should be split into nodelets -->
-  <node pkg="image_proc" type="image_proc" name="ip_node1" ns="/team1/camera/rgb" args="_image_transport:=compressed" />
+  <node pkg="image_proc" type="image_proc" name="ip_node1" ns="/hcmus_avengers/camera/rgb" args="_image_transport:=compressed" />
 
   
   <!-- The depth image is already rectified and registered
@@ -37,8 +37,8 @@
        to meters -->
   <node pkg="nodelet" type="nodelet" name="metric_rect" 
         args="load depth_image_proc/convert_metric record_player_manager --no-bond">
-    <remap from="image_raw" to="/team1/camera/depth/uint16_converted"/>
-    <remap from="image" to="/team1/camera/depth/image"/>
+    <remap from="image_raw" to="/hcmus_avengers/camera/depth/uint16_converted"/>
+    <remap from="image" to="/hcmus_avengers/camera/depth/image"/>
   </node>
   
   <!-- Downsample and crop rgb image before converting to cloud, if it's high res -->
@@ -56,11 +56,11 @@
   <!-- Convert it into a point cloud -->
   <node pkg="nodelet" type="nodelet" name="cloudify"
         args="load depth_image_proc/point_cloud_xyzrgb record_player_manager --no-bond">
-    <remap from="depth_registered/points" to="/team1/camera/depth_registered/points"/>
+    <remap from="depth_registered/points" to="/hcmus_avengers/camera/depth_registered/points"/>
 
-    <remap from="/depth_registered/image_rect" to="/team1/camera/depth/image"/>
-    <remap from="/rgb/image_rect_color" to="/team1/camera/rgb/image_rect_color"/>
-    <remap from="/rgb/camera_info" to="/team1/camera/rgb/camera_info"/>
+    <remap from="/depth_registered/image_rect" to="/hcmus_avengers/camera/depth/image"/>
+    <remap from="/rgb/image_rect_color" to="/hcmus_avengers/camera/rgb/image_rect_color"/>
+    <remap from="/rgb/camera_info" to="/hcmus_avengers/camera/rgb/camera_info"/>
   </node>
 
 </launch>

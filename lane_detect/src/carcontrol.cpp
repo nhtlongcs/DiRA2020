@@ -13,9 +13,9 @@ CarControl::CarControl()
     
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_angle",20);
-    speed_publisher = node_obj2.advertise<std_msgs::Float32>("team1/set_speed",20);
-    cam_publisher = node_obj1.advertise<std_msgs::Float32>("team1/set_camera_angle",20);
+    steer_publisher = node_obj1.advertise<std_msgs::Float32>("hcmus_avengers/set_angle",20);
+    speed_publisher = node_obj2.advertise<std_msgs::Float32>("hcmus_avengers/set_speed",20);
+    cam_publisher = node_obj1.advertise<std_msgs::Float32>("hcmus_avengers/set_camera_angle",20);
 }
 
 CarControl::~CarControl() {}
