@@ -1,5 +1,5 @@
 <launch>
-    <arg name="image_topic" default="/hcmus_avengers/camera/rgb/compressed"/>
+    <arg name="image_topic" default="/team220/camera/rgb/compressed"/>
     <!-- <arg name="weight_path" default="$(find mobilenet)/model/model.h5"/> -->
     <arg name="weight_path" default="$(find mobilenet)/model/model_dira.h5"/>
 

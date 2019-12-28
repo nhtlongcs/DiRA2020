@@ -115,8 +115,8 @@ int main(int argc, char **argv)
 
     ros::Rate rate(RATE);
 
-    image_transport::Subscriber sub = it.subscribe("hcmus_avengers/camera/rgb", 1, imageColorCallback);
-    image_transport::Subscriber sub2 = it.subscribe("hcmus_avengers/camera/depth", 1, imageDepthCallback);
+    image_transport::Subscriber sub = it.subscribe("team220/camera/rgb", 1, imageColorCallback);
+    image_transport::Subscriber sub2 = it.subscribe("team220/camera/depth", 1, imageDepthCallback);
     image_transport::Subscriber sub_binary = it.subscribe("lane_detect/lane_seg", 1, imageBinaryCallback);
 
     cv::Point drivePoint = car->getCarPos();

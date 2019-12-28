@@ -43,10 +43,10 @@ int main(int argc, char **argv)
     cv::startWindowThread();
 
     image_transport::ImageTransport it(nh);
-    image_transport::Subscriber sub = it.subscribe("/hcmus_avengers/camera/rgb", 1, imageCallback);
+    image_transport::Subscriber sub = it.subscribe("/team220/camera/rgb", 1, imageCallback);
 
     image_transport::ImageTransport it2(nh2);
-    image_transport::Subscriber sub2 = it2.subscribe("/hcmus_avengers/camera/depth", 1, depthImageCallback);
+    image_transport::Subscriber sub2 = it2.subscribe("/team220/camera/depth", 1, depthImageCallback);
     
     ros::spin();
     cv::destroyWindow("RGB");
