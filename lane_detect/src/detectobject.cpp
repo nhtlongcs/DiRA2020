@@ -1,8 +1,10 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <iostream>
+#include <ros/ros.h>
 #include "detectobject.h"
 #include "utils.h"
+
+constexpr const char* CONF_OBJ_WINDOW = "ConfigDetectObject";
 
 DetectObject::DetectObject()
 : objectROI{115, 62, 61, 49}
@@ -12,23 +14,27 @@ DetectObject::DetectObject()
 , configObjectmin{0, 0, 54}
 , configObjectmax{255, 205, 163}
 {
-    cv::namedWindow("ConfigDetectObject", cv::WINDOW_GUI_NORMAL);
-    cv::createTrackbar("clusterCount", "ConfigDetectObject", &kCluster, 10);
-    
+    cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
+    cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
 
-    cv::createTrackbar("x", "ConfigDetectObject", &objectROI.x, 320);
-    cv::createTrackbar("y", "ConfigDetectObject", &objectROI.y, 240);
-    cv::createTrackbar("width", "ConfigDetectObject", &objectROI.width, 320);
-    cv::createTrackbar("height", "ConfigDetectObject", &objectROI.height, 240);
+    cv::createTrackbar("x", CONF_OBJ_WINDOW, &objectROI.x, 320);
+    cv::createTrackbar("y", CONF_OBJ_WINDOW, &objectROI.y, 240);
+    cv::createTrackbar("width", CONF_OBJ_WINDOW, &objectROI.width, 320);
+    cv::createTrackbar("height", CONF_OBJ_WINDOW, &objectROI.height, 240);
 
-    cv::createTrackbar("Detect threshold", "ConfigDetectObject", &detectThreshold, 100); // percents
+    cv::createTrackbar("Detect threshold", CONF_OBJ_WINDOW, &detectThreshold, 100); // percents
 
-    cv::createTrackbar("min H", "ConfigDetectObject", &configObjectmin[0], 255);
-    cv::createTrackbar("max H", "ConfigDetectObject", &configObjectmax[0], 255);
-    cv::createTrackbar("min S", "ConfigDetectObject", &configObjectmin[1], 255);
-    cv::createTrackbar("max S", "ConfigDetectObject", &configObjectmax[1], 255);
-    cv::createTrackbar("min V", "ConfigDetectObject", &configObjectmin[2], 255);
-    cv::createTrackbar("max V", "ConfigDetectObject", &configObjectmax[2], 255);
+    cv::createTrackbar("min H", CONF_OBJ_WINDOW, &configObjectmin[0], 255);
+    cv::createTrackbar("max H", CONF_OBJ_WINDOW, &configObjectmax[0], 255);
+    cv::createTrackbar("min S", CONF_OBJ_WINDOW, &configObjectmin[1], 255);
+    cv::createTrackbar("max S", CONF_OBJ_WINDOW, &configObjectmax[1], 255);
+    cv::createTrackbar("min V", CONF_OBJ_WINDOW, &configObjectmin[2], 255);
+    cv::createTrackbar("max V", CONF_OBJ_WINDOW, &configObjectmax[2], 255);
+}
+
+DetectObject::~DetectObject()
+{
+    cv::destroyWindow(CONF_OBJ_WINDOW);
 }
 
 void DetectObject::update(const cv::Mat& depth)
@@ -92,19 +98,21 @@ bool DetectObject::estimator(const cv::Mat& binaryROI){
     return cv::countNonZero(ImageLeft) > cv::countNonZero(ImageRight) ? 1 : 0;
 
 }
-bool DetectObject::detect()
+
+bool DetectObject::detectOneFrame()
 {
     if (this->depth.empty())
     {
         return false;
     }
+
     // this->depth = birdviewTransformation(this->depth);
     
     cv::rectangle(this->depth, objectROI, cv::Scalar{0, 0, 255}, 2);
-    cv::Mat objectROIImage = this->depth;
+    cv::Mat objectROIImage = this->depth(objectROI);
     cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
 
-    cv::imshow("DepthObjectROI", kmeanImage);
+    // cv::imshow("DepthObjectROI", kmeanImage);
     // {
     //     double minVal, maxVal;
     //     cv::minMaxLoc(kmeanImage, &minVal, &maxVal, NULL, NULL);
@@ -118,7 +126,7 @@ bool DetectObject::detect()
     cv::cvtColor(kmeanImage, hsv, cv::COLOR_BGR2HSV);
     cv::inRange(hsv, cv::Scalar(configObjectmin[0], configObjectmin[1], configObjectmin[2]),
                     cv::Scalar(configObjectmax[0], configObjectmax[1], configObjectmax[2]), mask);
-    cv::imshow("cropped", mask);
+    cv::imshow(CONF_OBJ_WINDOW, mask);
 
     cv::Mat fgMask;
     pBackSub->apply(kmeanImage, fgMask);
@@ -127,12 +135,28 @@ bool DetectObject::detect()
     cv::imshow("foreground", fgMask);
 
     float percent = cv::countNonZero(fgMask) * 100.0f/ (fgMask.rows * fgMask.cols);
-    std::cout << "percent :" << percent << std::endl;
     if ( percent >= detectThreshold)
     {
-        std::cout << "OBJECTTTTT" << std::endl;
         return true;
     }
 
+    return false;
+
+}
+
+bool DetectObject::detect()
+{
+    bool object = detectOneFrame();
+    objectHistories.push_back(object);
+    if (objectHistories.size() > maxHistory)
+    {
+        objectHistories.pop_front();
+    }
+
+    int count = std::count(objectHistories.begin(), objectHistories.end(), true);
+    if ((count*100.0f/maxHistory) > 50)
+    {
+        return true;
+    }
     return false;
 }

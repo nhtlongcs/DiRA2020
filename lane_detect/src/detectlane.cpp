@@ -8,6 +8,8 @@
 using namespace cv;
 using namespace std;
 
+constexpr const char* CONF_BIRDVIEW_WINDOW = "Birdview";
+
 DetectLane::DetectLane()
 : leftLane{nullptr}
 , rightLane{nullptr}
@@ -21,13 +23,22 @@ DetectLane::DetectLane()
  
     // cvCreateTrackbar("Hough", "Threshold", &hough_lowerbound, max_houghThreshold);
     // cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
-    cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
-    cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
-    cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
-    cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
-    cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
-    cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
-    cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
+
+    // cv::namedWindow("Threshold");
+    // cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
+    // cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
+    // cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
+    // cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
+    // cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
+    // cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
+    // cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
+
+    cv::namedWindow(CONF_BIRDVIEW_WINDOW);
+    cv::createTrackbar("Use Birdview", CONF_BIRDVIEW_WINDOW, &usebirdview, 1);
+    cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
+    cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
+    cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
+
 
     leftLane = std::make_shared<LeftLane>();
     rightLane = std::make_shared<RightLane>();
@@ -77,11 +88,23 @@ void DetectLane::detect()
     // Mat shadowMask = shadow(this->rgb);
     // bitwise_or(binary, shadowMask, binary);
     imshow("binary", this->binary);
-    
-    birdview = birdviewTransformation(this->binary);
+
+    if (usebirdview)
+    {
+        cv::Mat M;
+        birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, M);
+        imshow("birdview", this->birdview);
+    }
+    else
+    {
+        birdview = this->binary;
+    }
+
+    // birdview = this->binary;
+
     // Mat morphBirdview = morphological(birdview);
 
-    // birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
+    birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
 
     leftLane->update(birdview);
     rightLane->update(birdview);

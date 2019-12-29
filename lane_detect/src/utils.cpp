@@ -91,13 +91,7 @@ cv::Mat kmean(cv::Mat image, int clusterCount) {
 }
 
 
-cv::Mat birdviewTransformation(const cv::Mat& src) {
-    const int offsetX = 160;
-    const int offsetY = 180;
-    const int birdwidth = 300;
-    const int birdheight = 330;
-    const int skyline = 100;
-
+cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight, int skyline, cv::Mat& returnM) {
     int W = src.size().width;
     int H = src.size().height;
 
@@ -113,9 +107,9 @@ cv::Mat birdviewTransformation(const cv::Mat& src) {
     dstVertices[2] = cv::Point(skyline, birdheight);
     dstVertices[3] = cv::Point(birdwidth - skyline, birdheight);
 
-    cv::Mat M = getPerspectiveTransform(srcVertices, dstVertices);
+    returnM = getPerspectiveTransform(srcVertices, dstVertices);
     cv::Mat resultBirdview(birdwidth, birdheight, CV_8UC3);
-    warpPerspective(src, resultBirdview, M, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+    warpPerspective(src, resultBirdview, returnM, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 
     return resultBirdview;
 }

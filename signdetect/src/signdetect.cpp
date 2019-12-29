@@ -12,6 +12,8 @@ using namespace std;
 
 #define SIZE_X 64.0
 
+constexpr const char* CONF_SIGN_WINDOW = "SignDetect";
+
 static double matching(cv::Mat image, cv::Mat templ)
 {
     Mat img_display;
@@ -42,21 +44,21 @@ DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate
     , LEFT_TEMPLATE{leftTemplate}
     , RIGHT_TEMPLATE{rightTemplate}
 {
-    cv::namedWindow("SignDetect");
-    cv::createTrackbar("canny", "SignDetect", &canny, 255);
-    cv::createTrackbar("votes", "SignDetect", &votes, 255);
+    cv::namedWindow(CONF_SIGN_WINDOW);
+    cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
+    cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
 
-    cv::createTrackbar("Strategy", "SignDetect", &classifyStrategy, 1);
-    cv::createTrackbar("DetectConfident", "SignDetect", &detectConfident, 100);
-    cv::createTrackbar("ClassifyConfident", "SignDetect", &classifyConfident, 100);
-    cv::createTrackbar("DiffToClassify", "SignDetect", &diffToClassify, 100);
+    cv::createTrackbar("Strategy", CONF_SIGN_WINDOW, &classifyStrategy, 1);
+    cv::createTrackbar("DetectConfident", CONF_SIGN_WINDOW, &detectConfident, 100);
+    cv::createTrackbar("ClassifyConfident", CONF_SIGN_WINDOW, &classifyConfident, 100);
+    cv::createTrackbar("DiffToClassify", CONF_SIGN_WINDOW, &diffToClassify, 100);
 
-    cv::createTrackbar("MinBlue H", "SignDetect", &minBlue[0], 179);
-    cv::createTrackbar("MinBlue S", "SignDetect", &minBlue[1], 255);
-    cv::createTrackbar("MinBlue V", "SignDetect", &minBlue[2], 255);
-    cv::createTrackbar("MaxBlue H", "SignDetect", &maxBlue[0], 179);
-    cv::createTrackbar("MaxBlue S", "SignDetect", &maxBlue[1], 255);
-    cv::createTrackbar("MaxBlue V", "SignDetect", &maxBlue[2], 255);
+    cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &minBlue[0], 179);
+    cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &minBlue[1], 255);
+    cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &minBlue[2], 255);
+    cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &maxBlue[0], 179);
+    cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &maxBlue[1], 255);
+    cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &maxBlue[2], 255);
 
     MAX_DIFF = matching(LEFT_TEMPLATE, cv::Scalar(255) - LEFT_TEMPLATE);
 }
@@ -119,8 +121,8 @@ int DetectSign::detectOneFrame()
         {
             cv::Mat roiImg(blue, roi);
             float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
-            // imshow("SignDetect", roiImg);
-            imshow("SignDetect", this->depth);
+            imshow("SignDetect", roiImg);
+            // imshow("SignDetect", this->depth);
             if (percent > detectConfident)
             {
                 int sign = classify(rgb(roi));

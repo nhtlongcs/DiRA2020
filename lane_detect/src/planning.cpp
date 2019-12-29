@@ -3,14 +3,22 @@
 #include "detectlane.h"
 #include "laneline.h"
 #include <iostream>
+#include <ros/ros.h>
 
 using namespace std;
 
-#include <ros/ros.h>
+constexpr const char* CONF_PLAN_WINDOW = "ConfigPlanning";
 
-Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect, int rate)
-    : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}, countTurning{rate * 3}, rate{rate}
+Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
+    : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}
+    , isAvoidObjectDone{true}, isTurningDone{true}
 {
+    cv::namedWindow(CONF_PLAN_WINDOW);
+    cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
+    cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 50);
+
+    _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime/10.0f}, &Planning::onObjectTimeout, this, true);
+    _turnTimer = _nh.createTimer(ros::Duration{turningTime/10.0f}, &Planning::onTurnTimeout, this, true);
 }
 
 void Planning::updateSign(int signId)
@@ -26,47 +34,50 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     auto leftLane = laneDetect->getLeftLane();
     auto rightLane = laneDetect->getRightLane();
 
-    // bool object = objectDetect->detect();
+    bool object = objectDetect->detect();
 
-    bool object = false;
+    // bool object = false;
 
     if (object)
     {
-        ROS_INFO("object!!!");
-    }
-
-    if (sign != 0)
-    {
-        // NOTE: test only
-        sign = 1;
-    }
-
-    if (sign != 0)
-    {
-        ROS_INFO("Turn %d", sign);
-        if (sign != prevSign)
+        if (isAvoidObjectDone)
         {
-            countTurning = rate * 3;
-            delay = rate;
+            isAvoidObjectDone = false;
+            _objectTimer.stop();
+            _objectTimer.setPeriod(ros::Duration{avoidObjectTime/10.0f});
+            _objectTimer.start();
         }
-        driveSpeed = minSpeed;
+    }
+    object = !isAvoidObjectDone;
+
+    if (sign != 0)
+    {
+        if (isTurningDone)
+        {
+            prevSign = sign; // important
+            isTurningDone = false;
+
+            leftLane->reset();
+            rightLane->reset();
+            laneDetect->detect();
+            driveSpeed = minSpeed;
+
+            _turnTimer.stop();
+            _turnTimer.setPeriod(ros::Duration{turningTime/10.0f});
+            _turnTimer.start();
+        }
+    }
+
+    if (!isTurningDone)
+    {
+        sign = prevSign;
         leftLane->reset();
         rightLane->reset();
         laneDetect->detect();
-    }
-    else if (countTurning > 0)
+        driveSpeed = minSpeed;
+    } else
     {
-        sign = prevSign;
-        if (delay > 0)
-        {
-            ROS_INFO("DELAY...");
-            delay--;
-        }
-        else
-        {
-            ROS_INFO("TURNING...");
-            countTurning--;
-        }
+        driveSpeed = maxSpeed;
     }
 
     if (leftLane->isFound() && rightLane->isFound())
@@ -78,29 +89,55 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         }
         else if (sign < 0)
         {
-            drivePoint = turnLeft();
+            // drivePoint = turnLeft();
+            drivePoint = driveCloseToLeft();
         }
         else
         {
-            drivePoint = turnRight();
+            // drivePoint = turnRight();
+            drivePoint = driveCloseToRight();
         }
     }
     else if (leftLane->isFound())
     {
+        // if (rightLane->recover(leftLane, laneWidth))
+        // {
+        //     if (sign <= 0) // go straight or turn left
+        //     {
+        //         if (sign == 0)
+        //         {
+        //             driveSpeed = maxSpeed;
+        //         }
+        //         drivePoint = driveStraight(object);
+        //     }
+        //     else
+        //     {
+        //         driveSpeed = minSpeed;
+        //         drivePoint = turnRight();
+        //     }
+        // }
+        // else
+        // {
+        //     if (sign > 0)
+        //     {
+        //         ROS_INFO("TURN RIGHT BUT RIGHT LANE NOT FOUND!!");
+        //     }
+        //     drivePoint = driveCloseToLeft();
+        // }
         if (rightLane->recover(leftLane, laneWidth))
         {
-            if (sign <= 0) // go straight or turn left
+            if (sign == 0)
             {
-                if (sign == 0)
-                {
-                    driveSpeed = maxSpeed;
-                }
+                driveSpeed = maxSpeed;
                 drivePoint = driveStraight(object);
+            } else if (sign < 0)
+            {
+                drivePoint = driveCloseToLeft();
             }
             else
             {
                 driveSpeed = minSpeed;
-                drivePoint = turnRight();
+                drivePoint = driveCloseToRight();
             }
         }
         else
@@ -210,4 +247,16 @@ cv::Point Planning::turnRight()
         return driveStraight(false);
     }
     return driveCloseToRight();
+}
+
+void Planning::onObjectTimeout(const ros::TimerEvent& event)
+{
+    ROS_INFO("Object timeout");
+    isAvoidObjectDone = true;
+}
+
+void Planning::onTurnTimeout(const ros::TimerEvent& event)
+{
+    ROS_INFO("Turn timeout");
+    isTurningDone = true;
 }

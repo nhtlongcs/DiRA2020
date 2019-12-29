@@ -13,6 +13,7 @@
 #include "carcontrol.h"
 
 bool STREAM = true;
+bool forceStop = false;
 
 // VideoCapture capture("video.avi");
 DetectLane *laneDetect;
@@ -93,13 +94,11 @@ int main(int argc, char **argv)
 
     std::string path = ros::package::getPath("lane_detect");
 
-    cv::namedWindow("Threshold");
-    cv::namedWindow("RGB");
-    cv::namedWindow("depth");
+    // cv::namedWindow("Threshold");
     laneDetect = new DetectLane();
     objectDetect = new DetectObject();
     car = new CarControl();
-    planner = new Planning(laneDetect, objectDetect, RATE);
+    planner = new Planning(laneDetect, objectDetect);
 
     ros::Rate rate(RATE);
 
@@ -115,10 +114,21 @@ int main(int argc, char **argv)
     {
         ros::spinOnce();
 
-        planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
-        laneDetect->show(&drivePoint);
-        car->driverCar(drivePoint, driveSpeed);
-        cv::waitKey(1);
+        if (forceStop)
+        {
+            car->driverCar(drivePoint, 0);
+        } else
+        {
+            planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
+            laneDetect->show(&drivePoint);
+            car->driverCar(drivePoint, driveSpeed);
+        }
+
+        int key = cv::waitKey(1);
+        if (key == 32) // press space to force stop
+        {
+            forceStop = !forceStop;
+        }
 
         rate.sleep();
     }

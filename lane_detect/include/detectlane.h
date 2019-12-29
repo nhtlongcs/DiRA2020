@@ -55,10 +55,12 @@ private:
     size_t sumLaneWidth = 0;
     size_t frameCount = 0;
 
-    const int offsetX = 160;
-    const int offsetY = 180;
-    const int birdwidth = 300;
-    const int birdheight = 330;
-    const int skyline = 100;
+    int usebirdview = 1;
+
+    int offsetX = 160;
+    int offsetY = 180;
+    int birdwidth = 300;
+    int birdheight = 330;
+    int skyline = 100;
 };
 #endif

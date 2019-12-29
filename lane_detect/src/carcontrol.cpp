@@ -1,7 +1,7 @@
 #include "carcontrol.h"
 
 #define MAX_SPEED 40
-#define MIN_SPEED 10
+#define MIN_SPEED 5
 
 CarControl::CarControl()
 {

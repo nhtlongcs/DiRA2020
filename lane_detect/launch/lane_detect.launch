@@ -15,7 +15,7 @@ limitations under the License.
 
 <launch>
 	<arg name="image_topic" default="/team220/camera/rgb/compressed"/>
-  <arg name="weight_path" default="$(find mobilenet)/model/model_dira.h5"/>
+  <arg name="weight_path" default="$(find mobilenet)/model/weight_dira.h5"/>
 
   <node pkg="mobilenet" type="mobilenet_node.py" name="mobilenet_node" output="screen">
       <param name="image_topic" value="$(arg image_topic)" />
