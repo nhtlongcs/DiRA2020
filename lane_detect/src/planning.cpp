@@ -1,7 +1,6 @@
 #include "planning.h"
 #include "detectobject.h"
 #include "detectlane.h"
-#include "detectsign.h"
 #include "laneline.h"
 #include <iostream>
 
@@ -9,28 +8,26 @@ using namespace std;
 
 #include <ros/ros.h>
 
-Planning::Planning(DetectLane* laneDetect, DetectObject* objectDetect, DetectSign* signDetect, int rate)
-: laneDetect{laneDetect}
-, objectDetect{objectDetect}
-, signDetect{signDetect}
-, sign{0}
-, prevSign{0}
-, countTurning{rate*3}
-, rate{rate}
+Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect, int rate)
+    : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}, countTurning{rate * 3}, rate{rate}
 {
 }
 
-void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, int minSpeed)
+void Planning::updateSign(int signId)
+{
+    prevSign = sign;
+    sign = signId;
+}
+
+void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, int minSpeed)
 {
     laneDetect->detect();
     auto laneWidth = laneDetect->getLaneWidth();
     auto leftLane = laneDetect->getLeftLane();
     auto rightLane = laneDetect->getRightLane();
 
-    prevSign = sign;
-    // sign = signDetect->detect();
     // bool object = objectDetect->detect();
-    
+
     bool object = false;
 
     if (object)
@@ -64,13 +61,13 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
         {
             ROS_INFO("DELAY...");
             delay--;
-        } else
+        }
+        else
         {
             ROS_INFO("TURNING...");
             countTurning--;
         }
     }
-    
 
     if (leftLane->isFound() && rightLane->isFound())
     {
@@ -78,14 +75,17 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
         {
             driveSpeed = maxSpeed;
             drivePoint = driveStraight(object);
-        } else if (sign < 0)
+        }
+        else if (sign < 0)
         {
             drivePoint = turnLeft();
-        } else
+        }
+        else
         {
             drivePoint = turnRight();
         }
-    } else if (leftLane->isFound())
+    }
+    else if (leftLane->isFound())
     {
         if (rightLane->recover(leftLane, laneWidth))
         {
@@ -96,12 +96,14 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
                     driveSpeed = maxSpeed;
                 }
                 drivePoint = driveStraight(object);
-            } else
+            }
+            else
             {
                 driveSpeed = minSpeed;
                 drivePoint = turnRight();
             }
-        } else
+        }
+        else
         {
             if (sign > 0)
             {
@@ -109,7 +111,8 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
             }
             drivePoint = driveCloseToLeft();
         }
-    } else if (rightLane->isFound())
+    }
+    else if (rightLane->isFound())
     {
         if (leftLane->recover(rightLane, laneWidth))
         {
@@ -120,11 +123,13 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
                     driveSpeed = maxSpeed;
                 }
                 drivePoint = driveStraight(object);
-            } else
+            }
+            else
             {
                 drivePoint = turnLeft();
             }
-        } else
+        }
+        else
         {
             if (sign < 0)
             {
@@ -132,7 +137,8 @@ void Planning::planning(cv::Point& drivePoint, int& driveSpeed, int maxSpeed, in
             }
             drivePoint = driveCloseToRight();
         }
-    } else
+    }
+    else
     {
         // ROS_INFO("BOTH LANES NOT FOUND!");
     }
@@ -147,13 +153,13 @@ void Planning::updateBinary(cv::Mat binaryImage)
 void Planning::updateColor(cv::Mat colorImage)
 {
     this->laneDetect->updateRGB(colorImage);
-    this->signDetect->updateRGB(colorImage);
+    // this->signDetect->updateRGB(colorImage);
 }
 
 void Planning::updateDepth(cv::Mat depthImage)
 {
     this->objectDetect->update(depthImage);
-    this->signDetect->updateDepth(depthImage);
+    // this->signDetect->updateDepth(depthImage);
 }
 
 cv::Point Planning::driveCloseToLeft()

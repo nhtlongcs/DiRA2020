@@ -1,13 +1,14 @@
-#include "detectsign.h"
+#include "signdetect.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
 #include <vector>
 #include <string>
 #include <exception>
+#include <ros/ros.h>
 #include "utils.h"
 using namespace cv;
 using namespace std;
-
 
 #define SIZE_X 64.0
 
@@ -36,34 +37,41 @@ static double matching(cv::Mat image, cv::Mat templ)
     return minVal;
 }
 
-
 DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate)
-: recentDetects{MAX_FRAME_COUNT, 0}
-, LEFT_TEMPLATE{leftTemplate}
-, RIGHT_TEMPLATE{rightTemplate}
+    : recentDetects{MAX_FRAME_COUNT, 0}
+    , LEFT_TEMPLATE{leftTemplate}
+    , RIGHT_TEMPLATE{rightTemplate}
 {
-    cv::createTrackbar("canny", "Threshold", &canny, 255);
-    cv::createTrackbar("votes", "Threshold", &votes, 255);
-    
+    cv::namedWindow("SignDetect");
+    cv::createTrackbar("canny", "SignDetect", &canny, 255);
+    cv::createTrackbar("votes", "SignDetect", &votes, 255);
 
-    cv::createTrackbar("Sign percent", "Threshold", &maxPercent, 100);
+    cv::createTrackbar("Strategy", "SignDetect", &classifyStrategy, 1);
+    cv::createTrackbar("DetectConfident", "SignDetect", &detectConfident, 100);
+    cv::createTrackbar("ClassifyConfident", "SignDetect", &classifyConfident, 100);
+    cv::createTrackbar("DiffToClassify", "SignDetect", &diffToClassify, 100);
 
-    cv::createTrackbar("MinBlue H", "Threshold", &minBlue[0], 179);
-    cv::createTrackbar("MinBlue S", "Threshold", &minBlue[1], 255);
-    cv::createTrackbar("MinBlue V", "Threshold", &minBlue[2], 255);
-    cv::createTrackbar("MaxBlue H", "Threshold", &maxBlue[0], 179);
-    cv::createTrackbar("MaxBlue S", "Threshold", &maxBlue[1], 255);
-    cv::createTrackbar("MaxBlue V", "Threshold", &maxBlue[2], 255);
-    
-    MAX_DIFF = matching(LEFT_TEMPLATE, cv::Scalar::all(255) - LEFT_TEMPLATE);
+    cv::createTrackbar("MinBlue H", "SignDetect", &minBlue[0], 179);
+    cv::createTrackbar("MinBlue S", "SignDetect", &minBlue[1], 255);
+    cv::createTrackbar("MinBlue V", "SignDetect", &minBlue[2], 255);
+    cv::createTrackbar("MaxBlue H", "SignDetect", &maxBlue[0], 179);
+    cv::createTrackbar("MaxBlue S", "SignDetect", &maxBlue[1], 255);
+    cv::createTrackbar("MaxBlue V", "SignDetect", &maxBlue[2], 255);
+
+    MAX_DIFF = matching(LEFT_TEMPLATE, cv::Scalar(255) - LEFT_TEMPLATE);
 }
 
-void DetectSign::updateRGB(const cv::Mat& rgb)
+DetectSign::~DetectSign()
+{
+    cv::destroyAllWindows();
+}
+
+void DetectSign::updateRGB(const cv::Mat &rgb)
 {
     this->rgb = rgb.clone();
 }
 
-void DetectSign::updateDepth(const cv::Mat& depth)
+void DetectSign::updateDepth(const cv::Mat &depth)
 {
     this->depth = depth.clone();
 }
@@ -76,17 +84,15 @@ int DetectSign::detectOneFrame()
     }
 
     Mat blue;
-    int turnFactor = 0;
-
-    // new method 
-
     cvtColor(rgb, blue, cv::COLOR_BGR2HSV);
-
     inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
 
+    int turnFactor = 0;
 
+    // new method
+    
     Mat gray;
-    gray = kmean(this->depth,2);
+    gray = kmean(this->depth, 2);
 
     cvtColor(gray, gray, CV_BGR2GRAY);
     cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
@@ -94,11 +100,11 @@ int DetectSign::detectOneFrame()
     vector<Vec3f> circles;
 
     HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
-          1,   // accumulator resolution (size of the image / 2)
-          300,  // minimum distance between two circles
-          canny, // Canny high threshold
-          votes, // minimum number of votes
-          0, 100); // min and max radius
+                 1,       // accumulator resolution (size of the image / 2)
+                 300,     // minimum distance between two circles
+                 canny,   // Canny high threshold
+                 votes,   // minimum number of votes
+                 0, 100); // min and max radius
     for (size_t i = 0; i < circles.size(); i++)
     {
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -107,89 +113,95 @@ int DetectSign::detectOneFrame()
         circle(this->depth, center, 3, Scalar(0, 255, 0), -1, 8, 0);
         // circle outline
         circle(this->depth, center, radius, Scalar(0, 0, 255), 3, 8, 0);
-        cv::Rect roi(center.x-radius, center.y-radius, radius*2, radius*2 );
+        cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
 
-        if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi )
+        if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)
         {
-            cv::Mat roiImg( blue, roi);
-            float percent = cv::countNonZero(roiImg) * 100.0f/ (roiImg.rows * roiImg.cols);
-            imshow("blue", roiImg);
-            imshow("detected circles", this->depth);    
-            if (percent > maxPercent) 
+            cv::Mat roiImg(blue, roi);
+            float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
+            // imshow("SignDetect", roiImg);
+            imshow("SignDetect", this->depth);
+            if (percent > detectConfident)
             {
-                std::cout << "SIGN DETECTED\n";
-                return 1;
+                int sign = classify(rgb(roi));
+                if (sign != 0)
+                {
+                    return sign;
+                }
             }
         }
     }
-    
-    // new method
 
     return 0;
-
-    // vector<vector<Point>> contours;
-    // findContours(blue, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
-    // drawContours(blue,contours,-1, (255,0,0), 2);
-    // if (!contours.empty()) {
-        
-    //     vector<vector<Point>> contoursPoly((int)contours.size());
-    //     vector<Rect> boundRect((int)contours.size());
-
-    //     for (int i = 0; i < (int)contours.size(); ++i) {
-    //         approxPolyDP(contours[i], contoursPoly[i], 3, true);
-    //         boundRect[i] = boundingRect(contoursPoly[i]);    
-    //     }
-
-    //     float maxPercent = 0;
-    //     int i_max = -1, max_type = 0;
-
-    //     for (int i = 0; i < (int)boundRect.size(); ++i) {
-    //         if (boundRect[i].area() < 20*20) {
-    //             continue;
-    //         }
-
-    //         cv::Mat mask = Mat::zeros(blue.size(), CV_8UC1);
-    //         drawContours(mask, contours, i, Scalar(255), CV_FILLED);
-    //         cv::Mat crop = cv::Mat::zeros(blue.size(), CV_8UC1);
-    //         blue.copyTo(crop, mask);
-
-    //         cv::Mat resized;
-    //         cv::resize(crop(boundRect[i]), resized, cv::Size(), SIZE_X / boundRect[i].width, SIZE_X / boundRect[i].height);
-    //         cv::GaussianBlur(resized, resized, cv::Size(5, 5), 0, 0);
-
-    //         {
-    //             double val = matching(resized, LEFT_TEMPLATE);
-    //             double percent = 1.0 - val / MAX_DIFF;
-    //             if (percent > maxPercent)
-    //             {
-    //                 i_max = i;
-    //                 maxPercent = percent;
-    //                 max_type = -1;
-    //             }
-    //         }
-
-    //         {
-    //             double val = matching(resized, RIGHT_TEMPLATE);
-    //             double percent = 1.0 - val / MAX_DIFF;
-    //             if (percent > maxPercent)
-    //             {
-    //                 i_max = i;
-    //                 maxPercent = percent;
-    //                 max_type = 1;
-    //             }
-    //         }
-    //     }
-
-    //     if (maxPercent >= 0.70)
-    //     {
-    //         turnFactor = max_type;
-    //     }
-    // }
-
-    // return turnFactor;
 }
 
-int DetectSign::detect() {
+int DetectSign::classify(const cv::Mat& colorROI) const
+{
+    switch (classifyStrategy)
+    {
+        case 0: return classifyTemplateMatching(colorROI);
+        case 1: return classifyCountBlue(colorROI);
+        default:
+            return classifyCountBlue(colorROI);
+    }
+}
+
+int DetectSign::classifyTemplateMatching(const cv::Mat& colorROI) const
+{
+    cv::Mat gray;
+    cv::cvtColor(colorROI, gray, cv::COLOR_BGR2GRAY);
+
+    // TODO: may be threshold?
+    // ...
+
+    cv::Mat resized;
+    cv::resize(gray, resized, cv::Size(), SIZE_X / colorROI.cols, SIZE_X / colorROI.rows);
+    cv::GaussianBlur(resized, resized, cv::Size(5, 5), 0, 0);
+
+    double left_val = matching(resized, LEFT_TEMPLATE);
+    double left_percent = (1.0 - left_val / MAX_DIFF) * 100;
+    double right_val = matching(resized, RIGHT_TEMPLATE);
+    double right_percent = (1.0 - right_val / MAX_DIFF) * 100;
+
+    ROS_INFO("TM: left = %.2lf, right = %.2lf, classifyConf = %d, diff = %d", left_percent, right_percent, diffToClassify, diffToClassify);
+
+    if (left_percent > classifyConfident || right_percent > classifyConfident)
+    {
+        int delta = (left_percent - right_percent);
+        if (abs(delta) >= diffToClassify)
+        {
+            if (delta > 0) return -1;
+            if (delta < 0) return 1;
+        }
+    }
+    return 0;
+}
+
+int DetectSign::classifyCountBlue(const cv::Mat& colorROI) const
+{
+    cv::Mat blue;
+    cv::cvtColor(colorROI, blue, cv::COLOR_BGR2HSV);
+    cv::inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
+
+    int bottomLeftCount = cv::countNonZero(blue(cv::Rect{0, blue.rows/2, blue.cols/2, blue.rows/2}));
+    int bottomRightCount = cv::countNonZero(blue(cv::Rect{blue.cols/2, blue.rows/2, blue.cols/2, blue.rows/2}));
+
+    float left_percent = bottomLeftCount * 100.0f/ (blue.cols/2 * blue.rows/2);
+    float right_percent = bottomRightCount * 100.0f / (blue.cols/2 * blue.rows/2);
+
+    int delta = (left_percent - right_percent);
+    ROS_INFO("CountBlue: left = %.2f, right = %.2f, diff = %d", left_percent, right_percent, diffToClassify);
+
+    if (abs(delta) >= diffToClassify)
+    {
+        if (delta > 0) return -1;
+        if (delta < 0) return 1;
+    }
+    return 0;
+}
+
+int DetectSign::detect()
+{
     if (rgb.empty())
     {
         return 0;
@@ -205,9 +217,12 @@ int DetectSign::detect() {
     int cntStraight = std::count(recentDetects.begin(), recentDetects.end(), 0);
 
     int max = std::max(cntLeft, std::max(cntRight, cntStraight));
-    if (max == cntLeft) return -1;
-    else if (max == cntRight) return 1;
-    else return 0;
+    if (max == cntLeft)
+        return -1;
+    else if (max == cntRight)
+        return 1;
+    else
+        return 0;
 }
 
 // int DetectSign::detect() {
@@ -228,13 +243,13 @@ int DetectSign::detect() {
 //     findContours(blue, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
 
 //     if (!contours.empty()) {
-        
+
 //         vector<vector<Point>> contoursPoly((int)contours.size());
 //         vector<Rect> boundRect((int)contours.size());
 
 //         for (int i = 0; i < (int)contours.size(); ++i) {
 //             approxPolyDP(contours[i], contoursPoly[i], 3, true);
-//             boundRect[i] = boundingRect(contoursPoly[i]);    
+//             boundRect[i] = boundingRect(contoursPoly[i]);
 //         }
 
 //         int maxArea = 0, bestRect;
@@ -257,7 +272,7 @@ int DetectSign::detect() {
 //         int rectH = abs(topLeft.y - bottomRight.y) * 4;
 //         Mat zoom(rectW, rectH, CV_8UC1);
 //         Point2f boundingBox[4], zoomBox[4];
-        
+
 //         boundingBox[0] = topLeft;
 //         boundingBox[1] = Point(bottomRight.x, topLeft.y);
 //         boundingBox[2] = bottomRight;
@@ -273,7 +288,7 @@ int DetectSign::detect() {
 
 //         int cntLeftOnes = 0, cntRightOnes = 0;
 //         for (int i = 0; i < rectW; ++i)
-//             for (int j = 0; j < rectH; ++j) 
+//             for (int j = 0; j < rectH; ++j)
 //                 if ((int)zoom.at<uchar>(i, j) == 255) {
 //                     if (i < rectW / 2) ++cntLeftOnes;
 //                         else ++cntRightOnes;
@@ -281,10 +296,10 @@ int DetectSign::detect() {
 
 //         cntLeftOnes = cntLeftOnes * cntLeftOnes;
 //         cntRightOnes = cntRightOnes * cntRightOnes;
-//         turnFactor = cntLeftOnes > cntRightOnes ? 1 : -1;   
+//         turnFactor = cntLeftOnes > cntRightOnes ? 1 : -1;
 //     }
 
-//     skip: 
+//     skip:
 //     addWeighted(rgb, 0.5, canvas, 1, 1, canvas);
 //     imshow("SignsDetector", canvas);
 

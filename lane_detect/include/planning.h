@@ -4,19 +4,18 @@
 #include <opencv2/core.hpp>
 
 class DetectLane;
-class DetectSign;
 class DetectObject;
 
 class Planning
 {
 public:
-    Planning(DetectLane* laneDetect, DetectObject* objectDetect, DetectSign* signDetect, int rate = 15);
+    Planning(DetectLane *laneDetect, DetectObject *objectDetect, int rate = 15);
 
     void updateBinary(cv::Mat binaryImage);
     void updateColor(cv::Mat colorImage);
     void updateDepth(cv::Mat depthImage);
-
-    void planning(cv::Point& drivePoint, int& speed, int maxSpeed, int minSpeed);
+    void updateSign(int signId);
+    void planning(cv::Point &drivePoint, int &speed, int maxSpeed, int minSpeed);
 
 private:
     cv::Point driveCloseToLeft();
@@ -26,14 +25,12 @@ private:
     cv::Point turnRight();
 
 private:
-    DetectLane* laneDetect;
-    DetectObject* objectDetect;
-    DetectSign* signDetect;
+    DetectLane *laneDetect;
+    DetectObject *objectDetect;
 
     int countTurning, delay; // for turning
-    int prevSign, sign; // for signDetect
+    int prevSign, sign;      // for signDetect
     int rate;
 };
-
 
 #endif

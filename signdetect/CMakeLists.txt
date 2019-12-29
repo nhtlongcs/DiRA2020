@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(lane_detect)
+project(signdetect)
 
 add_compile_options(-std=c++11)
 
@@ -7,47 +7,41 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
   roscpp
-  sensor_msgs
-  cds_msgs
+  lane_detect
 )
 
-set(OpenCV_STATIC OFF)
-find_package(  OpenCV REQUIRED )
-include_directories(${OpenCV_INCLUDE_DIRS})
+find_package(OpenCV REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES api_lane_detection
-  CATKIN_DEPENDS roscpp cds_msgs
+  LIBRARIES signdetect
+  CATKIN_DEPENDS cv_bridge image_transport roscpp lane_detect 
 )
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${api_lane_detection_INCLUDE_DIRS}
 )
 
-add_library(api_lane_detection
-  src/laneline.cpp
-  src/utils.cpp
-  src/detectlane.cpp
-  src/detectobject.cpp
-  src/carcontrol.cpp
-  src/planning.cpp
+add_library(api_${PROJECT_NAME}
+  src/signdetect.cpp
 )
 
-add_executable(lane_detect src/main.cpp)
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(${PROJECT_NAME}_node src/signdetect_node.cpp)
+
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(
-  lane_detect
-  api_lane_detection
+  ${PROJECT_NAME}_node
+  api_${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
-  ${Boost_LIBRARIES}
 )
 
-add_dependencies(lane_detect ${catkin_EXPORTED_TARGETS})
-
-install(TARGETS api_lane_detection ${ADDITIONAL_EXECUTABLES}
+install(TARGETS api_${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
