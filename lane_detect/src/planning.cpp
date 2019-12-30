@@ -4,6 +4,7 @@
 #include "laneline.h"
 #include <iostream>
 #include <ros/ros.h>
+#include <ros/package.h>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
 {
     cv::namedWindow(CONF_PLAN_WINDOW);
     cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
-    cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 50);
+    cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
 
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime/10.0f}, &Planning::onObjectTimeout, this, true);
     _turnTimer = _nh.createTimer(ros::Duration{turningTime/10.0f}, &Planning::onTurnTimeout, this, true);
@@ -67,6 +68,43 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             _turnTimer.start();
         }
     }
+
+    // if (sign != 0)
+    // {
+    //     ROS_INFO("Slow down..............");
+    //     driveSpeed = minSpeed;
+    // }
+
+    // if (prevSign != 0 && sign == 0)
+    // {
+    //     if (isTurningDone)
+    //     {
+    //         turnSign = prevSign;
+    //         ROS_INFO("I will turn %s", turnSign > 0 ? "right" : "left");
+    //         isTurningDone = false;
+    //         driveSpeed = minSpeed;
+    //         // TODO: set timeout in case not found any able to turn
+    //     }
+    // }
+
+    // if (!isTurningDone)
+    // {
+    //     if (laneDetect->isAbleToTurn(sign) && !isTurning)
+    //     {
+    //         ROS_INFO("It\'s time to turn");
+    //         isTurning = true;
+    //         _turnTimer.stop();
+    //         _turnTimer.setPeriod(ros::Duration{turningTime/10.0f});
+    //         _turnTimer.start();
+    //     }
+
+    //     if (isTurning)
+    //     {
+    //         driveSpeed = 20;
+    //         drivePoint = cv::Point{330 * prevSign, 200};
+    //         return;
+    //     }
+    // }
 
     if (!isTurningDone)
     {
@@ -145,8 +183,11 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             if (sign > 0)
             {
                 ROS_INFO("TURN RIGHT BUT RIGHT LANE NOT FOUND!!");
+                drivePoint = cv::Point{330 * sign, 200};
+            } else
+            {
+                drivePoint = driveCloseToLeft();
             }
-            drivePoint = driveCloseToLeft();
         }
     }
     else if (rightLane->isFound())
@@ -171,13 +212,17 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             if (sign < 0)
             {
                 ROS_INFO("TURN LEFT BUT LEFT LANE NOT FOUND!!");
+                drivePoint = cv::Point{330 * sign, 200};
+            } else
+            {
+                drivePoint = driveCloseToRight();
             }
-            drivePoint = driveCloseToRight();
         }
     }
     else
     {
         // ROS_INFO("BOTH LANES NOT FOUND!");
+        drivePoint = cv::Point{330 * sign, 200};
     }
 }
 
@@ -218,34 +263,34 @@ cv::Point Planning::driveCloseToRight()
 cv::Point Planning::driveStraight(bool object)
 {
     // ROS_INFO("DRIVE STRAIGHT");
-    // cv::Point leftDrive, rightDrive;
-    // laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-    // laneDetect->getRightLane()->getDrivePoint(rightDrive);
-    // return (leftDrive + rightDrive) / 2;
     if (object)
     {
         return driveCloseToLeft();
     }
-    return driveCloseToRight();
+    // return driveCloseToRight();
+    cv::Point leftDrive, rightDrive;
+    laneDetect->getLeftLane()->getDrivePoint(leftDrive);
+    laneDetect->getRightLane()->getDrivePoint(rightDrive);
+    return (leftDrive + rightDrive) / 2;
 }
 
 cv::Point Planning::turnLeft()
 {
     // ROS_INFO("TURN LEFT");
-    if (laneDetect->getRightLane()->recover(laneDetect->getLeftLane(), laneDetect->getLaneWidth()))
-    {
-        return driveStraight(false);
-    }
+    // if (laneDetect->getRightLane()->recover(laneDetect->getLeftLane(), laneDetect->getLaneWidth()))
+    // {
+    //     return driveStraight(false);
+    // }
     return driveCloseToLeft();
 }
 
 cv::Point Planning::turnRight()
 {
     // ROS_INFO("TURN RIGHT");
-    if (laneDetect->getLeftLane()->recover(laneDetect->getRightLane(), laneDetect->getLaneWidth()))
-    {
-        return driveStraight(false);
-    }
+    // if (laneDetect->getLeftLane()->recover(laneDetect->getRightLane(), laneDetect->getLaneWidth()))
+    // {
+    //     return driveStraight(false);
+    // }
     return driveCloseToRight();
 }
 
@@ -259,4 +304,6 @@ void Planning::onTurnTimeout(const ros::TimerEvent& event)
 {
     ROS_INFO("Turn timeout");
     isTurningDone = true;
+    turnSign = 0;
+    isTurning = false;
 }

@@ -20,11 +20,15 @@ limitations under the License.
   <node pkg="mobilenet" type="mobilenet_node.py" name="mobilenet_node" output="screen">
       <param name="image_topic" value="$(arg image_topic)" />
       <param name="weight_path" value="$(arg weight_path)" />
+      <!-- <param name="use_deep" value="true" /> -->
+      <param name="use_deep" value="false" />
+      <param name="ready" value="false" />
   </node>
 
 	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
 		<param name="port" value="9090"/>
 	</include>
+
   <node name="lane_detect" pkg="lane_detect" type="lane_detect" output="screen" args="_image_transport:=compressed" />
   <node name="sign_detect" pkg="signdetect" type="signdetect_node" output="screen" args="_image_transport:=compressed" />
 

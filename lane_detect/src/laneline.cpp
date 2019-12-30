@@ -163,9 +163,9 @@ bool LaneLine::getBeginPoint(cv::Point& returnPoint) const
 
 bool LaneLine::getDrivePoint(cv::Point& returnPoint) const
 {
-    if (isFound() && listPoint.size() > dirvePointIndex)
+    if (isFound() && listPoint.size() > drivePointIndex)
     {
-        returnPoint = *(listPoint.rbegin() + dirvePointIndex);
+        returnPoint = *(listPoint.rbegin() + drivePointIndex);
         return true;
     }
     return false;
@@ -208,6 +208,22 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat& trackingImage, cv::P
     returnPoint = maxPoint;
     returnValue = maxCount;
     return true;
+}
+
+std::vector<cv::Point> LaneLine::getPoints() const
+{
+    return this->listPoint;
+}
+
+void LaneLine::swap(std::shared_ptr<LaneLine> other)
+{
+    std::vector<cv::Point> tmpListPoint = this->listPoint;
+    listPoint = other->listPoint;
+    other->listPoint = tmpListPoint;
+
+    std::shared_ptr<LineParams> tmpLineParams = this->lineParams;
+    this->lineParams = other->lineParams;
+    other->lineParams = tmpLineParams;
 }
 
 bool LaneLine::findBeginPoint(cv::Point& returnPoint) const

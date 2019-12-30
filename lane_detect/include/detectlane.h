@@ -14,15 +14,19 @@ public:
 
     void detect();
     void show(const cv::Point* drivePoint=nullptr) const;
+    void show(cv::Mat& outputImage) const;
     void updateBinary(const cv::Mat& binary);
     void updateDepth(const cv::Mat& depth);
     void updateRGB(const cv::Mat& rgb);
+
+    bool isAbleToTurn(int direct) const;
 
     int getLaneWidth() const;
     std::shared_ptr<LaneLine> getLeftLane() const;
     std::shared_ptr<LaneLine> getRightLane() const;
 
 private:
+    bool isWrongLane() const;
     cv::Mat preprocess(const cv::Mat& src);
     cv::Mat shadow(const cv::Mat& src);
     cv::Mat morphological(const cv::Mat& img);
@@ -41,6 +45,7 @@ private:
     cv::Mat rgb;
     cv::Mat debug;
     cv::Mat birdview;
+    cv::Mat birdviewTransformMatrix;
 
     int minThreshold[3] = {0, 0, 180};
     int maxThreshold[3] = {179, 30, 255};

@@ -2,17 +2,19 @@
 #include <opencv2/imgproc.hpp>
 #include <ros/ros.h>
 #include "detectobject.h"
+#include "detectlane.h"
 #include "utils.h"
 
 constexpr const char* CONF_OBJ_WINDOW = "ConfigDetectObject";
 
-DetectObject::DetectObject()
+DetectObject::DetectObject(DetectLane* lane)
 : objectROI{115, 62, 61, 49}
 , kCluster{3}
 , pBackSub{cv::createBackgroundSubtractorMOG2()}
 , detectThreshold{30}
 , configObjectmin{0, 0, 54}
 , configObjectmax{255, 205, 163}
+, lane{lane}
 {
     cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
@@ -99,6 +101,11 @@ bool DetectObject::estimator(const cv::Mat& binaryROI){
 
 }
 
+int DetectObject::getDirect() const
+{
+    return this->direct;
+}
+
 bool DetectObject::detectOneFrame()
 {
     if (this->depth.empty())
@@ -137,11 +144,17 @@ bool DetectObject::detectOneFrame()
     float percent = cv::countNonZero(fgMask) * 100.0f/ (fgMask.rows * fgMask.cols);
     if ( percent >= detectThreshold)
     {
+        // cv::Mat laneImagePerspective;
+        // this->lane->show(laneImagePerspective);
+
+        // laneImagePerspective |= fgMask;
+        // cv::imshow("ObjectAndLane", laneImagePerspective);
+
+
         return true;
     }
 
     return false;
-
 }
 
 bool DetectObject::detect()

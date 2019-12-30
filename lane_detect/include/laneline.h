@@ -26,6 +26,10 @@ public:
     LineParams getLineParams() const;
     bool getBeginPoint(cv::Point& returnPoint) const;
     bool getDrivePoint(cv::Point& returnPoint) const;
+    std::vector<cv::Point> getPoints() const;
+
+    void swap(std::shared_ptr<LaneLine> other);
+
     virtual void reset();
     bool recover(const std::shared_ptr<LaneLine>& lane, int laneWidth);
 protected:
@@ -63,7 +67,7 @@ protected:
     const size_t minPointTrack = 70;
     const size_t minPointDetect = 10;
     const size_t beginPointIndex = 40;
-    const size_t dirvePointIndex = beginPointIndex + 30;
+    const size_t drivePointIndex = beginPointIndex + 20;
 
     size_t count_detect;
 };

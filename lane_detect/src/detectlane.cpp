@@ -1,7 +1,7 @@
 #include "detectlane.h"
 #include "laneline.h"
 #include "utils.h"
-
+#include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -96,11 +96,11 @@ void DetectLane::detect()
         imshow("binary", this->binary);
 
         // cv::Mat temp = this->binary(cv::Rect{0,this->binary.rows/2, this->binary.cols, this->binary.rows/2});
-        this->binary(cv::Rect{0, 0, this->binary.cols, this->binary.rows/2}) = cv::Scalar{0};
-        imshow("temp", this->binary);
+        // this->binary(cv::Rect{0, 0, this->binary.cols, this->binary.rows/2}) = cv::Scalar{0};
+        // imshow("temp", this->binary);
 
         this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, M);
-        imshow("birdview", this->birdview);
+        imshow(CONF_BIRDVIEW_WINDOW, this->birdview);
     }
     else
     {
@@ -126,6 +126,8 @@ void DetectLane::detect()
         {
             leftLane->reset();
             rightLane->reset();
+            frameCount = 0;
+            sumLaneWidth = 0;
         }
         else
         {
@@ -133,7 +135,35 @@ void DetectLane::detect()
             sumLaneWidth += abs(leftBegin.x - rightBegin.x);
         }
     }
+}
 
+bool DetectLane::isAbleToTurn(int direct) const
+{
+    if (this->binary.empty())
+    {
+        return false;
+    }
+
+    cv::Rect roiRect{0, this->binary.rows/10*6, this->binary.cols, this->binary.rows/10};
+    cv::Mat roi = this->binary(roiRect);
+    cv::imshow("Horizontal...", roi);
+
+    cv::Rect half;
+    if (direct < 0)
+    {
+        half = cv::Rect{0, 0, roi.cols/2, roi.rows};
+    } else if (direct > 0)
+    {
+        half = cv::Rect{roi.cols/2, 0, roi.cols/2, roi.rows};
+    } else
+    {
+        return false;
+    }
+    
+    cv::Mat halfImg = roi(half);
+    float percent = cv::countNonZero(halfImg) * 100.0f / (halfImg.rows * halfImg.cols);
+    ROS_INFO("percent = %.2f", percent);
+    return percent < 5;
 }
 
 void DetectLane::show(const cv::Point* drivePoint) const
@@ -153,6 +183,50 @@ void DetectLane::show(const cv::Point* drivePoint) const
     }
 
     cv::imshow("Lanes", birdviewColor);
+}
+
+void DetectLane::show(cv::Mat& outputImage) const
+{
+    if (this->binary.empty())
+    {
+        return;
+    }
+
+    if (usebirdview)
+    {
+        cv::Mat inv = birdviewTransformMatrix.inv();
+        outputImage = cv::Mat::zeros(this->binary.rows, this->binary.cols, CV_8UC1);
+        if (this->getLeftLane()->isFound())
+        {
+            std::vector<cv::Point2f> normalLeft, leftPointsBirdview;
+            for (const auto& point : this->getLeftLane()->getPoints())
+            {
+                leftPointsBirdview.push_back(cv::Point2f{point.x, point.y});
+            }
+
+            cv::perspectiveTransform(leftPointsBirdview, normalLeft, inv);
+            for (const auto& point : normalLeft)
+            {
+                cv::circle(outputImage, cv::Point{(int)point.x, (int)point.y}, 5, cv::Scalar{127}, -1);
+            }
+        }
+
+        if (this->getRightLane()->isFound())
+        {
+            // const auto& rightPointsBirdview = this->getRightLane()->getPoints();
+            // for (const auto& point : this->getRightLane()->getPoints())
+            // {
+            //     leftPointsBirdview.push_back(cv::Point2f{point.x, point.y});
+            // }
+            // std::vector<cv::Point2f> normalRight;
+            // cv::perspectiveTransform(rightPointsBirdview, normalRight, inv);
+            // for (const auto& point : normalRight)
+            // {
+            //     cv::circle(outputImage, cv::Point{(int)point.x, (int)point.y}, 5, cv::Scalar{255}, -1);
+            // }
+        }
+    }
+    
 }
 
 Mat DetectLane::shadow(const Mat& src) {

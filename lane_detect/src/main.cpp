@@ -14,6 +14,7 @@
 
 bool STREAM = true;
 bool forceStop = false;
+bool ready = false;
 
 // VideoCapture capture("video.avi");
 DetectLane *laneDetect;
@@ -26,6 +27,8 @@ static const int RATE = 15;
 static int delay = RATE;            // delay 1s
 static int countTurning = RATE * 3; // turn in 3s
 static int prevSign = 0, sign = 0;
+
+ros::Subscriber mobilenet_sub;
 
 void imageColorCallback(const sensor_msgs::ImageConstPtr &msg)
 {
@@ -82,7 +85,6 @@ void imageBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
 
 void signCallback(const cds_msgs::sign &msg)
 {
-    ROS_INFO("SIGN = %d", msg.sign_id);
     planner->updateSign(msg.sign_id);
 }
 
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
 
     // cv::namedWindow("Threshold");
     laneDetect = new DetectLane();
-    objectDetect = new DetectObject();
+    objectDetect = new DetectObject(laneDetect);
     car = new CarControl();
     planner = new Planning(laneDetect, objectDetect);
 
@@ -110,17 +112,24 @@ int main(int argc, char **argv)
     cv::Point drivePoint = car->getCarPos();
     int driveSpeed = car->getMaxSpeed();
 
+    bool is_lane_ready = false;
+    while (nh.getParam("mobilenet_node/ready", is_lane_ready) == false || !is_lane_ready)
+    {
+        ROS_INFO("Waiting for mobilenet ready...");
+        rate.sleep();
+    }
+
     while (ros::ok())
     {
         ros::spinOnce();
-
+        planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
+        laneDetect->show(&drivePoint);
         if (forceStop)
         {
-            car->driverCar(drivePoint, 0);
-        } else
+            car->driverCar(car->getCarPos(), 0);
+        } 
+        else
         {
-            planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
-            laneDetect->show(&drivePoint);
             car->driverCar(drivePoint, driveSpeed);
         }
 
@@ -128,8 +137,10 @@ int main(int argc, char **argv)
         if (key == 32) // press space to force stop
         {
             forceStop = !forceStop;
+        } else if (key == 'c')
+        {
+            // capture
         }
-
         rate.sleep();
     }
     cv::destroyAllWindows();

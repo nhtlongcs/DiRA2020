@@ -5,12 +5,15 @@
 #include <opencv2/video.hpp>
 #include <list>
 
+class DetectLane;
+
 class DetectObject
 {
 public:
-    DetectObject();
+    DetectObject(DetectLane* lane);
     ~DetectObject();
     void update(const cv::Mat& depth);
+    int getDirect() const;
     bool detect();
     bool estimator(const cv::Mat& binaryROI);
 private:
@@ -27,6 +30,9 @@ private:
 
     std::list<bool> objectHistories;
     int maxHistory = 10;
+    int direct;
+
+    DetectLane* lane;
 };
 
 #endif

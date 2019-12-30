@@ -43,6 +43,9 @@ private:
     int countTurning, delay; // for turning
     int prevSign, sign;      // for signDetect
     int rate;
+
+    int turnSign = 0;
+    bool isTurning = false;
 };
 
 #endif
