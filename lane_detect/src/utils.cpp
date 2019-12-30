@@ -91,24 +91,26 @@ cv::Mat kmean(cv::Mat image, int clusterCount) {
 }
 
 
-cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight, int skyline, cv::Mat& returnM) {
-    int W = src.size().width;
-    int H = src.size().height;
+cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight, int skyline, int offsetLeft, int offsetRight, cv::Mat& returnM) {
+    int W = src.cols;
+    int H = src.rows;
 
-    cv::Point2f srcVertices[4];
-    srcVertices[0] = cv::Point(0, skyline);
-    srcVertices[1] = cv::Point(W, skyline);
-    srcVertices[2] = cv::Point(0, H);
-    srcVertices[3] = cv::Point(W, H);
- 
-    cv::Point2f dstVertices[4];
-    dstVertices[0] = cv::Point(0, 0);
-    dstVertices[1] = cv::Point(birdwidth, skyline);
-    dstVertices[2] = cv::Point(skyline, birdheight);
-    dstVertices[3] = cv::Point(birdwidth - skyline, birdheight);
-
-    returnM = getPerspectiveTransform(srcVertices, dstVertices);
-    cv::Mat resultBirdview(birdwidth, birdheight, CV_8UC3);
+    cv::Point2f inQuad[4] = {
+      cv::Point(0, skyline),
+      cv::Point(W - 1, skyline),
+      cv::Point(0, H - 1),
+      cv::Point(W - 1, H - 1)
+    };
+    
+    cv::Point2f outQuad[4] = {
+      cv::Point(0, skyline), 
+      cv::Point(W - 1, skyline), 
+      cv::Point(offsetLeft, H - 1), 
+      cv::Point(W - offsetRight, H - 1)
+    };
+    
+    returnM = getPerspectiveTransform(inQuad, outQuad);
+    cv::Mat resultBirdview(birdheight,birdwidth, CV_8UC3);
     warpPerspective(src, resultBirdview, returnM, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 
     return resultBirdview;

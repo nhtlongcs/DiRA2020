@@ -63,7 +63,7 @@ protected:
     const size_t minPointTrack = 70;
     const size_t minPointDetect = 10;
     const size_t beginPointIndex = 40;
-    const size_t dirvePointIndex = beginPointIndex + 70;
+    const size_t dirvePointIndex = beginPointIndex + 30;
 
     size_t count_detect;
 };

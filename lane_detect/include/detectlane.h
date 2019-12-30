@@ -57,10 +57,13 @@ private:
 
     int usebirdview = 1;
 
+    int offsetLeft = 100;
+    int offsetRight = 100;
+
     int offsetX = 160;
     int offsetY = 180;
-    int birdwidth = 300;
-    int birdheight = 330;
-    int skyline = 100;
+    int birdwidth = 320;
+    int birdheight = 240;
+    int skyline = 120;
 };
 #endif

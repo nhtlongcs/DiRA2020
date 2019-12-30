@@ -48,7 +48,7 @@ void imageDepthCallback(const sensor_msgs::ImageConstPtr &msg)
 
 int main(int argc, char *argv[])
 {
-    ros::init(argc, argv, "image_listener");
+    ros::init(argc, argv, "signdetect");
     ros::NodeHandle nh;
     image_transport::ImageTransport it(nh);
 

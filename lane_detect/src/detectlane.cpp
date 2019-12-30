@@ -38,8 +38,9 @@ DetectLane::DetectLane()
     cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
     cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
     cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
-
-
+    cv::createTrackbar("OffsetLeft", CONF_BIRDVIEW_WINDOW, &offsetLeft, 200);
+    cv::createTrackbar("OffsetRight", CONF_BIRDVIEW_WINDOW, &offsetRight, 200);
+    
     leftLane = std::make_shared<LeftLane>();
     rightLane = std::make_shared<RightLane>();
 
@@ -87,12 +88,18 @@ void DetectLane::detect()
 
     // Mat shadowMask = shadow(this->rgb);
     // bitwise_or(binary, shadowMask, binary);
-    imshow("binary", this->binary);
+    // imshow("binary", this->binary);
 
     if (usebirdview)
     {
         cv::Mat M;
-        birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, M);
+        imshow("binary", this->binary);
+
+        // cv::Mat temp = this->binary(cv::Rect{0,this->binary.rows/2, this->binary.cols, this->binary.rows/2});
+        this->binary(cv::Rect{0, 0, this->binary.cols, this->binary.rows/2}) = cv::Scalar{0};
+        imshow("temp", this->binary);
+
+        this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, M);
         imshow("birdview", this->birdview);
     }
     else
