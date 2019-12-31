@@ -138,11 +138,6 @@ class mobilenet_node():
 
     def use_deep(self, cv_image):
         with self.graph.as_default():
-            try:
-                cv_image = data_to_image(data.data)
-            except:
-                print('Cannot convert to cv_image')
-                return None
             img = cv2.resize(cv_image, (224, 224))
             img = img.squeeze() / 255.
             img = np.expand_dims(img, 0)
