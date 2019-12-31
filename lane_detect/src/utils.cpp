@@ -110,7 +110,7 @@ cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight
     };
     
     returnM = getPerspectiveTransform(inQuad, outQuad);
-    cv::Mat resultBirdview(birdheight,birdwidth, CV_8UC3);
+    cv::Mat resultBirdview(birdheight,birdwidth, src.type());
     warpPerspective(src, resultBirdview, returnM, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 
     return resultBirdview;
