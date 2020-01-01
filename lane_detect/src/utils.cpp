@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
+#include <cmath>
+#include <array>
 
 using namespace Eigen;
 
@@ -65,28 +67,31 @@ int getXByY(const LineParams& params, double y)
 }
 
 
-cv::Mat kmean(cv::Mat image, int clusterCount) {
-    cv::Mat samples(image.rows * image.cols, 3, CV_32F);
-    for( int y = 0; y < image.rows; y++ )
-        for( int x = 0; x < image.cols; x++ )
-        for( int z = 0; z < 3; z++)
-            samples.at<float>(y + x*image.rows, z) = image.at<cv::Vec3b>(y,x)[z];
+cv::Mat kmean(cv::Mat image, size_t clusterCount) {
+    cv::Mat floatImage;
+    image.convertTo(floatImage, CV_32F);
+
+    cv::Mat samples = floatImage.reshape(1, floatImage.total());
+    clusterCount = std::min(samples.total(), clusterCount);
 
     cv::Mat labels;
-    int attempts = 5;
+    constexpr const int attempts = 5;
     cv::Mat centers;
     kmeans(samples, clusterCount, labels, cv::TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), attempts, cv::KMEANS_PP_CENTERS, centers );
 
+    std::array<int, 2> originalSize = {floatImage.rows, floatImage.cols};
+    labels = labels.reshape(1, originalSize.size(), originalSize.data());
 
-    cv::Mat new_image( image.size(), image.type() );
-    for( int y = 0; y < image.rows; y++ )
-        for( int x = 0; x < image.cols; x++ )
+    cv::Mat new_image( image.size(), CV_8UC1 );
+    for(int row = 0; row < image.rows; row++)
+    {
+        for( int col = 0; col < image.cols; col++ )
         { 
-        int cluster_idx = labels.at<int>(y + x*image.rows,0);
-        new_image.at<cv::Vec3b>(y,x)[0] = centers.at<float>(cluster_idx, 0);
-        new_image.at<cv::Vec3b>(y,x)[1] = centers.at<float>(cluster_idx, 1);
-        new_image.at<cv::Vec3b>(y,x)[2] = centers.at<float>(cluster_idx, 2);
+            int cluster_idx = labels.at<int>(row, col);
+            new_image.at<uchar>(row, col) = static_cast<int>(centers.at<float>(cluster_idx, 0));
         }
+    }
+
     return new_image;
 }
 

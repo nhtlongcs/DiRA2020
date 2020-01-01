@@ -14,9 +14,8 @@ public:
 
     void detect();
     void show(const cv::Point* drivePoint=nullptr) const;
-    void show(cv::Mat& outputImage) const;
+    int whichLane(const cv::Mat& objectMask) const;
     void updateBinary(const cv::Mat& binary);
-    void updateDepth(const cv::Mat& depth);
     void updateRGB(const cv::Mat& rgb);
 
     bool isAbleToTurn(int direct) const;
@@ -24,6 +23,8 @@ public:
     int getLaneWidth() const;
     std::shared_ptr<LaneLine> getLeftLane() const;
     std::shared_ptr<LaneLine> getRightLane() const;
+
+    cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat& resultM) const;
 
 private:
     bool isWrongLane() const;
@@ -41,7 +42,6 @@ private:
     std::shared_ptr<LaneLine> rightLane;
 
     cv::Mat binary;
-    cv::Mat depth;
     cv::Mat rgb;
     cv::Mat debug;
     cv::Mat birdview;

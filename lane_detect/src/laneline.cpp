@@ -151,6 +151,14 @@ void LaneLine::show(cv::Mat& drawImage) const
     }
 }
 
+void LaneLine::getMask(cv::Mat& birdviewInputBackground) const
+{
+    for (size_t i = 0; i < listPoint.size(); ++i)
+    {
+        circle(birdviewInputBackground, listPoint[i], 5, cv::Scalar{255}, -1, 1, 0);
+    }
+}
+
 bool LaneLine::getBeginPoint(cv::Point& returnPoint) const
 {
     if (isFound() && listPoint.size() > beginPointIndex)

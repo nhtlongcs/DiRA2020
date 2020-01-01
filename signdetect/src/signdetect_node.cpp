@@ -37,7 +37,8 @@ void imageDepthCallback(const sensor_msgs::ImageConstPtr &msg)
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         if (!cv_ptr->image.empty())
         {
-            signDetect->updateDepth(cv_ptr->image);
+            cv::cvtColor(cv_ptr->image, out, cv::COLOR_BGR2GRAY);
+            signDetect->updateDepth(out);
         }
     }
     catch (cv_bridge::Exception &e)

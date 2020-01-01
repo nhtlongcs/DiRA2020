@@ -55,11 +55,6 @@ void DetectLane::updateBinary(const cv::Mat& src)
     this->binary = src.clone();
 }
 
-void DetectLane::updateDepth(const cv::Mat& src)
-{
-    this->depth = src.clone();
-}
-
 void DetectLane::updateRGB(const cv::Mat& src)
 {
     this->rgb = src.clone();
@@ -92,14 +87,8 @@ void DetectLane::detect()
 
     if (usebirdview)
     {
-        cv::Mat M;
         imshow("binary", this->binary);
-
-        // cv::Mat temp = this->binary(cv::Rect{0,this->binary.rows/2, this->binary.cols, this->binary.rows/2});
-        // this->binary(cv::Rect{0, 0, this->binary.cols, this->binary.rows/2}) = cv::Scalar{0};
-        // imshow("temp", this->binary);
-
-        this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, M);
+        this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
         imshow(CONF_BIRDVIEW_WINDOW, this->birdview);
     }
     else
@@ -185,48 +174,57 @@ void DetectLane::show(const cv::Point* drivePoint) const
     cv::imshow("Lanes", birdviewColor);
 }
 
-void DetectLane::show(cv::Mat& outputImage) const
+int DetectLane::whichLane(const cv::Mat& objectMask) const
 {
     if (this->binary.empty())
     {
-        return;
+        return 0;
     }
 
     if (usebirdview)
     {
-        cv::Mat inv = birdviewTransformMatrix.inv();
-        outputImage = cv::Mat::zeros(this->binary.rows, this->binary.cols, CV_8UC1);
-        if (this->getLeftLane()->isFound())
-        {
-            std::vector<cv::Point2f> normalLeft, leftPointsBirdview;
-            for (const auto& point : this->getLeftLane()->getPoints())
-            {
-                leftPointsBirdview.push_back(cv::Point2f{point.x, point.y});
-            }
+        cv::Mat M;
+        cv::Mat birdviewObjectMask = birdviewTransformation(objectMask, birdwidth, birdheight, offsetLeft, offsetRight, skyline, M);
+        
+        cv::Mat black = cv::Mat::zeros(birdview.rows, birdview.cols, CV_8UC1);
+        this->getLeftLane()->getMask(black);
+        this->getRightLane()->getMask(black);
 
-            cv::perspectiveTransform(leftPointsBirdview, normalLeft, inv);
-            for (const auto& point : normalLeft)
-            {
-                cv::circle(outputImage, cv::Point{(int)point.x, (int)point.y}, 5, cv::Scalar{127}, -1);
-            }
-        }
+        cv::imshow("ObjectMask", objectMask);
 
-        if (this->getRightLane()->isFound())
-        {
-            // const auto& rightPointsBirdview = this->getRightLane()->getPoints();
-            // for (const auto& point : this->getRightLane()->getPoints())
-            // {
-            //     leftPointsBirdview.push_back(cv::Point2f{point.x, point.y});
-            // }
-            // std::vector<cv::Point2f> normalRight;
-            // cv::perspectiveTransform(rightPointsBirdview, normalRight, inv);
-            // for (const auto& point : normalRight)
-            // {
-            //     cv::circle(outputImage, cv::Point{(int)point.x, (int)point.y}, 5, cv::Scalar{255}, -1);
-            // }
-        }
+        black |= birdviewObjectMask;
+        cv::imshow("TwoLaneMask", black);
+
+        // std::vector<cv::Point2f> points = {
+        //     cv::Point2f{boundingBox.tl()},
+        //     cv::Point2f{boundingBox.br().x, boundingBox.tl().y},
+        //     cv::Point2f{boundingBox.br()},
+        //     cv::Point2f{boundingBox.tl().x, boundingBox.br().y}
+        // };
+        // std::vector<cv::Point2f> birdviewBoundingBox;
+        // cv::perspectiveTransform(points, birdviewBoundingBox, birdviewTransformMatrix);
+
+        // cv::Mat colorBirdview;
+        // cv::cvtColor(this->birdview, colorBirdview, cv::COLOR_GRAY2BGR);
+
+        // for (int i = 0; i < 3; i++)
+        //     cv::line(colorBirdview, birdviewBoundingBox[i], birdviewBoundingBox[i+1], cv::Scalar{255,255,0});
+        // cv::line(colorBirdview, birdviewBoundingBox[0], birdviewBoundingBox[3], cv::Scalar{255,255,0});
+
+        
+        // cv::imshow("BoundingBoxBirdview", colorBirdview);
+
+        return 0;
     }
     
+    // I dont know
+    return 0;
+}
+
+cv::Mat DetectLane::birdviewTransform(cv::Mat inputImage, cv::Mat& resultM) const
+{
+    cv::Mat birdviewResult = birdviewTransformation(inputImage, birdwidth, birdheight, skyline, offsetLeft, offsetRight, resultM);
+    return birdviewResult;
 }
 
 Mat DetectLane::shadow(const Mat& src) {

@@ -13,6 +13,7 @@ constexpr const char* CONF_PLAN_WINDOW = "ConfigPlanning";
 Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
     : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}
     , isAvoidObjectDone{true}, isTurningDone{true}
+    , prevObject{0}, object{0}
 {
     cv::namedWindow(CONF_PLAN_WINDOW);
     cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
@@ -35,21 +36,29 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     auto leftLane = laneDetect->getLeftLane();
     auto rightLane = laneDetect->getRightLane();
 
-    bool object = objectDetect->detect();
+    prevObject = object;
+    object = objectDetect->detect();
+
+    ROS_INFO("object = %d", object);
 
     // bool object = false;
 
-    if (object)
-    {
-        if (isAvoidObjectDone)
-        {
-            isAvoidObjectDone = false;
-            _objectTimer.stop();
-            _objectTimer.setPeriod(ros::Duration{avoidObjectTime/10.0f});
-            _objectTimer.start();
-        }
-    }
-    object = !isAvoidObjectDone;
+    // if (object)
+    // {
+    //     if (isAvoidObjectDone)
+    //     {
+    //         prevObject = object;
+    //         isAvoidObjectDone = false;
+    //         _objectTimer.stop();
+    //         _objectTimer.setPeriod(ros::Duration{avoidObjectTime/10.0f});
+    //         _objectTimer.start();
+    //     }
+    // }
+
+    // if (!isAvoidObjectDone)
+    // {
+    //     object = prevObject;
+    // }
 
     if (sign != 0)
     {
@@ -240,13 +249,13 @@ void Planning::updateColor(cv::Mat colorImage)
 
 void Planning::updateDepth(cv::Mat depthImage)
 {
-    this->objectDetect->update(depthImage);
+    // this->objectDetect->update(depthImage);
     // this->signDetect->updateDepth(depthImage);
 }
 
 cv::Point Planning::driveCloseToLeft()
 {
-    // ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
+    ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
     cv::Point leftDrive;
     laneDetect->getLeftLane()->getDrivePoint(leftDrive);
     return {leftDrive.x + 30, leftDrive.y};
@@ -254,29 +263,32 @@ cv::Point Planning::driveCloseToLeft()
 
 cv::Point Planning::driveCloseToRight()
 {
-    // ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
+    ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
     cv::Point rightDrive;
     laneDetect->getRightLane()->getDrivePoint(rightDrive);
     return {rightDrive.x - 30, rightDrive.y};
 }
 
-cv::Point Planning::driveStraight(bool object)
+cv::Point Planning::driveStraight(int object)
 {
-    // ROS_INFO("DRIVE STRAIGHT");
-    if (object)
+    ROS_INFO("DRIVE STRAIGHT %d", object);
+    if (object > 0)
     {
         return driveCloseToLeft();
+    } else if (object < 0)
+    {
+        return driveCloseToRight();
     }
-    // return driveCloseToRight();
-    cv::Point leftDrive, rightDrive;
-    laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-    laneDetect->getRightLane()->getDrivePoint(rightDrive);
-    return (leftDrive + rightDrive) / 2;
+    return driveCloseToRight();
+    // cv::Point leftDrive, rightDrive;
+    // laneDetect->getLeftLane()->getDrivePoint(leftDrive);
+    // laneDetect->getRightLane()->getDrivePoint(rightDrive);
+    // return (leftDrive + rightDrive) / 2;
 }
 
 cv::Point Planning::turnLeft()
 {
-    // ROS_INFO("TURN LEFT");
+    ROS_INFO("TURN LEFT");
     // if (laneDetect->getRightLane()->recover(laneDetect->getLeftLane(), laneDetect->getLaneWidth()))
     // {
     //     return driveStraight(false);
@@ -286,7 +298,7 @@ cv::Point Planning::turnLeft()
 
 cv::Point Planning::turnRight()
 {
-    // ROS_INFO("TURN RIGHT");
+    ROS_INFO("TURN RIGHT");
     // if (laneDetect->getLeftLane()->recover(laneDetect->getRightLane(), laneDetect->getLaneWidth()))
     // {
     //     return driveStraight(false);

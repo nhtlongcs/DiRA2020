@@ -13,7 +13,7 @@ std::shared_ptr<LineParams> calcLineParams(const std::vector<cv::Point>& listPoi
 
 int getXByY(const LineParams& params, double y);
 
-cv::Mat kmean(cv::Mat image, int kCluster);
+cv::Mat kmean(cv::Mat image, size_t kCluster);
 
 cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight, int offsetLeft, int offsetRight, int skyline, cv::Mat& returnM);
 

@@ -21,6 +21,7 @@ public:
     bool isFound() const;
     bool isOutOfImage(const cv::Point& point) const;
     void show(cv::Mat& drawImage) const;
+    void getMask(cv::Mat& birdviewInputBackground) const;
 
     // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
     LineParams getLineParams() const;

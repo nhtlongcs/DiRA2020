@@ -25,7 +25,7 @@ private:
 private:
     cv::Point driveCloseToLeft();
     cv::Point driveCloseToRight();
-    cv::Point driveStraight(bool object);
+    cv::Point driveStraight(int object);
     cv::Point turnLeft();
     cv::Point turnRight();
 
@@ -42,6 +42,7 @@ private:
 
     int countTurning, delay; // for turning
     int prevSign, sign;      // for signDetect
+    int prevObject, object;      // for signDetect
     int rate;
 
     int turnSign = 0;

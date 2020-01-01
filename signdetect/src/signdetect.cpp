@@ -96,7 +96,7 @@ int DetectSign::detectOneFrame()
     Mat gray;
     gray = kmean(this->depth, 2);
 
-    cvtColor(gray, gray, CV_BGR2GRAY);
+    // cvtColor(gray, gray, CV_BGR2GRAY);
     cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
 
     vector<Vec3f> circles;
@@ -112,9 +112,9 @@ int DetectSign::detectOneFrame()
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
         int radius = cvRound(circles[i][2]);
         // circle center
-        circle(this->depth, center, 3, Scalar(0, 255, 0), -1, 8, 0);
+        circle(this->depth, center, 3, Scalar(127), -1, 8, 0);
         // circle outline
-        circle(this->depth, center, radius, Scalar(0, 0, 255), 3, 8, 0);
+        circle(this->depth, center, radius, Scalar(100), 3, 8, 0);
         cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
 
         if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)

@@ -56,7 +56,9 @@ void imageDepthCallback(const sensor_msgs::ImageConstPtr &msg)
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         if (!cv_ptr->image.empty())
         {
-            planner->updateDepth(cv_ptr->image);
+            cv::cvtColor(cv_ptr->image, out, cv::COLOR_BGR2GRAY);
+            planner->updateDepth(out);
+            objectDetect->updateDepth(out);
         }
     }
     catch (cv_bridge::Exception &e)
@@ -74,7 +76,8 @@ void imageBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
         if (!cv_ptr->image.empty())
         {
-            planner->updateBinary(cv_ptr->image);
+            laneDetect->updateBinary(cv_ptr->image);
+            objectDetect->updateBinary(cv_ptr->image);
         }
     }
     catch (cv_bridge::Exception &e)
