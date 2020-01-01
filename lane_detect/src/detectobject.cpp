@@ -17,14 +17,8 @@ enum OBJ_STRATEGY
 };
 
 DetectObject::DetectObject(DetectLane* lane)
-: objectROIRect{115, 100, 61, 49}
-, kCluster{3}
-, pBackSub{cv::createBackgroundSubtractorMOG2()}
-, detectThreshold{30}
-, depthThresholdMin{100}
-, depthThresholdMax{155}
+: pBackSub{cv::createBackgroundSubtractorMOG2()}
 , lane{lane}
-, strategy{0}
 {
     cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
@@ -164,23 +158,23 @@ int DetectObject::getDirectOnRawBinary(const cv::Rect& objectROI)
 
 int DetectObject::getDirectOnKmean(const cv::Rect& objectROI)
 {
-    cv::Mat kmeanImage = kmean(this->depth, kCluster);
-    cv::imshow("KMean", kmeanImage);
+    // cv::Mat kmeanImage = kmean(this->depth, kCluster);
+    // cv::imshow("KMean", kmeanImage);
 
-    cv::Mat objectROIImage = kmeanImage(objectROI);
-    cv::imshow("KMeanCrop", objectROIImage);
+    // cv::Mat objectROIImage = kmeanImage(objectROI);
+    // cv::imshow("KMeanCrop", objectROIImage);
 
-    return 0;
-    // cv::Mat objectROIImage = this->depth(objectROI);
-    // cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
+    // return 0;
+    cv::Mat objectROIImage = this->depth(objectROI);
+    cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
 
 
-    // cv::Mat mask;
-    // cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin}, cv::Scalar{depthThresholdMax}, mask);
+    cv::Mat mask;
+    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin}, cv::Scalar{depthThresholdMax}, mask);
 
-    // cv::imshow(CONF_OBJ_WINDOW, mask);
+    cv::imshow(CONF_OBJ_WINDOW, mask);
 
-    // return estimateDirect(mask);
+    return estimateDirect(mask);
 }
 
 int DetectObject::getDirectOnKmeanBGSub(const cv::Rect& objectROI)

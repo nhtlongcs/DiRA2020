@@ -14,10 +14,12 @@ Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
     : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}
     , isAvoidObjectDone{true}, isTurningDone{true}
     , prevObject{0}, object{0}
+    , laneToDriveCloseTo{2}
 {
     cv::namedWindow(CONF_PLAN_WINDOW);
     cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
     cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
+    cv::createTrackbar("LaneToCloseTo", CONF_PLAN_WINDOW, &laneToDriveCloseTo, 2);
 
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime/10.0f}, &Planning::onObjectTimeout, this, true);
     _turnTimer = _nh.createTimer(ros::Duration{turningTime/10.0f}, &Planning::onTurnTimeout, this, true);
@@ -78,11 +80,11 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         }
     }
 
-    // if (sign != 0)
-    // {
-    //     ROS_INFO("Slow down..............");
-    //     driveSpeed = minSpeed;
-    // }
+    if (sign != 0)
+    {
+        ROS_INFO("Slow down..............");
+        driveSpeed = minSpeed;
+    }
 
     // if (prevSign != 0 && sign == 0)
     // {
@@ -127,111 +129,48 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         driveSpeed = maxSpeed;
     }
 
-    if (leftLane->isFound() && rightLane->isFound())
+    if (sign == 0)
     {
-        if (sign == 0)
+        driveSpeed = maxSpeed;
+        if (leftLane->isFound() && rightLane->isFound())
         {
-            driveSpeed = maxSpeed;
             drivePoint = driveStraight(object);
         }
-        else if (sign < 0)
+        else if (leftLane->isFound())
         {
-            // drivePoint = turnLeft();
-            drivePoint = driveCloseToLeft();
-        }
-        else
-        {
-            // drivePoint = turnRight();
-            drivePoint = driveCloseToRight();
-        }
-    }
-    else if (leftLane->isFound())
-    {
-        // if (rightLane->recover(leftLane, laneWidth))
-        // {
-        //     if (sign <= 0) // go straight or turn left
-        //     {
-        //         if (sign == 0)
-        //         {
-        //             driveSpeed = maxSpeed;
-        //         }
-        //         drivePoint = driveStraight(object);
-        //     }
-        //     else
-        //     {
-        //         driveSpeed = minSpeed;
-        //         drivePoint = turnRight();
-        //     }
-        // }
-        // else
-        // {
-        //     if (sign > 0)
-        //     {
-        //         ROS_INFO("TURN RIGHT BUT RIGHT LANE NOT FOUND!!");
-        //     }
-        //     drivePoint = driveCloseToLeft();
-        // }
-        if (rightLane->recover(leftLane, laneWidth))
-        {
-            if (sign == 0)
+            if (rightLane->recover(leftLane, laneWidth))
             {
-                driveSpeed = maxSpeed;
                 drivePoint = driveStraight(object);
-            } else if (sign < 0)
-            {
-                drivePoint = driveCloseToLeft();
             }
             else
             {
-                driveSpeed = minSpeed;
+                drivePoint = driveCloseToLeft();
+            }
+        }
+        else if (rightLane->isFound())
+        {
+            if (leftLane->recover(rightLane, laneWidth))
+            {
+                drivePoint = driveStraight(object);
+            }
+            else
+            {
                 drivePoint = driveCloseToRight();
             }
         }
         else
         {
-            if (sign > 0)
-            {
-                ROS_INFO("TURN RIGHT BUT RIGHT LANE NOT FOUND!!");
-                drivePoint = cv::Point{330 * sign, 200};
-            } else
-            {
-                drivePoint = driveCloseToLeft();
-            }
+            ROS_INFO("BOTH LANES NOT FOUND!");
+            // drivePoint = cv::Point{330 * sign, 200};
         }
-    }
-    else if (rightLane->isFound())
+    } else if (sign > 0)
     {
-        if (leftLane->recover(rightLane, laneWidth))
-        {
-            if (sign >= 0) // go straight or turn right
-            {
-                if (sign == 0)
-                {
-                    driveSpeed = maxSpeed;
-                }
-                drivePoint = driveStraight(object);
-            }
-            else
-            {
-                drivePoint = turnLeft();
-            }
-        }
-        else
-        {
-            if (sign < 0)
-            {
-                ROS_INFO("TURN LEFT BUT LEFT LANE NOT FOUND!!");
-                drivePoint = cv::Point{330 * sign, 200};
-            } else
-            {
-                drivePoint = driveCloseToRight();
-            }
-        }
-    }
-    else
+        driveSpeed = minSpeed;
+        drivePoint = turnRight();
+    } else
     {
-        // ROS_INFO("BOTH LANES NOT FOUND!");
-        drivePoint = cv::Point{330 * sign, 200};
+        driveSpeed = minSpeed;
+        drivePoint = turnLeft();
     }
 }
 
@@ -256,17 +195,27 @@ void Planning::updateDepth(cv::Mat depthImage)
 cv::Point Planning::driveCloseToLeft()
 {
     ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
-    cv::Point leftDrive;
-    laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-    return {leftDrive.x + 30, leftDrive.y};
+    cv::Point leftDrive{-320, 200};
+    if (laneDetect->getLeftLane()->getDrivePoint(leftDrive))
+    {
+        leftDrive = cv::Point{leftDrive.x + 30, leftDrive.y};
+    }
+
+    return leftDrive;
+
+
 }
 
 cv::Point Planning::driveCloseToRight()
 {
     ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
-    cv::Point rightDrive;
-    laneDetect->getRightLane()->getDrivePoint(rightDrive);
-    return {rightDrive.x - 30, rightDrive.y};
+    cv::Point rightDrive{320, 200};
+    if (laneDetect->getRightLane()->getDrivePoint(rightDrive))
+    {
+        rightDrive = cv::Point{rightDrive.x - 30, rightDrive.y};
+    }
+
+    return rightDrive;
 }
 
 cv::Point Planning::driveStraight(int object)
@@ -279,31 +228,52 @@ cv::Point Planning::driveStraight(int object)
     {
         return driveCloseToRight();
     }
-    return driveCloseToRight();
-    // cv::Point leftDrive, rightDrive;
-    // laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-    // laneDetect->getRightLane()->getDrivePoint(rightDrive);
-    // return (leftDrive + rightDrive) / 2;
+
+    if (laneToDriveCloseTo == 0)
+    {
+        return driveCloseToLeft();
+    } else if (laneToDriveCloseTo == 1)
+    {
+        cv::Point leftDrive, rightDrive;
+        // return driveCloseToRight();
+        laneDetect->getLeftLane()->getDrivePoint(leftDrive);
+        laneDetect->getRightLane()->getDrivePoint(rightDrive);
+        return (leftDrive + rightDrive) / 2;
+    } else 
+    {
+        return driveCloseToRight();
+    }
+
 }
 
 cv::Point Planning::turnLeft()
 {
     ROS_INFO("TURN LEFT");
-    // if (laneDetect->getRightLane()->recover(laneDetect->getLeftLane(), laneDetect->getLaneWidth()))
-    // {
-    //     return driveStraight(false);
-    // }
-    return driveCloseToLeft();
+    laneDetect->getRightLane()->reset();
+    laneDetect->getLeftLane()->reset();
+    laneDetect->detect();
+    if (laneDetect->getLeftLane()->isFound())
+    {
+        return driveCloseToLeft();
+    } else
+    {
+        return cv::Point{0, 240};
+    }
 }
 
 cv::Point Planning::turnRight()
 {
     ROS_INFO("TURN RIGHT");
-    // if (laneDetect->getLeftLane()->recover(laneDetect->getRightLane(), laneDetect->getLaneWidth()))
-    // {
-    //     return driveStraight(false);
-    // }
-    return driveCloseToRight();
+    laneDetect->getRightLane()->reset();
+    laneDetect->getLeftLane()->reset();
+    laneDetect->detect();
+    if (laneDetect->getRightLane()->isFound())
+    {
+        return driveCloseToRight();
+    } else
+    {
+        return cv::Point{320, 240};
+    }
 }
 
 void Planning::onObjectTimeout(const ros::TimerEvent& event)

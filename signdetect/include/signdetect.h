@@ -28,10 +28,10 @@ private:
     int canny = 255;
     int votes = 22;
     int frameCount = 0;
-    // int minBlue[3] = {100, 90, 35};
-    int minBlue[3] = {77, 10, 20};
-    // int maxBlue[3] = {170, 142, 60};
-    int maxBlue[3] = {170, 142, 110};
+    int minBlue[3] = {100, 90, 35};
+    // int minBlue[3] = {77, 10, 20};
+    int maxBlue[3] = {170, 142, 60};
+    // int maxBlue[3] = {170, 142, 110};
 
 
     int detectConfident = 30, classifyConfident = 70;

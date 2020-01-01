@@ -28,7 +28,7 @@ private:
 private:
     cv::Mat depth;
     cv::Mat binary;
-    cv::Rect objectROIRect;
+    cv::Rect objectROIRect = {115, 100, 61, 49};
 
     int strategy = 0;
 
@@ -38,7 +38,7 @@ private:
 
     std::list<bool> objectHistories;
     int maxHistory = 10;
-    int direct;
+    int direct = 0;
 
     int offsetROI_x = 30;
     int offsetROI_y = 95;
@@ -53,11 +53,11 @@ private:
     int maxLineGap = 5;
 
     // Strategy getDirectOnRawBinary
-    int depthThresholdMin = 0;
+    int depthThresholdMin = 10;
     int depthThresholdMax = 155;
 
     // Strategy getDirectOnKmean
-    int kCluster;
+    int kCluster = 3;
 };
 
 #endif

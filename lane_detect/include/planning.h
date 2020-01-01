@@ -45,6 +45,8 @@ private:
     int prevObject, object;      // for signDetect
     int rate;
 
+    int laneToDriveCloseTo;
+
     int turnSign = 0;
     bool isTurning = false;
 };

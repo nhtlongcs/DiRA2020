@@ -26,7 +26,9 @@ public:
     // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
     LineParams getLineParams() const;
     bool getBeginPoint(cv::Point& returnPoint) const;
+    // bool getDrivePoint(std::shared_ptr<LaneLine> other, cv::Point& returnPoint) const;
     bool getDrivePoint(cv::Point& returnPoint) const;
+
     std::vector<cv::Point> getPoints() const;
 
     void swap(std::shared_ptr<LaneLine> other);

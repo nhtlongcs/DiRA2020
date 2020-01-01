@@ -365,6 +365,28 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine>& lane, int laneWidth)
     }
 }
 
+// bool LaneLine::getDrivePoint(std::shared_ptr<LaneLine> other, cv::Point& returnPoint) const
+// {
+//     if (this->isFound() && other->isFound())
+//     {
+//         LineParams midLine;
+//         std::shared_ptr<LineParams> leftParams = other->getLineParams();
+//         for (size_t i = 0; i < midLine.size(); i++)
+//         {
+//             midLine[i] = (*leftParams)[i] + (*lineParams)[i]) / 2;
+//         }
+
+//         int y = drivePointIndex;
+//         int x = getXByY(midLine, y);
+//         returnPoint = cv::Point{x, y};
+//         return true;
+//     } else if (this->isFound())
+//     {
+        
+//     }
+// }
+
+
 //////////////////////////////////////////
 
 cv::Rect LeftLane::getDetectBeginPointRegion() const
@@ -422,7 +444,6 @@ cv::Point RightLane::calcPerpendicular(const cv::Point& point) const
 {
     return {-point.y, point.x};
 }
-
 ///////////////////////////////////////////////
 
 // MidLane::MidLane(LaneLine& leftLane, LaneLine& rightLane)
