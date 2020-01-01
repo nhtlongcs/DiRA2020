@@ -391,7 +391,7 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine>& lane, int laneWidth)
 
 cv::Rect LeftLane::getDetectBeginPointRegion() const
 {
-    return cv::Rect{0, 0, lineImage.cols / 2, lineImage.rows};
+    return cv::Rect{0, 0, lineImage.cols / 3, lineImage.rows};
 }
 
 cv::Scalar LeftLane::getLaneColor() const
@@ -420,7 +420,7 @@ cv::Point LeftLane::calcPerpendicular(const cv::Point& point) const
 
 cv::Rect RightLane::getDetectBeginPointRegion() const
 {
-    return cv::Rect{lineImage.cols / 2, 0, lineImage.cols / 2, lineImage.rows};
+    return cv::Rect{lineImage.cols * 2 / 3, 0, lineImage.cols / 3, lineImage.rows};
 }
 
 cv::Scalar RightLane::getLaneColor() const

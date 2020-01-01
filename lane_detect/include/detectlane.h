@@ -53,6 +53,8 @@ private:
     int minLaneInShadow[3] = {90, 35, 95};
     int maxLaneInShadow[3] = {180, 117, 158};
 
+    int initLaneWidth = 50;
+
     int lowThreshold = 2;
     int votes = 60;
     int minLinlength = 60;

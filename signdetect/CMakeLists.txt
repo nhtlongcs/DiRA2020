@@ -8,9 +8,14 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   lane_detect
+  dynamic_reconfigure
 )
 
 find_package(OpenCV REQUIRED)
+
+generate_dynamic_reconfigure_options(
+  cfg/sign.cfg
+)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -28,11 +33,11 @@ add_library(api_${PROJECT_NAME}
   src/signdetect.cpp
 )
 
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(api_${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 add_executable(${PROJECT_NAME}_node src/signdetect_node.cpp)
 
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(
   ${PROJECT_NAME}_node

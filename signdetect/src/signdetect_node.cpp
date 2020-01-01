@@ -5,6 +5,8 @@
 #include <image_transport/image_transport.h>
 #include <ros/package.h>
 #include <cds_msgs/sign.h>
+#include <dynamic_reconfigure/server.h>
+#include "signdetect/signConfig.h"
 #include "signdetect.h"
 
 static const int RATE = 15;
@@ -60,7 +62,13 @@ int main(int argc, char *argv[])
     const cv::Mat&& LEFT_TEMPLATE = cv::imread(leftTemplate, cv::IMREAD_GRAYSCALE);
     const cv::Mat&& RIGHT_TEMPLATE = cv::imread(rightTemplate, cv::IMREAD_GRAYSCALE);
 
+    dynamic_reconfigure::Server<signdetect::signConfig> server;
+    dynamic_reconfigure::Server<signdetect::signConfig>::CallbackType f;
+
+
     signDetect = new DetectSign(LEFT_TEMPLATE, RIGHT_TEMPLATE);
+    f = boost::bind(&DetectSign::configCallback, signDetect, _1, _2);
+    server.setCallback(f);
 
     ros::Rate rate(RATE);
 
@@ -69,6 +77,7 @@ int main(int argc, char *argv[])
 
     pub = nh.advertise<cds_msgs::sign>("team220/sign", 1);
 
+    ROS_INFO("Spinning node");
     while (ros::ok())
     {
         ros::spinOnce();

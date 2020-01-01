@@ -21,11 +21,14 @@
   <build_depend>roscpp</build_depend>
   <build_depend>cds_msgs</build_depend>
   <build_depend>lane_detect</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_export_depend>dynamic_reconfigure</build_export_depend>
   <build_export_depend>cv_bridge</build_export_depend>
   <build_export_depend>image_transport</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>cds_msgs</build_export_depend>
   <build_export_depend>lane_detect</build_export_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>image_transport</exec_depend>
   <exec_depend>roscpp</exec_depend>

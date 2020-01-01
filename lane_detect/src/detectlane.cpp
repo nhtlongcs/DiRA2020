@@ -35,6 +35,7 @@ DetectLane::DetectLane()
 
     cv::namedWindow(CONF_BIRDVIEW_WINDOW);
     cv::createTrackbar("Use Birdview", CONF_BIRDVIEW_WINDOW, &usebirdview, 1);
+    cv::createTrackbar("InitLanewidth", CONF_BIRDVIEW_WINDOW, &initLaneWidth, 200);
     cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
     cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
     cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
@@ -62,7 +63,7 @@ void DetectLane::updateRGB(const cv::Mat& src)
 
 bool DetectLane::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
 {
-    return abs(leftBegin.x - rightBegin.x) < 50;
+    return abs(leftBegin.x - rightBegin.x) < initLaneWidth;
 }
 
 void DetectLane::detect()
@@ -113,6 +114,7 @@ void DetectLane::detect()
 
         if (isNeedRedetect(leftBegin, rightBegin))
         {
+            ROS_INFO("LaneWidth < %d. Redetect", initLaneWidth);
             leftLane->reset();
             rightLane->reset();
             frameCount = 0;

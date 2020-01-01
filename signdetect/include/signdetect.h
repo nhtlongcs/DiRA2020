@@ -3,6 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <list>
+#include "signdetect/signConfig.h"
 
 class DetectSign
 {
@@ -12,6 +13,8 @@ public:
     void updateRGB(const cv::Mat &rgb);
     void updateDepth(const cv::Mat &depth);
     int detect();
+
+    void configCallback(signdetect::signConfig &config, uint32_t level);
 
 private:
     int detectOneFrame();

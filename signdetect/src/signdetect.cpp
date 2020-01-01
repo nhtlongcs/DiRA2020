@@ -1,4 +1,6 @@
 #include "signdetect.h"
+#include <dynamic_reconfigure/server.h>
+#include "signdetect/signConfig.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -44,24 +46,45 @@ DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate
     , LEFT_TEMPLATE{leftTemplate}
     , RIGHT_TEMPLATE{rightTemplate}
 {
-    cv::namedWindow(CONF_SIGN_WINDOW);
-    cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
-    cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
+    // cv::namedWindow(CONF_SIGN_WINDOW);
+    // cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
+    // cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
 
-    cv::createTrackbar("Strategy", CONF_SIGN_WINDOW, &classifyStrategy, 1);
-    cv::createTrackbar("DetectConfident", CONF_SIGN_WINDOW, &detectConfident, 100);
-    cv::createTrackbar("ClassifyConfident", CONF_SIGN_WINDOW, &classifyConfident, 100);
-    cv::createTrackbar("DiffToClassify", CONF_SIGN_WINDOW, &diffToClassify, 100);
+    // cv::createTrackbar("Strategy", CONF_SIGN_WINDOW, &classifyStrategy, 1);
+    // cv::createTrackbar("DetectConfident", CONF_SIGN_WINDOW, &detectConfident, 100);
+    // cv::createTrackbar("ClassifyConfident", CONF_SIGN_WINDOW, &classifyConfident, 100);
+    // cv::createTrackbar("DiffToClassify", CONF_SIGN_WINDOW, &diffToClassify, 100);
 
-    cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &minBlue[0], 179);
-    cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &minBlue[1], 255);
-    cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &minBlue[2], 255);
-    cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &maxBlue[0], 179);
-    cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &maxBlue[1], 255);
-    cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &maxBlue[2], 255);
+    // cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &minBlue[0], 179);
+    // cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &minBlue[1], 255);
+    // cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &minBlue[2], 255);
+    // cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &maxBlue[0], 179);
+    // cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &maxBlue[1], 255);
+    // cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &maxBlue[2], 255);
 
     MAX_DIFF = matching(LEFT_TEMPLATE, cv::Scalar(255) - LEFT_TEMPLATE);
 }
+
+void DetectSign::configCallback(signdetect::signConfig &config, uint32_t level)
+{
+    // ROS_INFO("Reconfigure Request: %d %f %s %s %d", 
+    //         config.int_param, config.double_param, 
+    //         config.str_param.c_str(), 
+    //         config.bool_param?"True":"False", 
+    //         config.size);
+
+    classifyStrategy = config.classify_method;
+    detectConfident = config.detect_confident;
+    diffToClassify = config.diff_classify;
+    classifyConfident = config.classify_confident;
+    minBlue[0] = config.min_H;
+    minBlue[1] = config.min_S;
+    minBlue[2] = config.min_V;
+    maxBlue[0] = config.max_H;
+    maxBlue[1] = config.max_S;
+    maxBlue[2] = config.max_V;
+}
+
 
 DetectSign::~DetectSign()
 {
