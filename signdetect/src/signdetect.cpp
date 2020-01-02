@@ -154,7 +154,12 @@ int DetectSign::detectOneFrame()
             // showImage("DetectSign", depth);
             // showImage("DetectSignROI", roiImg);
             showImage(_detectPublisher, "mono8", depth);
-            showImage(_roiPublisher, "mono8", roiImg);
+
+            cv::Mat colorBlue;
+            cv::cvtColor(roiImg, colorBlue, cv::COLOR_GRAY2BGR);
+            cv::Mat thresholdconcat;
+            cv::hconcat(rgb(roi), colorBlue, thresholdconcat);
+            showImage(_roiPublisher, "bgr8", thresholdconcat);
 
             if (percent > detectConfident)
             {
