@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include <vector>
 #include <string>
 #include <exception>
@@ -45,7 +46,12 @@ DetectSign::DetectSign(const cv::Mat& leftTemplate, const cv::Mat& rightTemplate
     : recentDetects{MAX_FRAME_COUNT, 0}
     , LEFT_TEMPLATE{leftTemplate}
     , RIGHT_TEMPLATE{rightTemplate}
+    , _nh{"signdetect"}
+    , _debugImage{_nh}
 {
+    _roiPublisher = _debugImage.advertise("/debug/sign/ROI", 1, false);
+    _thresholdedPublisher = _debugImage.advertise("/debug/sign/blue", 1, false);
+    _detectPublisher = _debugImage.advertise("/debug/sign/detect", 1, false);
     // cv::namedWindow(CONF_SIGN_WINDOW);
     // cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
     // cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
@@ -144,8 +150,12 @@ int DetectSign::detectOneFrame()
         {
             cv::Mat roiImg(blue, roi);
             float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
-            imshow("SignDetect", roiImg);
-            // imshow("SignDetect", this->depth);
+
+            // showImage("DetectSign", depth);
+            // showImage("DetectSignROI", roiImg);
+            showImage(_detectPublisher, "mono8", depth);
+            showImage(_roiPublisher, "mono8", roiImg);
+
             if (percent > detectConfident)
             {
                 int sign = classify(rgb(roi));

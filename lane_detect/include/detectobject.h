@@ -5,6 +5,7 @@
 #include <opencv2/video.hpp>
 #include <list>
 #include <dynamic_reconfigure/server.h>
+#include <image_transport/image_transport.h>
 #include "lane_detect/detectobjectConfig.h"
 
 class DetectLane;
@@ -67,6 +68,10 @@ private:
 
     // Strategy getDirectOnKmean
     int kCluster = 3;
+
+    image_transport::ImageTransport _debugImage;
+    image_transport::Publisher _houghPublisher;
+    image_transport::Publisher _depthThresholdedPublisher;
 };
 
 #endif

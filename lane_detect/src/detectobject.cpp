@@ -2,6 +2,7 @@
 #include <opencv2/imgproc.hpp>
 #include <limits>
 #include <ros/ros.h>
+#include <cv_bridge/cv_bridge.h>
 #include "detectobject.h"
 #include "detectlane.h"
 #include "utils.h"
@@ -20,9 +21,11 @@ DetectObject::DetectObject(DetectLane* lane)
 , lane{lane}
 , _nh{"detectobject"}
 , _serverConfig{_nh}
+, _debugImage{_nh}
 {
     _serverConfig.setCallback(boost::bind(&DetectObject::configCallback, this, _1, _2));
-
+    _houghPublisher = _debugImage.advertise("/debug/object/hough", 1, false);
+    _depthThresholdedPublisher = _debugImage.advertise("/debug/object/depth_threshold", 1, false);
     // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     // cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
 
@@ -167,7 +170,8 @@ int DetectObject::getDirectOnRawBinary(const cv::Rect& objectROI)
     cv::Mat depthThresholded;
     depthThresholded = this->depth(objectROI);
     cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, depthThresholded);
-    cv::imshow(CONF_OBJ_WINDOW, depthThresholded);
+    // showImage(CONF_OBJ_WINDOW, depthThresholded);
+    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
 
     return estimateDirect(depthThresholded);
 }
@@ -188,7 +192,7 @@ int DetectObject::getDirectOnKmean(const cv::Rect& objectROI)
     cv::Mat mask;
     cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, mask);
 
-    cv::imshow(CONF_OBJ_WINDOW, mask);
+    // cv::imshow(CONF_OBJ_WINDOW, mask);
 
     return estimateDirect(mask);
 }
@@ -205,7 +209,7 @@ int DetectObject::getDirectOnKmeanBGSub(const cv::Rect& objectROI)
     pBackSub->apply(kmeanImage, fgMask);
     
     fgMask &= mask;
-    cv::imshow(CONF_OBJ_WINDOW, fgMask);
+    // cv::imshow(CONF_OBJ_WINDOW, fgMask);
 
     return estimateDirect(fgMask);
 }
@@ -373,7 +377,9 @@ void DetectObject::Hough(const cv::Mat& binary)
         objectROIRect.y = std::max(0, offsetROI_y - objectROI_offsetTop);
         objectROIRect.width = std::abs(right_most_x - left_most_x);
         cv::rectangle(HoughTransform, objectROIRect, cv::Scalar{255, 0, 0}, 2);
-        cv::imshow("HoughLines", HoughTransform);
+
+        // showImage("HoughLines", HoughTransform);
+        showImage(_houghPublisher, "bgr8", HoughTransform);
     }
 }
 

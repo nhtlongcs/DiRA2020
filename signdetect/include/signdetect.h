@@ -3,6 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <list>
+#include <image_transport/image_transport.h>
 #include "signdetect/signConfig.h"
 
 class DetectSign
@@ -43,6 +44,12 @@ private:
 
     const cv::Mat LEFT_TEMPLATE, RIGHT_TEMPLATE;
     int MAX_DIFF;
+
+    ros::NodeHandle _nh;
+    image_transport::ImageTransport _debugImage;
+    image_transport::Publisher _roiPublisher;
+    image_transport::Publisher _detectPublisher;
+    image_transport::Publisher _thresholdedPublisher;
 };
 
 #endif

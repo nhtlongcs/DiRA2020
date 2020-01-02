@@ -4,6 +4,8 @@
 #include <memory>
 #include "opencv2/core.hpp"
 #include <dynamic_reconfigure/server.h>
+#include <image_transport/publisher.h>
+#include <image_transport/image_transport.h>
 #include "lane_detect/laneConfig.h"
 
 class LaneLine;
@@ -32,9 +34,6 @@ public:
     void configlaneCallback(lane_detect::laneConfig& config, uint32_t level);
 
 private:
-    ros::NodeHandle _nh;
-    dynamic_reconfigure::Server<lane_detect::laneConfig> _configServer;
-
     bool isWrongLane() const;
     cv::Mat preprocess(const cv::Mat& src);
     cv::Mat shadow(const cv::Mat& src);
@@ -80,5 +79,14 @@ private:
     int birdwidth = 320;
     int birdheight = 240;
     int skyline = 120;
+
+private:
+    ros::NodeHandle _nh;
+    dynamic_reconfigure::Server<lane_detect::laneConfig> _configServer;
+
+    image_transport::ImageTransport _debugImage;
+    image_transport::Publisher _birdviewPublisher;
+    image_transport::Publisher _lanePublisher;
+    image_transport::Publisher _houghPublisher;
 };
 #endif

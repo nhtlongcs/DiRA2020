@@ -3,7 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <cmath>
 #include <array>
-
+#include <cv_bridge/cv_bridge.h>
 using namespace Eigen;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,4 +119,15 @@ cv::Mat birdviewTransformation(const cv::Mat& src, int birdwidth, int birdheight
     warpPerspective(src, resultBirdview, returnM, resultBirdview.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
 
     return resultBirdview;
+}
+
+void showImage(const image_transport::Publisher& publisher, const std::string& encode, const cv::Mat& image)
+{
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), encode, image).toImageMsg();
+    publisher.publish(msg);
+}
+
+void showImage(const std::string& winname, const cv::Mat& image)
+{
+    cv::imshow(winname, image);
 }

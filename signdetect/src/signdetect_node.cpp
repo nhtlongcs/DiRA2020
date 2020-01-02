@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
     pub = nh.advertise<cds_msgs::sign>("team220/sign", 1);
 
-    ROS_INFO("Spinning node");
+    ROS_INFO_NAMED("signdetect","Spinning node");
     while (ros::ok())
     {
         ros::spinOnce();

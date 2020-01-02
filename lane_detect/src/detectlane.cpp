@@ -2,6 +2,7 @@
 #include "laneline.h"
 #include "utils.h"
 #include "lane_detect/laneConfig.h"
+#include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -18,10 +19,14 @@ DetectLane::DetectLane()
 , sumLaneWidth{0}
 , _nh{"lanedetect"}
 , _configServer{_nh}
+, _debugImage{_nh}
 // , midLane{nullptr}
 {
     _configServer.setCallback(boost::bind(&DetectLane::configlaneCallback, this, _1, _2));
-    
+
+    _birdviewPublisher = _debugImage.advertise("/debug/lane/birdview", 1, false);
+    _lanePublisher = _debugImage.advertise("/debug/lane/lane", 1, false);
+    _houghPublisher = _debugImage.advertise("/debug/lane/hough", 1, false);
     // setUseOptimized(true);
     // setNumThreads(4);
  
@@ -93,25 +98,30 @@ void DetectLane::detect()
         return;
     }
 
-    cv::imshow("RGB", this->rgb);
+    // showImage("RGB", this->rgb);
 
     // Mat binary = preprocess(this->rgb);
 
     // Mat shadowMask = shadow(this->rgb);
     // bitwise_or(binary, shadowMask, binary);
-    // imshow("binary", this->binary);
+    // showImage("binary", this->binary);
 
     if (usebirdview)
     {
-        imshow("binary", this->binary);
+        // showImage("binary", this->binary);
         this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
-        imshow(CONF_BIRDVIEW_WINDOW, this->birdview);
+        // showImage(CONF_BIRDVIEW_WINDOW, this->birdview);
     }
     else
     {
         birdview = this->binary;
     }
 
+    {
+        // publish debug image
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", this->birdview).toImageMsg();
+        _birdviewPublisher.publish(msg);
+    }
     // birdview = this->binary;
 
     // Mat morphBirdview = morphological(birdview);
@@ -152,7 +162,7 @@ bool DetectLane::isAbleToTurn(int direct) const
 
     cv::Rect roiRect{0, this->binary.rows/10*6, this->binary.cols, this->binary.rows/10};
     cv::Mat roi = this->binary(roiRect);
-    cv::imshow("Horizontal...", roi);
+    // cv::imshow("Horizontal...", roi);
 
     cv::Rect half;
     if (direct < 0)
@@ -188,7 +198,8 @@ void DetectLane::show(const cv::Point* drivePoint) const
         cv::circle(birdviewColor, *drivePoint, 25, cv::Scalar{0, 255, 255}, -1);
     }
 
-    cv::imshow("Lanes", birdviewColor);
+    // showImage("Lanes", birdviewColor);
+    showImage(_lanePublisher, "bgr8", birdviewColor);
 }
 
 int DetectLane::whichLane(const cv::Mat& objectMask) const
@@ -207,10 +218,10 @@ int DetectLane::whichLane(const cv::Mat& objectMask) const
         this->getLeftLane()->getMask(black);
         this->getRightLane()->getMask(black);
 
-        cv::imshow("ObjectMask", objectMask);
+        // cv::imshow("ObjectMask", objectMask);
 
         black |= birdviewObjectMask;
-        cv::imshow("TwoLaneMask", black);
+        // cv::imshow("TwoLaneMask", black);
 
         // std::vector<cv::Point2f> points = {
         //     cv::Point2f{boundingBox.tl()},
@@ -308,7 +319,9 @@ Point DetectLane::Hough(const Mat& img, const Mat& src) {
     addWeighted(src, 0.5, HoughTransform, 1, 1, HoughTransform);
     circle(HoughTransform, Point(midX, midY), 3, Scalar(0, 0, 255), -1);
     circle(HoughTransform, Point(offsetX, offsetY), 3, Scalar(0, 255, 0), -1);
-    imshow("HoughLines", HoughTransform);
+
+    // showImage("HoughLines", HoughTransform);
+    showImage(_houghPublisher, "bgr8", HoughTransform);
 
     return Point(midX, midY);
 }
