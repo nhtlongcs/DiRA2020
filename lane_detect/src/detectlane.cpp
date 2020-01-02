@@ -1,7 +1,7 @@
 #include "detectlane.h"
 #include "laneline.h"
 #include "utils.h"
-#include "lane_detect/birdviewConfig.h"
+#include "lane_detect/laneConfig.h"
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
