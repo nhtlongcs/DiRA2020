@@ -6,6 +6,9 @@
 # Info
 Parameter files are located in `$(find cds_msgs)/params/`
 Perspective files are located in `tools/`
+To save configured parameters:
+- `roscd cds_msgs/params`
+- `./dump.sh`
 
 # Run
 1. Download models
