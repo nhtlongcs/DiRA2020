@@ -1,0 +1,35 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  classify_confident: 70
+  classify_method: 0
+  detect_confident: 30
+  diff_classify: 5
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      classify_confident: 70
+      classify_method: 0
+      detect_confident: 30
+      diff_classify: 5
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      max_H: 170
+      max_S: 142
+      max_V: 60
+      min_H: 100
+      min_S: 90
+      min_V: 35
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      type: ''
+    state: []
+  max_H: 170
+  max_S: 142
+  max_V: 60
+  min_H: 100
+  min_S: 90
+  min_V: 35
+state: []

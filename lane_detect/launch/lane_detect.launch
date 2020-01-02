@@ -17,6 +17,17 @@ limitations under the License.
 	<arg name="image_topic" default="/team220/camera/rgb/compressed"/>
   <arg name="weight_path" default="$(find mobilenet)/model/weight_dira.h5"/>
 
+  <node name="carcontrol_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
+        args="load /carcontrol $(find cds_msgs)/params/carcontrol.yaml" />
+  <node name="detectobject_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
+        args="load /detectobject $(find cds_msgs)/params/detectobject.yaml" />
+  <node name="lanedetect_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
+        args="load /lanedetect $(find cds_msgs)/params/lanedetect.yaml" />
+  <node name="planning_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
+        args="load /planning $(find cds_msgs)/params/planning.yaml" />
+  <node name="sign_detect_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
+        args="load /sign_detect $(find cds_msgs)/params/sign_detect.yaml" />
+
   <node pkg="mobilenet" type="mobilenet_node.py" name="mobilenet_node" output="screen">
       <param name="image_topic" value="$(arg image_topic)" />
       <param name="weight_path" value="$(arg weight_path)" />

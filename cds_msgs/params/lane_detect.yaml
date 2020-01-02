@@ -1,0 +1,68 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  birdheight: 240
+  birdwidth: 320
+  drop_top: 80
+  find_begin_point_divide: 2
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      birdheight: 240
+      birdwidth: 320
+      drop_top: 80
+      find_begin_point_divide: 2
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        dictitems:
+          Left_Line: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 1
+              left_width: 160
+              name: Left_Line
+              offset_left: 0
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              state: true
+              type: ''
+            state: []
+          Right_Line: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 2
+              name: Right_Line
+              offset_right: 0
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              right_width: 160
+              state: true
+              type: ''
+            state: []
+        state: []
+      id: 0
+      init_lane_width: 50
+      name: Default
+      offset_birdview_left: 100
+      offset_birdview_right: 100
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      show_detect_region: true
+      skyline: 120
+      state: true
+      type: ''
+      use_birdview: true
+    state: []
+  init_lane_width: 50
+  left_width: 160
+  offset_birdview_left: 100
+  offset_birdview_right: 100
+  offset_left: 0
+  offset_right: 0
+  right_width: 160
+  show_detect_region: true
+  skyline: 120
+  use_birdview: true
+state: []

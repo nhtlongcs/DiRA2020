@@ -1,0 +1,33 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  cluster_count: 3
+  depth_threshold_max: 155
+  depth_threshold_min: 10
+  diff_to_know_left_right: 5
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      cluster_count: 3
+      depth_threshold_max: 155
+      depth_threshold_min: 10
+      diff_to_know_left_right: 5
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      name: Default
+      objectROI_h: 49
+      objectROI_offsetTop: 45
+      offsetROI_x: 30
+      offsetROI_y: 95
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      strategy: 0
+      type: ''
+    state: []
+  objectROI_h: 49
+  objectROI_offsetTop: 45
+  offsetROI_x: 30
+  offsetROI_y: 95
+  strategy: 0
+state: []

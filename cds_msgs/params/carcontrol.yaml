@@ -1,0 +1,29 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  D: 10
+  I: 3
+  P: 1
+  carpos_x: 165
+  carpos_y: 180
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      D: 10
+      I: 3
+      P: 1
+      carpos_x: 165
+      carpos_y: 180
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      max_velocity: 40
+      min_velocity: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      type: ''
+    state: []
+  max_velocity: 40
+  min_velocity: 0
+state: []
