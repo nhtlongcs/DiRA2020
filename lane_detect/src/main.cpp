@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     {
         ros::spinOnce();
         planner->planning(drivePoint, driveSpeed, car->getMaxSpeed(), car->getMinSpeed());
-        laneDetect->show(&drivePoint);
+        laneDetect->show(car->getCarPos(), &drivePoint);
         if (forceStop)
         {
             car->driverCar(car->getCarPos(), 0);

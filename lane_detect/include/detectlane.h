@@ -17,7 +17,7 @@ public:
     ~DetectLane();
 
     void detect();
-    void show(const cv::Point* drivePoint=nullptr) const;
+    void show(const cv::Point& carPos, const cv::Point* drivePoint=nullptr) const;
     int whichLane(const cv::Mat& objectMask) const;
     void updateBinary(const cv::Mat& binary);
     void updateRGB(const cv::Mat& rgb);

@@ -183,7 +183,7 @@ bool DetectLane::isAbleToTurn(int direct) const
     return percent < 5;
 }
 
-void DetectLane::show(const cv::Point* drivePoint) const
+void DetectLane::show(const cv::Point& carPos, const cv::Point* drivePoint) const
 {
     if (birdview.empty())
     {
@@ -198,6 +198,8 @@ void DetectLane::show(const cv::Point* drivePoint) const
     {
         cv::circle(birdviewColor, *drivePoint, 25, cv::Scalar{0, 255, 255}, -1);
     }
+
+    cv::circle(birdviewColor, carPos, 25, cv::Scalar{0,0,255}, -1);
 
     // showImage("Lanes", birdviewColor);
     showImage(_lanePublisher, "bgr8", birdviewColor);

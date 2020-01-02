@@ -14,8 +14,8 @@ limitations under the License.
 -->
 
 <launch>
-	<arg name="image_topic" default="/team220/camera/rgb/compressed"/>
-  <arg name="weight_path" default="$(find mobilenet)/model/weight_dira.h5"/>
+  <arg name="image_topic" default="/team220/camera/rgb/compressed"/>
+  <arg name="weight_path" default="$(find mobilenet)/model/model_dira_v4.h5"/>
 
   <node name="carcontrol_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
         args="load /carcontrol $(find cds_msgs)/params/carcontrol.yaml" />
@@ -29,16 +29,16 @@ limitations under the License.
         args="load /sign_detect $(find cds_msgs)/params/sign_detect.yaml" />
 
   <node pkg="mobilenet" type="mobilenet_node.py" name="mobilenet_node" output="screen">
-      <param name="image_topic" value="$(arg image_topic)" />
-      <param name="weight_path" value="$(arg weight_path)" />
-      <param name="use_deep" value="true" />
-      <!-- <param name="use_deep" value="false" /> -->
-      <param name="ready" value="false" />
+    <param name="image_topic" value="$(arg image_topic)" />
+    <param name="weight_path" value="$(arg weight_path)" />
+    <param name="use_deep" value="true" />
+    <!-- <param name="use_deep" value="false" /> -->
+    <param name="ready" value="false" />
   </node>
 
-	<include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
-		<param name="port" value="9090"/>
-	</include>
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+    <param name="port" value="9090"/>
+  </include>
 
   <node name="lane_detect" pkg="lane_detect" type="lane_detect" output="screen" args="_image_transport:=compressed" />
   <node name="sign_detect" pkg="signdetect" type="signdetect_node" output="screen" args="_image_transport:=compressed" />
