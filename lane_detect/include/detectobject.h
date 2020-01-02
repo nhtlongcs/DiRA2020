@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/video.hpp>
 #include <list>
+#include <dynamic_reconfigure/server.h>
 #include "lane_detect/detectobjectConfig.h"
 
 class DetectLane;
@@ -30,6 +31,10 @@ private:
     void Hough(const cv::Mat& binary);
     void drawLine(float slope, float y_intercept, cv::Mat &HoughTransform);
 private:
+
+    ros::NodeHandle _nh;
+    dynamic_reconfigure::Server<lane_detect::detectobjectConfig> _serverConfig;
+
     cv::Mat depth;
     cv::Mat binary;
     cv::Rect objectROIRect = {115, 100, 61, 49};

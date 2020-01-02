@@ -15,7 +15,11 @@ Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
     , isAvoidObjectDone{true}, isTurningDone{true}
     , prevObject{0}, object{0}
     , laneToDriveCloseTo{2}
+    , _nh{"planning"}
+    , _configServer{_nh}
 {
+    _configServer.setCallback(boost::bind(&Planning::configCallback, this, _1, _2));
+
     // cv::namedWindow(CONF_PLAN_WINDOW);
     // cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
     // cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);

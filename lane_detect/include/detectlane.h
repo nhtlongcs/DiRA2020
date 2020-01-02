@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "opencv2/core.hpp"
+#include <dynamic_reconfigure/server.h>
 #include "lane_detect/laneConfig.h"
 
 class LaneLine;
@@ -31,6 +32,9 @@ public:
     void configlaneCallback(lane_detect::laneConfig& config, uint32_t level);
 
 private:
+    ros::NodeHandle _nh;
+    dynamic_reconfigure::Server<lane_detect::laneConfig> _configServer;
+
     bool isWrongLane() const;
     cv::Mat preprocess(const cv::Mat& src);
     cv::Mat shadow(const cv::Mat& src);

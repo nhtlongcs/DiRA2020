@@ -1,0 +1,7 @@
+#!/bin/bash
+
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=17zgFE_BRWVVqoPRbAjZscu2ZYdNT0mBf' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=17zgFE_BRWVVqoPRbAjZscu2ZYdNT0mBf" -O weight_dira.h5 && rm -rf /tmp/cookies.txt
+
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1lEPCqdJG6YLr0kJVViCfON1Bct6AxaIu' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1lEPCqdJG6YLr0kJVViCfON1Bct6AxaIu" -O model_dira_v2.h5 && rm -rf /tmp/cookies.txt
+
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1FiOJmCB4i1cE012ga4t7wHIezApht4HC' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1FiOJmCB4i1cE012ga4t7wHIezApht4HC" -O model_dira_v3.h5 && rm -rf /tmp/cookies.txt

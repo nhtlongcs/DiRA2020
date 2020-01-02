@@ -1,8 +1,10 @@
 #include "carcontrol.h"
 
 CarControl::CarControl()
+: _nh{"carcontrol"}
+, _configServer{_nh}
 {
-
+    _configServer.setCallback(boost::bind(&CarControl::configCallback, this, _1, _2));
     // cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
     // cv::createTrackbar("kP", "PID config", &kP, 20);
     // cv::createTrackbar("kI", "PID config", &kI, 20);
@@ -10,9 +12,9 @@ CarControl::CarControl()
     
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = node_obj1.advertise<std_msgs::Float32>("team220/set_angle",20);
-    speed_publisher = node_obj2.advertise<std_msgs::Float32>("team220/set_speed",20);
-    cam_publisher = node_obj1.advertise<std_msgs::Float32>("team220/set_camera_angle",20);
+    steer_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_angle",20);
+    speed_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_speed",20);
+    cam_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_camera_angle",20);
 }
 
 CarControl::~CarControl() {}

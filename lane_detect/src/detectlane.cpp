@@ -16,8 +16,11 @@ DetectLane::DetectLane()
 , rightLane{nullptr}
 , frameCount{0}
 , sumLaneWidth{0}
+, _nh{"lanedetect"}
+, _configServer{_nh}
 // , midLane{nullptr}
 {
+    _configServer.setCallback(boost::bind(&DetectLane::configlaneCallback, this, _1, _2));
     
     // setUseOptimized(true);
     // setNumThreads(4);

@@ -18,7 +18,11 @@ enum OBJ_STRATEGY
 DetectObject::DetectObject(DetectLane* lane)
 : pBackSub{cv::createBackgroundSubtractorMOG2()}
 , lane{lane}
+, _nh{"detectobject"}
+, _serverConfig{_nh}
 {
+    _serverConfig.setCallback(boost::bind(&DetectObject::configCallback, this, _1, _2));
+
     // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     // cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
 
@@ -51,15 +55,9 @@ DetectObject::~DetectObject()
 
 void DetectObject::configCallback(lane_detect::detectobjectConfig& config, uint32_t level)
 {
-    ROS_INFO("Callback config detect object");
     kCluster = config.cluster_count;
     offsetROI_x = config.offsetROI_x;
-    ROS_INFO("Callback config offsetROI_y = %d",config.offsetROI_y);
-
-    ROS_INFO("Callback config offsetROI_y = %d",config.offsetROI_y);
     offsetROI_y = config.offsetROI_y;
-    ROS_INFO("Callback config objectROI_offsetTop = %d",config.objectROI_offsetTop);
-
     objectROIRect.height = config.objectROI_h;
     objectROI_offsetTop = config.objectROI_offsetTop;
     diffDirectPercent = config.diff_to_know_left_right;
@@ -168,7 +166,7 @@ int DetectObject::getDirectOnRawBinary(const cv::Rect& objectROI)
 {
     cv::Mat depthThresholded;
     depthThresholded = this->depth(objectROI);
-    cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin}, cv::Scalar{depthThresholdMax}, depthThresholded);
+    cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, depthThresholded);
     cv::imshow(CONF_OBJ_WINDOW, depthThresholded);
 
     return estimateDirect(depthThresholded);
@@ -188,7 +186,7 @@ int DetectObject::getDirectOnKmean(const cv::Rect& objectROI)
 
 
     cv::Mat mask;
-    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin}, cv::Scalar{depthThresholdMax}, mask);
+    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, mask);
 
     cv::imshow(CONF_OBJ_WINDOW, mask);
 
@@ -201,7 +199,7 @@ int DetectObject::getDirectOnKmeanBGSub(const cv::Rect& objectROI)
     cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
 
     cv::Mat mask;
-    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin}, cv::Scalar{depthThresholdMax}, mask);
+    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, mask);
 
     cv::Mat fgMask;
     pBackSub->apply(kmeanImage, fgMask);

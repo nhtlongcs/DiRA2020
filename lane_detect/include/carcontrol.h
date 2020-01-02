@@ -6,6 +6,8 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32.h"
+
+#include <dynamic_reconfigure/server.h>
 #include "lane_detect/carcontrolConfig.h"
 
 #include <vector>
@@ -32,11 +34,13 @@ public:
     void configCallback(lane_detect::carcontrolConfig& config, uint32_t level);
 
 private:
-    ros::NodeHandle node_obj1;
-    ros::NodeHandle node_obj2;
+    ros::NodeHandle _nh;
     ros::Publisher steer_publisher;
     ros::Publisher speed_publisher;
     ros::Publisher cam_publisher;
+
+    dynamic_reconfigure::Server<lane_detect::carcontrolConfig> _configServer;
+
     Point carPos;
     float errorAngle(const Point &dst);
     float minVelocity = 10;

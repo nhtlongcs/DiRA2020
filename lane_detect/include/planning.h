@@ -3,6 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <ros/ros.h>
+#include <dynamic_reconfigure/server.h>
 #include "lane_detect/planningConfig.h"
 
 class DetectLane;
@@ -34,8 +35,8 @@ private:
     cv::Point turnRight();
 
 private:
-
     ros::NodeHandle _nh;
+    dynamic_reconfigure::Server<lane_detect::planningConfig> _configServer;
     ros::Timer _objectTimer, _turnTimer;
 
     DetectLane *laneDetect;
