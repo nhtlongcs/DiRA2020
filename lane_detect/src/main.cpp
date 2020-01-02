@@ -7,6 +7,10 @@
 #include <ros/package.h>
 #include <cds_msgs/sign.h>
 
+#include <dynamic_reconfigure/server.h>
+#include "lane_detect/birdviewConfig.h"
+
+
 #include "detectobject.h"
 #include "detectlane.h"
 #include "planning.h"
@@ -93,8 +97,12 @@ void signCallback(const cds_msgs::sign &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "image_listener");
+    ros::init(argc, argv, "lane_detect_node");
     ros::NodeHandle nh;
+    ros::NodeHandle nh_carcontrol("~/carcontrol");
+    ros::NodeHandle nh_object("~/object");
+    ros::NodeHandle nh_lane("~/lane");
+    ros::NodeHandle nh_planning("~/planning");
     image_transport::ImageTransport it(nh);
 
     std::string path = ros::package::getPath("lane_detect");
@@ -105,8 +113,28 @@ int main(int argc, char **argv)
     car = new CarControl();
     planner = new Planning(laneDetect, objectDetect);
 
-    ros::Rate rate(RATE);
 
+    dynamic_reconfigure::Server<lane_detect::laneConfig> serverlane(nh_lane);
+    dynamic_reconfigure::Server<lane_detect::laneConfig>::CallbackType laneCallback;
+    laneCallback = boost::bind(&DetectLane::configlaneCallback, laneDetect, _1, _2);
+    serverlane.setCallback(laneCallback);
+
+    dynamic_reconfigure::Server<lane_detect::detectobjectConfig> serverDetectObject(nh_object);
+    dynamic_reconfigure::Server<lane_detect::detectobjectConfig>::CallbackType detectObjectCallback;
+    detectObjectCallback = boost::bind(&DetectObject::configCallback, objectDetect, _1, _2);
+    serverDetectObject.setCallback(detectObjectCallback);
+
+    dynamic_reconfigure::Server<lane_detect::carcontrolConfig> serverCarControl(nh_carcontrol);
+    dynamic_reconfigure::Server<lane_detect::carcontrolConfig>::CallbackType carControlCallback;
+    carControlCallback = boost::bind(&CarControl::configCallback, car, _1, _2);
+    serverCarControl.setCallback(carControlCallback);
+
+    dynamic_reconfigure::Server<lane_detect::planningConfig> serverPlanning(nh_planning);
+    dynamic_reconfigure::Server<lane_detect::planningConfig>::CallbackType planningCallback;
+    planningCallback = boost::bind(&Planning::configCallback, planner, _1, _2);
+    serverPlanning.setCallback(planningCallback);
+
+    ros::Rate rate(RATE);
     image_transport::Subscriber sub = it.subscribe("team220/camera/rgb", 1, imageColorCallback);
     image_transport::Subscriber sub2 = it.subscribe("team220/camera/depth", 1, imageDepthCallback);
     image_transport::Subscriber sub_binary = it.subscribe("lane_detect/lane_seg", 1, imageBinaryCallback);

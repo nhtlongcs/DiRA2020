@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/video.hpp>
 #include <list>
+#include "lane_detect/detectobjectConfig.h"
 
 class DetectLane;
 
@@ -15,6 +16,9 @@ public:
     void updateDepth(const cv::Mat& depth);
     void updateBinary(const cv::Mat& binary);
     int detect();
+
+public:
+    void configCallback(lane_detect::detectobjectConfig& config, uint32_t level);
 private:
     int estimateDirect(const cv::Mat& binaryROI);
     int getDirect(const cv::Rect& objectROI);
@@ -32,7 +36,7 @@ private:
 
     int strategy = 0;
 
-    int detectThreshold;
+    // int detectThreshold;
     int diffDirectPercent = 5; // percents
     cv::Ptr<cv::BackgroundSubtractor> pBackSub;
 

@@ -16,10 +16,10 @@ Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
     , prevObject{0}, object{0}
     , laneToDriveCloseTo{2}
 {
-    cv::namedWindow(CONF_PLAN_WINDOW);
-    cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
-    cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
-    cv::createTrackbar("LaneToCloseTo", CONF_PLAN_WINDOW, &laneToDriveCloseTo, 2);
+    // cv::namedWindow(CONF_PLAN_WINDOW);
+    // cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
+    // cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
+    // cv::createTrackbar("LaneToCloseTo", CONF_PLAN_WINDOW, &laneToDriveCloseTo, 2);
 
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime/10.0f}, &Planning::onObjectTimeout, this, true);
     _turnTimer = _nh.createTimer(ros::Duration{turningTime/10.0f}, &Planning::onTurnTimeout, this, true);
@@ -288,4 +288,11 @@ void Planning::onTurnTimeout(const ros::TimerEvent& event)
     isTurningDone = true;
     turnSign = 0;
     isTurning = false;
+}
+
+void Planning::configCallback(lane_detect::planningConfig& config, uint32_t level)
+{
+    turningTime = config.turning_time;
+    avoidObjectTime = config.avoid_time;
+    laneToDriveCloseTo = config.lane_close;
 }

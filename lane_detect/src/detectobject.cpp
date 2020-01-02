@@ -12,7 +12,6 @@ enum OBJ_STRATEGY
 {
     ON_RAW_BINARY = 0,
     ON_KMEAN,
-    ON_KMEAN_BACKGROUND_SUB,
     LEN
 };
 
@@ -20,22 +19,22 @@ DetectObject::DetectObject(DetectLane* lane)
 : pBackSub{cv::createBackgroundSubtractorMOG2()}
 , lane{lane}
 {
-    cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
-    cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
+    // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
+    // cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
 
-    cv::createTrackbar("strategy", CONF_OBJ_WINDOW, &strategy, OBJ_STRATEGY::LEN - 1);
+    // cv::createTrackbar("strategy", CONF_OBJ_WINDOW, &strategy, OBJ_STRATEGY::LEN - 1);
 
-    cv::createTrackbar("objectROI_x", CONF_OBJ_WINDOW, &offsetROI_x, 320);
-    cv::createTrackbar("objectROI_y", CONF_OBJ_WINDOW, &offsetROI_y, 240);
-    // cv::createTrackbar("objectROI_w", CONF_OBJ_WINDOW, &objectROIRect.width, 320);
-    cv::createTrackbar("objectROI_h", CONF_OBJ_WINDOW, &objectROIRect.height, 240);
-    cv::createTrackbar("objectROI_offsetTop", CONF_OBJ_WINDOW, &objectROI_offsetTop, 100);
+    // cv::createTrackbar("objectROI_x", CONF_OBJ_WINDOW, &offsetROI_x, 320);
+    // cv::createTrackbar("objectROI_y", CONF_OBJ_WINDOW, &offsetROI_y, 240);
+    // // cv::createTrackbar("objectROI_w", CONF_OBJ_WINDOW, &objectROIRect.width, 320);
+    // cv::createTrackbar("objectROI_h", CONF_OBJ_WINDOW, &objectROIRect.height, 240);
+    // cv::createTrackbar("objectROI_offsetTop", CONF_OBJ_WINDOW, &objectROI_offsetTop, 100);
 
-    cv::createTrackbar("Detect threshold", CONF_OBJ_WINDOW, &detectThreshold, 100); // percents
-    cv::createTrackbar("DiffToKnowLeftRight", CONF_OBJ_WINDOW, &diffDirectPercent, 100); // percents
+    // cv::createTrackbar("Detect threshold", CONF_OBJ_WINDOW, &detectThreshold, 100); // percents
+    // cv::createTrackbar("DiffToKnowLeftRight", CONF_OBJ_WINDOW, &diffDirectPercent, 100); // percents
 
-    cv::createTrackbar("DepthThresholdMin", CONF_OBJ_WINDOW, &depthThresholdMin, 255); // percents
-    cv::createTrackbar("DepthThresholdMax", CONF_OBJ_WINDOW, &depthThresholdMax, 255); // percents
+    // cv::createTrackbar("DepthThresholdMin", CONF_OBJ_WINDOW, &depthThresholdMin, 255); // percents
+    // cv::createTrackbar("DepthThresholdMax", CONF_OBJ_WINDOW, &depthThresholdMax, 255); // percents
 
     // cv::createTrackbar("min H", CONF_OBJ_WINDOW, &configObjectmin[0], 255);
     // cv::createTrackbar("max H", CONF_OBJ_WINDOW, &configObjectmax[0], 255);
@@ -47,7 +46,26 @@ DetectObject::DetectObject(DetectLane* lane)
 
 DetectObject::~DetectObject()
 {
-    cv::destroyWindow(CONF_OBJ_WINDOW);
+    // cv::destroyWindow(CONF_OBJ_WINDOW);
+}
+
+void DetectObject::configCallback(lane_detect::detectobjectConfig& config, uint32_t level)
+{
+    ROS_INFO("Callback config detect object");
+    kCluster = config.cluster_count;
+    offsetROI_x = config.offsetROI_x;
+    ROS_INFO("Callback config offsetROI_y = %d",config.offsetROI_y);
+
+    ROS_INFO("Callback config offsetROI_y = %d",config.offsetROI_y);
+    offsetROI_y = config.offsetROI_y;
+    ROS_INFO("Callback config objectROI_offsetTop = %d",config.objectROI_offsetTop);
+
+    objectROIRect.height = config.objectROI_h;
+    objectROI_offsetTop = config.objectROI_offsetTop;
+    diffDirectPercent = config.diff_to_know_left_right;
+    depthThresholdMin = config.depth_threshold_min;
+    depthThresholdMax = config.depth_threshold_max;
+    strategy = config.strategy;
 }
 
 void DetectObject::updateDepth(const cv::Mat& depth)

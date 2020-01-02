@@ -1,15 +1,12 @@
 #include "carcontrol.h"
 
-#define MAX_SPEED 40
-#define MIN_SPEED 0
-
 CarControl::CarControl()
 {
 
-    cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
-    cv::createTrackbar("kP", "PID config", &kP, 20);
-    cv::createTrackbar("kI", "PID config", &kI, 20);
-    cv::createTrackbar("kD", "PID config", &kD, 20);
+    // cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
+    // cv::createTrackbar("kP", "PID config", &kP, 20);
+    // cv::createTrackbar("kI", "PID config", &kI, 20);
+    // cv::createTrackbar("kD", "PID config", &kD, 20);
     
     carPos.x = 165;
     carPos.y = 180;
@@ -20,6 +17,17 @@ CarControl::CarControl()
 
 CarControl::~CarControl() {}
 
+void CarControl::configCallback(lane_detect::carcontrolConfig& config, uint32_t level)
+{
+    kP = config.P;
+    kI = config.I;
+    kD = config.D;
+    carPos.x = config.carpos_x;
+    carPos.y = config.carpos_y;
+    minVelocity = config.min_velocity;
+    maxVelocity = config.max_velocity;
+}
+
 cv::Point CarControl::getCarPos() const
 {
     return this->carPos;
@@ -27,12 +35,12 @@ cv::Point CarControl::getCarPos() const
 
 int CarControl::getMaxSpeed() const
 {
-    return MAX_SPEED;
+    return maxVelocity;
 }
 
 int CarControl::getMinSpeed() const
 {
-    return MIN_SPEED;
+    return minVelocity;
 }
 
 float CarControl::errorAngle(const Point &dst)
@@ -54,7 +62,7 @@ void CarControl::driverCar(const Point& cur, float velocity)
 {
     std_msgs::Float32 angle;
     std_msgs::Float32 speed;
-    carPos.x = 165;   
+    // carPos.x = 165;   
     float error = -errorAngle(cur);
     //PID controller
     t_kP = error;

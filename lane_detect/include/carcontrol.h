@@ -6,6 +6,7 @@
 
 #include <ros/ros.h>
 #include "std_msgs/Float32.h"
+#include "lane_detect/carcontrolConfig.h"
 
 #include <vector>
 #include <math.h>
@@ -27,6 +28,9 @@ public:
     void steerCamera(float angle);
     cv::Point getCarPos() const;
 
+public:
+    void configCallback(lane_detect::carcontrolConfig& config, uint32_t level);
+
 private:
     ros::NodeHandle node_obj1;
     ros::NodeHandle node_obj2;
@@ -35,7 +39,6 @@ private:
     ros::Publisher cam_publisher;
     Point carPos;
     float errorAngle(const Point &dst);
-    float laneWidth = 40;
     float minVelocity = 10;
     float maxVelocity = 30;
     float preError;

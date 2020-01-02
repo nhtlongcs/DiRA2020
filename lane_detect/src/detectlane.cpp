@@ -1,6 +1,7 @@
 #include "detectlane.h"
 #include "laneline.h"
 #include "utils.h"
+#include "lane_detect/birdviewConfig.h"
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -33,14 +34,14 @@ DetectLane::DetectLane()
     // cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
     // cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
 
-    cv::namedWindow(CONF_BIRDVIEW_WINDOW);
-    cv::createTrackbar("Use Birdview", CONF_BIRDVIEW_WINDOW, &usebirdview, 1);
-    cv::createTrackbar("InitLanewidth", CONF_BIRDVIEW_WINDOW, &initLaneWidth, 200);
-    cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
-    cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
-    cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
-    cv::createTrackbar("OffsetLeft", CONF_BIRDVIEW_WINDOW, &offsetLeft, 200);
-    cv::createTrackbar("OffsetRight", CONF_BIRDVIEW_WINDOW, &offsetRight, 200);
+    // cv::namedWindow(CONF_BIRDVIEW_WINDOW);
+    // cv::createTrackbar("Use Birdview", CONF_BIRDVIEW_WINDOW, &usebirdview, 1);
+    // cv::createTrackbar("InitLanewidth", CONF_BIRDVIEW_WINDOW, &initLaneWidth, 200);
+    // cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
+    // cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
+    // cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
+    // cv::createTrackbar("OffsetLeft", CONF_BIRDVIEW_WINDOW, &offsetLeft, 200);
+    // cv::createTrackbar("OffsetRight", CONF_BIRDVIEW_WINDOW, &offsetRight, 200);
     
     leftLane = std::make_shared<LeftLane>();
     rightLane = std::make_shared<RightLane>();
@@ -50,6 +51,17 @@ DetectLane::DetectLane()
 
 DetectLane::~DetectLane(){
 } 
+
+void DetectLane::configlaneCallback(lane_detect::laneConfig& config, uint32_t level)
+{
+    usebirdview = config.use_birdview;
+    initLaneWidth = config.init_lane_width;
+    birdwidth = config.birdwidth;
+    birdheight = config.birdheight;
+    skyline = config.skyline;
+    offsetLeft = config.offset_left;
+    offsetRight = config.offset_right;
+}
 
 void DetectLane::updateBinary(const cv::Mat& src)
 {

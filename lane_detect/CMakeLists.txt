@@ -9,6 +9,15 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   cds_msgs
+  dynamic_reconfigure
+)
+
+
+generate_dynamic_reconfigure_options(
+  cfg/lane.cfg
+  cfg/carcontrol.cfg
+  cfg/detectobject.cfg
+  cfg/planning.cfg
 )
 
 set(OpenCV_STATIC OFF)
@@ -35,6 +44,8 @@ add_library(api_lane_detection
   src/planning.cpp
 )
 
+add_dependencies(api_lane_detection ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+
 add_executable(lane_detect src/main.cpp)
 
 target_link_libraries(
@@ -45,7 +56,7 @@ target_link_libraries(
   ${Boost_LIBRARIES}
 )
 
-add_dependencies(lane_detect ${catkin_EXPORTED_TARGETS})
+add_dependencies(lane_detect ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 install(TARGETS api_lane_detection ${ADDITIONAL_EXECUTABLES}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

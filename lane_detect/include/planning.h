@@ -3,6 +3,7 @@
 
 #include <opencv2/core.hpp>
 #include <ros/ros.h>
+#include "lane_detect/planningConfig.h"
 
 class DetectLane;
 class DetectObject;
@@ -17,6 +18,9 @@ public:
     void updateDepth(cv::Mat depthImage);
     void updateSign(int signId);
     void planning(cv::Point &drivePoint, int &speed, int maxSpeed, int minSpeed);
+
+public:
+    void configCallback(lane_detect::planningConfig& config, uint32_t level);
 
 private:
     void onTurnTimeout(const ros::TimerEvent& event);

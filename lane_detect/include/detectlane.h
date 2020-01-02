@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "opencv2/core.hpp"
+#include "lane_detect/laneConfig.h"
 
 class LaneLine;
 
@@ -25,6 +26,9 @@ public:
     std::shared_ptr<LaneLine> getRightLane() const;
 
     cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat& resultM) const;
+
+public:
+    void configlaneCallback(lane_detect::laneConfig& config, uint32_t level);
 
 private:
     bool isWrongLane() const;
