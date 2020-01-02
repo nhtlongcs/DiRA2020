@@ -139,7 +139,7 @@ std::vector<cv::Point> LaneLine::calcGradient(const std::vector<cv::Point>& poin
     return gradients;
 }
 
-void LaneLine::show(cv::Mat& drawImage) const
+void LaneLine::show(cv::Mat& drawImage, bool showDetectRegion) const
 {
     if (isFound())
     {
@@ -148,6 +148,14 @@ void LaneLine::show(cv::Mat& drawImage) const
         getBeginPoint(beginPoint);
         circle(drawImage, beginPoint , 20, color, -1, 8, 0);
         showLinePoints(drawImage);
+
+        if (showDetectRegion)
+        {
+            const cv::Rect&& regionRect = getDetectBeginPointRegion();
+            cv::Mat region = drawImage(regionRect);
+            cv::Mat colorMap{regionRect.size(), CV_8UC3, getLaneColor()};
+            cv::addWeighted(region, 0.5, colorMap, 0.5, 1, region);
+        }
     }
 }
 
@@ -234,9 +242,16 @@ void LaneLine::swap(std::shared_ptr<LaneLine> other)
     other->lineParams = tmpLineParams;
 }
 
+void LaneLine::setFindBeginPointRegion(int offset, int width)
+{
+    this->offsetX = offset;
+    this->width = width;
+}
+
 bool LaneLine::findBeginPoint(cv::Point& returnPoint) const
 {
     cv::Rect&& regionRect = getDetectBeginPointRegion();
+    ROS_INFO("findBeginPoint, region = %d, %d, %d, %d", regionRect.x, regionRect.y, regionRect.width, regionRect.height);
 
     const cv::Mat region = lineImage(regionRect);
 
@@ -391,7 +406,8 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine>& lane, int laneWidth)
 
 cv::Rect LeftLane::getDetectBeginPointRegion() const
 {
-    return cv::Rect{0, 0, lineImage.cols / 3, lineImage.rows};
+    int real_width = std::min(width, lineImage.cols - offsetX - 1);
+    return cv::Rect{offsetX, 0, real_width, lineImage.rows};
 }
 
 cv::Scalar LeftLane::getLaneColor() const
@@ -420,7 +436,9 @@ cv::Point LeftLane::calcPerpendicular(const cv::Point& point) const
 
 cv::Rect RightLane::getDetectBeginPointRegion() const
 {
-    return cv::Rect{lineImage.cols * 2 / 3, 0, lineImage.cols / 3, lineImage.rows};
+    int x = std::max(0, lineImage.cols - offsetX - width - 1);
+    int real_width = std::min(width, lineImage.cols - x);
+    return cv::Rect{x, 0, real_width, lineImage.rows};
 }
 
 cv::Scalar RightLane::getLaneColor() const

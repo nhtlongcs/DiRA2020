@@ -61,6 +61,7 @@ private:
     int maxLaneInShadow[3] = {180, 117, 158};
 
     int initLaneWidth = 50;
+    int dropTop = 80;
 
     int lowThreshold = 2;
     int votes = 60;
@@ -69,7 +70,8 @@ private:
     size_t sumLaneWidth = 0;
     size_t frameCount = 0;
 
-    int usebirdview = 1;
+    bool usebirdview = true;
+    bool showDetectRegion = true;
 
     int offsetLeft = 100;
     int offsetRight = 100;

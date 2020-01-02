@@ -22,6 +22,9 @@ DetectLane::DetectLane()
 , _debugImage{_nh}
 // , midLane{nullptr}
 {
+    leftLane = std::make_shared<LeftLane>();
+    rightLane = std::make_shared<RightLane>();
+
     _configServer.setCallback(boost::bind(&DetectLane::configlaneCallback, this, _1, _2));
 
     _birdviewPublisher = _debugImage.advertise("/debug/lane/birdview", 1, false);
@@ -51,8 +54,6 @@ DetectLane::DetectLane()
     // cv::createTrackbar("OffsetLeft", CONF_BIRDVIEW_WINDOW, &offsetLeft, 200);
     // cv::createTrackbar("OffsetRight", CONF_BIRDVIEW_WINDOW, &offsetRight, 200);
     
-    leftLane = std::make_shared<LeftLane>();
-    rightLane = std::make_shared<RightLane>();
 
     // midLane = new MidLane(*leftLane, *rightLane);
 }
@@ -63,12 +64,16 @@ DetectLane::~DetectLane(){
 void DetectLane::configlaneCallback(lane_detect::laneConfig& config, uint32_t level)
 {
     usebirdview = config.use_birdview;
+    showDetectRegion = config.show_detect_region;
+    dropTop = config.drop_top;
     initLaneWidth = config.init_lane_width;
     birdwidth = config.birdwidth;
     birdheight = config.birdheight;
     skyline = config.skyline;
-    offsetLeft = config.offset_left;
-    offsetRight = config.offset_right;
+    offsetLeft = config.offset_birdview_left;
+    offsetRight = config.offset_birdview_right;
+    leftLane->setFindBeginPointRegion(config.offset_left, config.left_width);
+    rightLane->setFindBeginPointRegion(config.offset_right, config.right_width);
 }
 
 void DetectLane::updateBinary(const cv::Mat& src)
@@ -117,16 +122,12 @@ void DetectLane::detect()
         birdview = this->binary;
     }
 
-    {
-        // publish debug image
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", this->birdview).toImageMsg();
-        _birdviewPublisher.publish(msg);
-    }
     // birdview = this->binary;
 
     // Mat morphBirdview = morphological(birdview);
 
-    birdview(cv::Rect(0,0,birdview.cols, birdview.rows / 3)) = cv::Scalar{0};
+    birdview(cv::Rect(0,0,birdview.cols, dropTop)) = cv::Scalar{0};
+    showImage(_birdviewPublisher, "mono8", birdview);
 
     leftLane->update(birdview);
     rightLane->update(birdview);
@@ -190,8 +191,8 @@ void DetectLane::show(const cv::Point* drivePoint) const
     }
     cv::Mat birdviewColor;
     cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
-    leftLane->show(birdviewColor);
-    rightLane->show(birdviewColor);
+    leftLane->show(birdviewColor, showDetectRegion);
+    rightLane->show(birdviewColor, showDetectRegion);
 
     if (drivePoint)
     {

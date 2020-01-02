@@ -20,8 +20,9 @@ public:
     void update(const cv::Mat& lineImage);
     bool isFound() const;
     bool isOutOfImage(const cv::Point& point) const;
-    void show(cv::Mat& drawImage) const;
+    void show(cv::Mat& drawImage, bool showDetectRegion = true) const;
     void getMask(cv::Mat& birdviewInputBackground) const;
+    void setFindBeginPointRegion(int offset, int width);
 
     // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
     LineParams getLineParams() const;
@@ -72,7 +73,9 @@ protected:
     const size_t beginPointIndex = 40;
     const size_t drivePointIndex = beginPointIndex + 20;
 
-    size_t count_detect;
+    int offsetX = 0;
+    int width = 160;
+    int count_detect;
 };
 
 class LeftLane : public LaneLine
@@ -84,7 +87,6 @@ public:
     virtual cv::Point calcPerpendicular(const cv::Point& point) const override;
 protected:
     virtual void showLinePoints(cv::Mat& drawImage) const override;
-
 };
 
 class RightLane : public LaneLine
