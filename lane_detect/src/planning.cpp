@@ -263,7 +263,7 @@ cv::Point Planning::turnLeft()
         return driveCloseToLeft();
     } else
     {
-        return cv::Point{0, 240};
+        return cv::Point{0, 120};
     }
 }
 
@@ -278,7 +278,7 @@ cv::Point Planning::turnRight()
         return driveCloseToRight();
     } else
     {
-        return cv::Point{320, 240};
+        return cv::Point{319, 120};
     }
 }
 

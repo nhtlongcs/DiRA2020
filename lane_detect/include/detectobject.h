@@ -59,6 +59,8 @@ private:
     int offsetX = 160;
     int offsetY = 180;
     int votes = 60;
+    int canny_sign = 255;
+    int votes_sign = 22;
     int minLinlength = 60;
     int maxLineGap = 5;
 

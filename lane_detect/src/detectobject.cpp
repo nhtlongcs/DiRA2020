@@ -144,6 +144,7 @@ int DetectObject::estimateDirect(const cv::Mat& binaryROI)
     float percentLeft = countLeft * 100.0f / (ImageLeft.rows*ImageLeft.cols); // 0-100%
     float percentRight = countRight * 100.0f / (ImageRight.rows*ImageRight.cols); // 0-100%
 
+    ROS_INFO("Diff Object = %.2f", percentLeft - percentRight);
     if (abs(percentLeft - percentRight) > diffDirectPercent)
     {
         return (percentLeft > percentRight) ? -1 : 1;
@@ -221,8 +222,48 @@ int DetectObject::detectOneFrame()
     {
         return 0;
     }
+
+    {
+        using namespace std;
+        using namespace cv;
+        Mat gray;
+        gray = kmean(this->depth, 2);
+
+        // cvtColor(gray, gray, CV_BGR2GRAY);
+        cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
+
+        vector<Vec3f> circles;
+
+        HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
+                    1,       // accumulator resolution (size of the image / 2)
+                    300,     // minimum distance between two circles
+                    canny_sign,   // Canny high threshold
+                    votes_sign,   // minimum number of votes
+                    0, 100); // min and max radius
+
+        for (size_t i = 0; i < circles.size(); i++)
+        {
+            Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+            int radius = cvRound(circles[i][2]);
+            // circle center
+            // circle(this->depth, center, 3, Scalar(127), -1, 8, 0);
+            // // circle outline
+            // circle(this->depth, center, radius, Scalar(100), 3, 8, 0);
+
+            radius += 10;
+            cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
+            
+
+            if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)
+            {
+                this->depth(roi) = cv::Scalar{0};
+            }
+        }
+    }
+
+
     Hough(this->binary);
-    ROS_INFO("objectROI = %d, %d, %d, %d", objectROIRect.x, objectROIRect.y, objectROIRect.width, objectROIRect.height);
+    // ROS_INFO("objectROI = %d, %d, %d, %d", objectROIRect.x, objectROIRect.y, objectROIRect.width, objectROIRect.height);
 
     return getDirect(objectROIRect);
 
