@@ -160,7 +160,7 @@ int DetectSign::detectOneFrame()
             cv::Mat thresholdconcat;
             cv::hconcat(rgb(roi), colorBlue, thresholdconcat);
             showImage(_roiPublisher, "bgr8", thresholdconcat);
-
+            ROS_INFO("percent = %.2f", percent);
             if (percent > detectConfident)
             {
                 int sign = classify(rgb(roi));
@@ -179,8 +179,8 @@ int DetectSign::classify(const cv::Mat& colorROI) const
 {
     switch (classifyStrategy)
     {
-        case 0: return classifyTemplateMatching(colorROI);
-        case 1: return classifyCountBlue(colorROI);
+        case 0: return classifyCountBlue(colorROI);
+        case 1: return classifyTemplateMatching(colorROI);
         default:
             return classifyCountBlue(colorROI);
     }

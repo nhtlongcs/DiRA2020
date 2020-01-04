@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     image_transport::Subscriber sub = it.subscribe("team220/camera/rgb", 1, imageColorCallback);
     image_transport::Subscriber sub2 = it.subscribe("team220/camera/depth", 1, imageDepthCallback);
     image_transport::Subscriber sub_binary = it.subscribe("lane_detect/lane_seg", 1, imageBinaryCallback);
-    ros::Subscriber sub_sign = nh.subscribe("team220/sign", 1, signCallback);
+    ros::Subscriber sub_sign = nh.subscribe("/team220/sign", 1, signCallback);
 
     cv::Point drivePoint = car->getCarPos();
     int driveSpeed = car->getMaxSpeed();

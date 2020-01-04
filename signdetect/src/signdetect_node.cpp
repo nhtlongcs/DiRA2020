@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     image_transport::Subscriber sub = it.subscribe("team220/camera/rgb", 1, imageColorCallback);
     image_transport::Subscriber sub2 = it.subscribe("team220/camera/depth", 1, imageDepthCallback);
 
-    pub = nh.advertise<cds_msgs::sign>("team220/sign", 1);
+    pub = nh.advertise<cds_msgs::sign>("/team220/sign", 1);
 
     ROS_INFO_NAMED("signdetect","Spinning node");
     while (ros::ok())

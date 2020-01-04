@@ -46,6 +46,7 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     object = objectDetect->detect();
 
     ROS_INFO("object = %d", object);
+    ROS_INFO("sign = %d", sign);
 
     // bool object = false;
 
@@ -113,12 +114,13 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     //         _turnTimer.start();
     //     }
 
-    //     if (isTurning)
-    //     {
-    //         driveSpeed = 20;
-    //         drivePoint = cv::Point{330 * prevSign, 200};
-    //         return;
-    //     }
+        if (isTurning)
+        {
+            driveSpeed = minSpeed;
+            sign = prevSign;
+            // drivePoint = cv::Point{330 * prevSign, 200};
+            // return;
+        }
     // }
 
     if (!isTurningDone)

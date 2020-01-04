@@ -15,7 +15,7 @@ limitations under the License.
 
 <launch>
   <arg name="image_topic" default="/team220/camera/rgb/compressed"/>
-  <arg name="weight_path" default="$(find mobilenet)/model/model_dira_v4.h5"/>
+  <arg name="weight_path" default="$(find mobilenet)/model/model_dira.h5"/>
 
   <node name="carcontrol_param_loader" pkg="dynamic_reconfigure" type="dynparam" 
         args="load /carcontrol $(find cds_msgs)/params/carcontrol.yaml" />
