@@ -68,8 +68,8 @@ protected:
 
     // const size_t maxNonZeroThreshold = W_TRACKING / N_BINS * H_TRACKING;
     const size_t maxNonZeroThreshold = 10;
-    const size_t minPointTrack = 70;
-    const size_t minPointDetect = 10;
+    const size_t minPointTrack = 50;
+    const size_t minPointDetect = 5;
     const size_t beginPointIndex = 40;
     const size_t drivePointIndex = beginPointIndex + 20;
 

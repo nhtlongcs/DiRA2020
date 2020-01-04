@@ -201,7 +201,7 @@ void Planning::updateDepth(cv::Mat depthImage)
 cv::Point Planning::driveCloseToLeft()
 {
     ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
-    cv::Point leftDrive{-320, 200};
+    cv::Point leftDrive{0, 120};
     if (laneDetect->getLeftLane()->getDrivePoint(leftDrive))
     {
         leftDrive = cv::Point{leftDrive.x + 30, leftDrive.y};
@@ -215,7 +215,7 @@ cv::Point Planning::driveCloseToLeft()
 cv::Point Planning::driveCloseToRight()
 {
     ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
-    cv::Point rightDrive{320, 200};
+    cv::Point rightDrive{319, 120};
     if (laneDetect->getRightLane()->getDrivePoint(rightDrive))
     {
         rightDrive = cv::Point{rightDrive.x - 30, rightDrive.y};

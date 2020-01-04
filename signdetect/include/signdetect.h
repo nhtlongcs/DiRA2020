@@ -27,7 +27,7 @@ private:
     cv::Mat rgb;
     cv::Mat depth;
 
-    const int MAX_FRAME_COUNT = 7;
+    const int MAX_FRAME_COUNT = 3;
     std::list<int> recentDetects;
     int canny = 255;
     int votes = 22;

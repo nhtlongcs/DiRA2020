@@ -83,6 +83,7 @@ void DetectSign::configCallback(signdetect::signConfig &config, uint32_t level)
     detectConfident = config.detect_confident;
     diffToClassify = config.diff_classify;
     classifyConfident = config.classify_confident;
+    votes = config.vote_kmean;
     minBlue[0] = config.min_H;
     minBlue[1] = config.min_S;
     minBlue[2] = config.min_V;
@@ -248,9 +249,12 @@ int DetectSign::detect()
     }
 
     int sign = detectOneFrame();
-
-    recentDetects.pop_front();
+    // return sign;
     recentDetects.push_back(sign);
+    if (recentDetects.size() > MAX_FRAME_COUNT)
+    {
+        recentDetects.pop_front();
+    }
 
     int cntLeft = std::count(recentDetects.begin(), recentDetects.end(), -1);
     int cntRight = std::count(recentDetects.begin(), recentDetects.end(), 1);
