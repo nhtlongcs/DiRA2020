@@ -171,9 +171,9 @@ int DetectObject::getDirectOnRawBinary(const cv::Rect& objectROI)
     cv::Mat depthThresholded;
     depthThresholded = this->depth(objectROI);
     cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, depthThresholded);
-    // showImage(CONF_OBJ_WINDOW, depthThresholded);
-    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
+    
 
+    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
     return estimateDirect(depthThresholded);
 }
 
@@ -200,22 +200,25 @@ int DetectObject::getDirectOnKmean(const cv::Rect& objectROI)
 
 int DetectObject::getDirectOnKmeanBGSub(const cv::Rect& objectROI)
 {
-    cv::Mat objectROIImage = this->depth(objectROI);
-    cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
-
-    cv::Mat mask;
-    cv::inRange(kmeanImage, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, mask);
-
+    cv::Mat depthThresholded;
+    depthThresholded = this->depth(objectROI);
+    cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, depthThresholded);
+    // showImage(CONF_OBJ_WINDOW, depthThresholded);
     cv::Mat fgMask;
-    pBackSub->apply(kmeanImage, fgMask);
-    
-    fgMask &= mask;
-    // cv::imshow(CONF_OBJ_WINDOW, fgMask);
+    pBackSub->apply(this->depth, fgMask);
+    int tmp = estimateDirect(depthThresholded);
+    if (!tmp)
+    {   
+        fgMask = fgMask(objectROI);
+        depthThresholded &= fgMask;
+        tmp = estimateDirect(depthThresholded);
+    } 
 
-    return estimateDirect(fgMask);
+    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
+
+    return tmp;
 }
-
-
+    
 int DetectObject::detectOneFrame()
 {
     if (this->binary.empty() || this->depth.empty())
@@ -383,7 +386,11 @@ void DetectObject::Hough(const cv::Mat& binary)
     }
 
     cv::Mat colorBinary;
-    cv::cvtColor(depth, colorBinary, cv::COLOR_GRAY2BGR);
+
+    cv::Mat depthThresholded = this->depth.clone();
+    cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin*1.0}, cv::Scalar{depthThresholdMax*1.0}, depthThresholded);
+
+    cv::cvtColor(depthThresholded, colorBinary, cv::COLOR_GRAY2BGR);
     cv::addWeighted(colorBinary, 0.5, HoughTransform, 1, 1, HoughTransform);
 
     cv::circle(HoughTransform, cv::Point(midX, midY), 3, cv::Scalar(0, 0, 255), -1);

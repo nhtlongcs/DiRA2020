@@ -31,6 +31,7 @@ private:
     int detectOneFrame();
     void Hough(const cv::Mat& binary);
     void drawLine(float slope, float y_intercept, cv::Mat &HoughTransform);
+    
 private:
 
     ros::NodeHandle _nh;

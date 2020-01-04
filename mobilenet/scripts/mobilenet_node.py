@@ -43,7 +43,7 @@ def image_to_data(image_np):
 
 def unet(input_size=(224, 224, 3)):
 
-    model = MobileNetV2(include_top=False, input_shape=input_size)
+    model = MobileNetV2(include_top=False, input_shape=input_size, weights=None )
 
     conv1 = Conv2DTranspose(320, 3, activation='relu', padding='same',
                             kernel_initializer='he_normal')(model.layers[-1].output)

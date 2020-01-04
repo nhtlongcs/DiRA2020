@@ -70,7 +70,7 @@ void CarControl::driverCar(const Point& cur, float velocity)
     t_kP = error;
     t_kI += error;
     t_kD = error - preError;
-    angle.data = kP * t_kP + (kI/100000.) * t_kI + kD * t_kD;
+    angle.data = (kP * t_kP + kI * t_kI + kD * t_kD) / 1000.;
     // speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
 
     float newSpeed = velocity;
