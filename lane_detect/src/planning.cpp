@@ -8,15 +8,10 @@
 
 using namespace std;
 
-constexpr const char* CONF_PLAN_WINDOW = "ConfigPlanning";
+constexpr const char *CONF_PLAN_WINDOW = "ConfigPlanning";
 
 Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
-    : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}
-    , isAvoidObjectDone{true}, isTurningDone{true}
-    , prevObject{0}, object{0}
-    , laneToDriveCloseTo{2}
-    , _nh{"planning"}
-    , _configServer{_nh}
+    : laneDetect{laneDetect}, objectDetect{objectDetect}, sign{0}, prevSign{0}, isAvoidObjectDone{true}, isTurningDone{true}, prevObject{0}, object{0}, laneToDriveCloseTo{2}, _nh{"planning"}, _configServer{_nh}
 {
     _configServer.setCallback(boost::bind(&Planning::configCallback, this, _1, _2));
 
@@ -25,8 +20,8 @@ Planning::Planning(DetectLane *laneDetect, DetectObject *objectDetect)
     // cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
     // cv::createTrackbar("LaneToCloseTo", CONF_PLAN_WINDOW, &laneToDriveCloseTo, 2);
 
-    _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime/10.0f}, &Planning::onObjectTimeout, this, true);
-    _turnTimer = _nh.createTimer(ros::Duration{turningTime/10.0f}, &Planning::onTurnTimeout, this, true);
+    _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime / 10.0f}, &Planning::onObjectTimeout, this, true);
+    _turnTimer = _nh.createTimer(ros::Duration{turningTime / 10.0f}, &Planning::onTurnTimeout, this, true);
 }
 
 void Planning::updateSign(int signId)
@@ -80,7 +75,7 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             driveSpeed = minSpeed;
 
             _turnTimer.stop();
-            _turnTimer.setPeriod(ros::Duration{turningTime/10.0f});
+            _turnTimer.setPeriod(ros::Duration{turningTime / 10.0f});
             _turnTimer.start();
         }
     }
@@ -114,13 +109,13 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     //         _turnTimer.start();
     //     }
 
-        if (isTurning)
-        {
-            driveSpeed = minSpeed;
-            sign = prevSign;
-            // drivePoint = cv::Point{330 * prevSign, 200};
-            // return;
-        }
+    if (isTurning)
+    {
+        driveSpeed = minSpeed;
+        sign = prevSign;
+        // drivePoint = cv::Point{330 * prevSign, 200};
+        // return;
+    }
     // }
 
     if (!isTurningDone)
@@ -130,7 +125,8 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         rightLane->reset();
         laneDetect->detect();
         driveSpeed = minSpeed;
-    } else
+    }
+    else
     {
         driveSpeed = maxSpeed;
     }
@@ -169,11 +165,13 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             ROS_INFO("BOTH LANES NOT FOUND!");
             // drivePoint = cv::Point{330 * sign, 200};
         }
-    } else if (sign > 0)
+    }
+    else if (sign > 0)
     {
         driveSpeed = minSpeed;
         drivePoint = turnRight();
-    } else
+    }
+    else
     {
         driveSpeed = minSpeed;
         drivePoint = turnLeft();
@@ -208,8 +206,6 @@ cv::Point Planning::driveCloseToLeft()
     }
 
     return leftDrive;
-
-
 }
 
 cv::Point Planning::driveCloseToRight()
@@ -230,7 +226,8 @@ cv::Point Planning::driveStraight(int object)
     if (object > 0)
     {
         return driveCloseToLeft();
-    } else if (object < 0)
+    }
+    else if (object < 0)
     {
         return driveCloseToRight();
     }
@@ -238,18 +235,19 @@ cv::Point Planning::driveStraight(int object)
     if (laneToDriveCloseTo == 0)
     {
         return driveCloseToLeft();
-    } else if (laneToDriveCloseTo == 1)
+    }
+    else if (laneToDriveCloseTo == 1)
     {
         cv::Point leftDrive, rightDrive;
         // return driveCloseToRight();
         laneDetect->getLeftLane()->getDrivePoint(leftDrive);
         laneDetect->getRightLane()->getDrivePoint(rightDrive);
         return (leftDrive + rightDrive) / 2;
-    } else 
+    }
+    else
     {
         return driveCloseToRight();
     }
-
 }
 
 cv::Point Planning::turnLeft()
@@ -261,7 +259,8 @@ cv::Point Planning::turnLeft()
     if (laneDetect->getLeftLane()->isFound())
     {
         return driveCloseToLeft();
-    } else
+    }
+    else
     {
         return cv::Point{0, 120};
     }
@@ -273,22 +272,29 @@ cv::Point Planning::turnRight()
     laneDetect->getRightLane()->reset();
     laneDetect->getLeftLane()->reset();
     laneDetect->detect();
+
     if (laneDetect->getRightLane()->isFound())
     {
-        return driveCloseToRight();
-    } else
+        cv::Point rightDrive;
+        if (laneDetect->getRightLane()->getDrivePoint(rightDrive))
+        {
+            rightDrive = cv::Point{rightDrive.x, rightDrive.y};
+            return rightDrive;
+        }
+    }
+    else
     {
         return cv::Point{319, 120};
     }
 }
 
-void Planning::onObjectTimeout(const ros::TimerEvent& event)
+void Planning::onObjectTimeout(const ros::TimerEvent &event)
 {
     ROS_INFO("Object timeout");
     isAvoidObjectDone = true;
 }
 
-void Planning::onTurnTimeout(const ros::TimerEvent& event)
+void Planning::onTurnTimeout(const ros::TimerEvent &event)
 {
     ROS_INFO("Turn timeout");
     isTurningDone = true;
@@ -296,7 +302,7 @@ void Planning::onTurnTimeout(const ros::TimerEvent& event)
     isTurning = false;
 }
 
-void Planning::configCallback(lane_detect::planningConfig& config, uint32_t level)
+void Planning::configCallback(lane_detect::planningConfig &config, uint32_t level)
 {
     turningTime = config.turning_time;
     avoidObjectTime = config.avoid_time;

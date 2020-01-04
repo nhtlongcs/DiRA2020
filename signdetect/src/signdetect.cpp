@@ -119,10 +119,13 @@ int DetectSign::detectOneFrame()
     // new method
 
     Mat gray;
-    gray = kmean(this->depth, 2);
+    inRange(depth, cv::Scalar{10}, cv::Scalar{180}, gray);
+
+    // gray = kmean(this->depth, 2);
 
     // cvtColor(gray, gray, CV_BGR2GRAY);
     cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
+    cv::imshow("Gray", gray);
 
     vector<Vec3f> circles;
 
@@ -132,14 +135,17 @@ int DetectSign::detectOneFrame()
                  canny,   // Canny high threshold
                  votes,   // minimum number of votes
                  0, 100); // min and max radius
+
+    // ROS_INFO("Circles size = %ull", circles.size());
     for (size_t i = 0; i < circles.size(); i++)
     {
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
         int radius = cvRound(circles[i][2]);
         // circle center
-        // circle(this->depth, center, 3, Scalar(127), -1, 8, 0);
+        circle(gray, center, 3, Scalar(127), -1, 8, 0);
         // // circle outline
-        // circle(this->depth, center, radius, Scalar(100), 3, 8, 0);
+        circle(gray, center, radius, Scalar(100), 3, 8, 0);
+        cv::imshow("Draw Gray", gray);
         cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
 
         if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)
@@ -434,24 +440,24 @@ int DetectSign::detect()
     }
 
     int sign = detectOneFrame();
-    return sign;
-    // recentDetects.push_back(sign);
-    // if (recentDetects.size() > MAX_FRAME_COUNT)
-    // {
-    //     recentDetects.pop_front();
-    // }
+    // return sign;
+    recentDetects.push_back(sign);
+    if (recentDetects.size() > MAX_FRAME_COUNT)
+    {
+        recentDetects.pop_front();
+    }
 
-    // int cntLeft = std::count(recentDetects.begin(), recentDetects.end(), -1);
-    // int cntRight = std::count(recentDetects.begin(), recentDetects.end(), 1);
-    // int cntStraight = std::count(recentDetects.begin(), recentDetects.end(), 0);
+    int cntLeft = std::count(recentDetects.begin(), recentDetects.end(), -1);
+    int cntRight = std::count(recentDetects.begin(), recentDetects.end(), 1);
+    int cntStraight = std::count(recentDetects.begin(), recentDetects.end(), 0);
 
-    // int max = std::max(cntLeft, std::max(cntRight, cntStraight));
-    // if (max == cntLeft)
-    //     return -1;
-    // else if (max == cntRight)
-    //     return 1;
-    // else
-    //     return 0;
+    int max = std::max(cntLeft, std::max(cntRight, cntStraight));
+    if (max == cntLeft)
+        return -1;
+    else if (max == cntRight)
+        return 1;
+    else
+        return 0;
 }
 
 // int DetectSign::detect() {

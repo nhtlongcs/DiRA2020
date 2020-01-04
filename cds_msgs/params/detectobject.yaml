@@ -3,13 +3,13 @@ dictitems:
   cluster_count: 3
   depth_threshold_max: 120
   depth_threshold_min: 10
-  diff_to_know_left_right: 5
+  diff_to_know_left_right: 40
   groups: !!python/object/new:dynamic_reconfigure.encoding.Config
     dictitems:
       cluster_count: 3
       depth_threshold_max: 120
       depth_threshold_min: 10
-      diff_to_know_left_right: 5
+      diff_to_know_left_right: 40
       groups: !!python/object/new:dynamic_reconfigure.encoding.Config
         state: []
       id: 0

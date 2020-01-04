@@ -123,7 +123,7 @@ class mobilenet_node():
         self.bridge = CvBridge()
 
         self.sub_image = rospy.Subscriber(
-            self.image_topic, CompressedImage, self.img_callback, queue_size=1)  # , buff_size=4294967296)
+            self.image_topic, CompressedImage, self.img_callback, queue_size=1)#, buff_size=4294967296)
         self.pub_lane = rospy.Publisher(
             '/lane_detect/lane_seg/compressed', CompressedImage, queue_size=1)
 
