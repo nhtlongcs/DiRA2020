@@ -30,6 +30,10 @@ DetectLane::DetectLane()
     // cvCreateTrackbar("Hough", "Threshold", &hough_lowerbound, max_houghThreshold);
     // cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
 
+    cv::namedWindow("Threshold");
+    cv::createTrackbar( "Min Threshold:", "Threshold", &highThreshold, 255);
+    cv::createTrackbar( "Max Threshold:", "Threshold", &lowThreshold, 255);
+
     // cv::namedWindow("Threshold");
     // cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
     // cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
@@ -176,20 +180,34 @@ cv::Mat DetectLane::extractFeatureY(cv::Mat img) const
 
     
 }
-bool DetectLane::isAbleToTurn(int direct) const
+bool DetectLane::isAbleToTurn(cv::Mat depth) const
 {
     if (this->binary.empty())
     {
         return false;
     }
 
-    cv::Mat sobely;
-    // cv::Mat skel = extractFeatureY(this->binary);
+    // cv::imshow("binary", binary);
+
+    cv::Mat nearRegionMask;
+    cv::inRange(depth, cv::Scalar{lowThreshold}, cv::Scalar{highThreshold}, nearRegionMask);
+    // cv::imshow("nearRegionMask", nearRegionMask);
+
+    cv::Mat binaryNearRegion = binary & nearRegionMask;
+    // cv::imshow("binaryNearRegion", binaryNearRegion);
+
+
+    // cv::Mat sobely;
+    // cv::Mat skel = extractFeatureY(roadSegmentation);
+    // cv::imshow("Sobely", skel);
+
     // cv::Sobel(skel, sobely, CV_8U, 0, 1);
-    cv::imshow("Sobely", binary);
+    // cv::imshow("Sobely", binary);
     int cnt = 0;
     std::vector<cv::Vec4f> lines;
-    cv::HoughLinesP(binary, lines, 1, CV_PI / 180, votes, minLinlength, maxLineGap);
+    cv::HoughLinesP(binaryNearRegion, lines, 1, CV_PI / 180, votes, minLinlength, maxLineGap);
+    // cv::HoughLinesP(skel, lines, 1, CV_PI / 180, votes, minLinlength, maxLineGap);
+
     float Slope_average = 0;
     for (const cv::Vec4f &line : lines)
     {
@@ -208,8 +226,8 @@ bool DetectLane::isAbleToTurn(int direct) const
         // std::cout << slope << std::endl;
         if (fabs(slope)< 0.1) cnt++;
     }
-    std::cout << cnt << std::endl;
-    if (cnt > 10) 
+    // std::cout << cnt << std::endl;
+    if (cnt > 4) 
         return 1;
 
     return 0;

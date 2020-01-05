@@ -62,8 +62,8 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     // }
 
     int notuse;
-    bool isTurnable = laneDetect->isAbleToTurn(notuse);
-    ROS_INFO("Is turnable = %d", isTurnable);
+    bool isTurnable = laneDetect->isAbleToTurn(this->depth);
+    ROS_INFO_ONCE("Is turnable = %d", isTurnable);
     // kento fix this
     short_term_memory.push_back(sign);  
     if (short_term_memory.size() > KENTODEEPTRY)
@@ -92,7 +92,7 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
 
     if (sign != 0)
     {
-        ROS_INFO("Slow down..............");
+        ROS_INFO_ONCE("Slow down..............");
         driveSpeed = minSpeed;
     }
 
@@ -229,6 +229,7 @@ void Planning::updateColor(cv::Mat colorImage)
 
 void Planning::updateDepth(cv::Mat depthImage)
 {
+    this->depth = depthImage.clone();
     // this->objectDetect->update(depthImage);
     // this->signDetect->updateDepth(depthImage);
 }
@@ -259,7 +260,7 @@ cv::Point Planning::driveCloseToRight()
 
 cv::Point Planning::driveStraight(int object)
 {
-    ROS_INFO("DRIVE STRAIGHT %d", object);
+    ROS_INFO_COND(object != 0, "DRIVE STRAIGHT %d", object);
     if (object > 0)
     {
         return driveCloseToLeft();
@@ -289,7 +290,7 @@ cv::Point Planning::driveStraight(int object)
 
 cv::Point Planning::turnLeft()
 {
-    ROS_INFO("TURN LEFT");
+    ROS_INFO_ONCE("TURN LEFT");
     laneDetect->getRightLane()->reset();
     laneDetect->getLeftLane()->reset();
     laneDetect->detect();
@@ -305,7 +306,7 @@ cv::Point Planning::turnLeft()
 
 cv::Point Planning::turnRight()
 {
-    ROS_INFO("TURN RIGHT");
+    ROS_INFO_ONCE("TURN RIGHT");
     laneDetect->getRightLane()->reset();
     laneDetect->getLeftLane()->reset();
     laneDetect->detect();

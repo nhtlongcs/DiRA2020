@@ -22,7 +22,7 @@ public:
     void updateBinary(const cv::Mat &binary);
     void updateRGB(const cv::Mat &rgb);
 
-    bool isAbleToTurn(int direct) const;
+    bool isAbleToTurn(cv::Mat depth) const;
 
     int getLaneWidth() const;
     std::shared_ptr<LaneLine> getLeftLane() const;
@@ -54,6 +54,9 @@ private:
     cv::Mat birdview;
     cv::Mat birdviewTransformMatrix;
 
+    int roadInside_min[3] = {0, 0, 0};
+    int roadInside_max[3] = {179, 40, 140};
+
     int minThreshold[3] = {0, 0, 180};
     int maxThreshold[3] = {179, 30, 255};
 
@@ -63,7 +66,8 @@ private:
     int initLaneWidth = 50;
     int dropTop = 80;
 
-    int lowThreshold = 2;
+    int lowThreshold = 0;
+    int highThreshold = 155;
     int votes = 60;
     int minLinlength = 60;
     int maxLineGap = 5;

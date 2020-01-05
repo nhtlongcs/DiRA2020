@@ -70,7 +70,7 @@ def on_high_V_thresh_trackbar(val):
 parser = argparse.ArgumentParser(
     description='Code for Thresholding Operations using inRange tutorial.')
 parser.add_argument('--filepath', help='Image file path.',
-                    default="", type=int)
+                    default="", type=str)
 
 args = parser.parse_args()
 original_img = cv.imread(args.filepath)

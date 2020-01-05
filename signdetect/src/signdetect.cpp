@@ -48,7 +48,8 @@ DetectSign::DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate
     _roiPublisher = _debugImage.advertise("/debug/sign/ROI", 1, false);
     _thresholdedPublisher = _debugImage.advertise("/debug/sign/blue", 1, false);
     _detectPublisher = _debugImage.advertise("/debug/sign/detect", 1, false);
-    // cv::namedWindow(CONF_SIGN_WINDOW);
+
+    cv::namedWindow(CONF_SIGN_WINDOW);
     // cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
     // cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
 
@@ -56,6 +57,14 @@ DetectSign::DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate
     // cv::createTrackbar("DetectConfident", CONF_SIGN_WINDOW, &detectConfident, 100);
     // cv::createTrackbar("ClassifyConfident", CONF_SIGN_WINDOW, &classifyConfident, 100);
     // cv::createTrackbar("DiffToClassify", CONF_SIGN_WINDOW, &diffToClassify, 100);
+
+    cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &low_minBlue[0], 179);
+    cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &low_minBlue[1], 255);
+    cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &low_minBlue[2], 255);
+    cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &low_maxBlue[0], 179);
+    cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &low_maxBlue[1], 255);
+    cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &low_maxBlue[2], 255);
+
 
     // cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &minBlue[0], 179);
     // cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &minBlue[1], 255);
@@ -110,22 +119,22 @@ int DetectSign::detectOneFrame()
         return 0;
     }
 
-    Mat blue;
-    cvtColor(rgb, blue, cv::COLOR_BGR2HSV);
-    inRange(blue, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue);
-
-    int turnFactor = 0;
-
-    // new method
-
     Mat gray;
     inRange(depth, cv::Scalar{10}, cv::Scalar{180}, gray);
-
-    // gray = kmean(this->depth, 2);
-
-    // cvtColor(gray, gray, CV_BGR2GRAY);
     cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
     cv::imshow("Gray", gray);
+
+    Mat blue_low_pass;
+    Mat hsv;
+    cvtColor(rgb, hsv, cv::COLOR_BGR2HSV);
+    inRange(hsv, Scalar(low_minBlue[0], low_minBlue[1], low_minBlue[2]), Scalar(low_maxBlue[0], low_maxBlue[1], low_maxBlue[2]), blue_low_pass);
+    cv::medianBlur(blue_low_pass, blue_low_pass, 5);
+
+    cv::imshow("Blue Low Pass", blue_low_pass);
+
+    gray &= blue_low_pass;
+    cv::imshow("GrayAfter", gray);
+
 
     vector<Vec3f> circles;
 
@@ -136,7 +145,10 @@ int DetectSign::detectOneFrame()
                  votes,   // minimum number of votes
                  0, 100); // min and max radius
 
-    // ROS_INFO("Circles size = %ull", circles.size());
+
+
+    // debug
+    ROS_INFO("Circles size = %ul", circles.size());
     for (size_t i = 0; i < circles.size(); i++)
     {
         Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -146,173 +158,203 @@ int DetectSign::detectOneFrame()
         // // circle outline
         circle(gray, center, radius, Scalar(100), 3, 8, 0);
         cv::imshow("Draw Gray", gray);
+    }
+
+    // TODO: Debug
+    // return 0;
+
+    cv::Mat blue_high_pass;
+    inRange(hsv, Scalar(minBlue[0], minBlue[1], minBlue[2]), Scalar(maxBlue[0], maxBlue[1], maxBlue[2]), blue_high_pass);
+    const cv::Rect imageBound{0,0,gray.cols,gray.rows};
+    for (size_t i = 0; i < circles.size(); i++)
+    {
+        const auto& circle = circles[i];
+        cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]) + 10; // important
+
         cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
+        roi &= imageBound;
 
-        if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)
+        cv::Mat roiImg(blue_high_pass, roi);
+
+        int real_x1 = roiImg.cols - 1, real_y1 = roiImg.rows - 1, real_x2 = 0, real_y2 = 0;
+        for (int row = 0; row < roiImg.rows; row++)
         {
-            cv::Mat roiImg(blue, roi);
-            float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
-            ROS_INFO("percent sign = %.2f", percent);
-            if (percent < detectConfident)
-            {
-                continue;
-            }
-
-            cv::imshow("threshold + ROI", roiImg);
-            cv::waitKey(1);
-            // showImage(_detectPublisher, "mono8", depth);
-
-            int real_x1 = 319, real_y1 = 239, real_x2 = 0, real_y2 = 0;
-            for (int row = 0; row < roiImg.rows; row++)
-            {
-                for (int col = 0; col < roiImg.cols; col++)
-                {
-                    if (roiImg.at<uchar>(row, col))
-                    {
-                        real_x1 = std::min(real_x1, col);
-                        real_y1 = std::min(real_y1, row);
-                        real_x2 = std::max(real_x2, col);
-                        real_y2 = std::max(real_y2, row);
-                    }
-                }
-            }
-
-            cv::Rect boundingBox{real_x1, real_y1, real_x2 - real_x1, real_y2 - real_y1};
-            ROS_INFO_STREAM(boundingBox);
-            roiImg = roiImg(boundingBox);
-            cv::imshow("ROI Img", roiImg);
-
-            cv::Point top, bot, left, right;
-            // find top
-            for (int row = 0; row < roiImg.rows; row++)
-            {
-                int n = 0;
-                for (int col = 0; col < roiImg.cols; col++)
-                {
-                    if (roiImg.at<uchar>(row, col))
-                    {
-                        top.x += col;
-                        top.y += row;
-                        n++;
-                    }
-                }
-                if (n > 0)
-                {
-                    top.x /= n * 1.0f;
-                    top.y /= n * 1.0f;
-                    break;
-                }
-            }
-
-            ROS_INFO_STREAM("top ok: " << top);
-
-            // find bot
-            for (int row = roiImg.rows - 1; row >= 0; row--)
-            {
-                int n = 0;
-                for (int col = 0; col < roiImg.cols; col++)
-                {
-                    if (roiImg.at<uchar>(row, col))
-                    {
-                        bot.x += col;
-                        bot.y += row;
-                        n++;
-                    }
-                }
-                if (n > 0)
-                {
-                    bot.x /= n * 1.0f;
-                    bot.y /= n * 1.0f;
-                    break;
-                }
-            }
-
-            ROS_INFO_STREAM("bot ok: " << bot);
-            // find left
             for (int col = 0; col < roiImg.cols; col++)
             {
-                int n = 0;
-                for (int row = 0; row < roiImg.rows; row++)
+                if (roiImg.at<uchar>(row, col))
                 {
-                    if (roiImg.at<uchar>(row, col))
-                    {
-                        left.x += col;
-                        left.y += row;
-                        n++;
-                    }
-                }
-                if (n > 0)
-                {
-                    left.x /= n * 1.0f;
-                    left.y /= n * 1.0f;
-                    break;
+                    real_x1 = std::min(real_x1, col);
+                    real_y1 = std::min(real_y1, row);
+                    real_x2 = std::max(real_x2, col);
+                    real_y2 = std::max(real_y2, row);
                 }
             }
-            ROS_INFO_STREAM("left ok: " << left);
-            // find right
-            for (int col = roiImg.cols - 1; col >= 0; col--)
-            {
-                int n = 0;
-                for (int row = 0; row < roiImg.rows; row++)
-                {
-                    if (roiImg.at<uchar>(row, col))
-                    {
-                        right.x += col;
-                        right.y += row;
-                        n++;
-                    }
-                }
-                if (n > 0)
-                {
-                    right.x /= n * 1.0f;
-                    right.y /= n * 1.0f;
-                    break;
-                }
-            }
-            ROS_INFO_STREAM("right ok: " << right);
-            // std::swap(top, bot);
-            // std::swap(left, right);
+        }
+
+        if (real_x1 > real_x2)
+            std::swap(real_x1, real_x2);
+        if (real_y1 > real_y2)
+            std::swap(real_y1, real_y2);
+
+        int w = abs(real_x2 - real_x1);
+        int h = abs(real_y2 - real_y1);
+
+        if (w < 10 || h < 10)
+        {
+            continue;
+        }
+
+        cv::Rect boundingBox{real_x1, real_y1, w, h};
+        ROS_INFO_STREAM(boundingBox);
+        roiImg = roiImg(boundingBox);
+        cv::imshow("ROI Img before", roiImg);
+
+        cv::morphologyEx(roiImg, roiImg, cv::MORPH_CLOSE, cv::getStructuringElement(cv::MorphShapes::MORPH_ELLIPSE, cv::Size{3,3}));
+        cv::imshow("ROI Img after", roiImg);
+
+        float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
+        ROS_INFO("percent sign = %.2f", percent);
+        if (percent < detectConfident)
+        {
+            continue;
+        }
+
+        cv::imshow("threshold + ROI", roiImg);
+        cv::waitKey(1);
+        // showImage(_detectPublisher, "mono8", depth);
+
+            // cv::Point top, bot, left, right;
+            // // find top
+            // for (int row = 0; row < roiImg.rows; row++)
             // {
-            //     cv::Mat resized;
-            //     cv::resize(roiImg, resized, cv::Size{64, 64});
-            //     cv::imshow("ROI resized", resized);
+            //     int n = 0;
+            //     for (int col = 0; col < roiImg.cols; col++)
+            //     {
+            //         if (roiImg.at<uchar>(row, col))
+            //         {
+            //             top.x += col;
+            //             top.y += row;
+            //             n++;
+            //         }
+            //     }
+            //     if (n > 0)
+            //     {
+            //         top.x /= n * 1.0f;
+            //         top.y /= n * 1.0f;
+            //         break;
+            //     }
             // }
 
-            cv::Mat warppedROI(roiImg.rows, roiImg.cols, roiImg.type());
+            // ROS_INFO_STREAM("top ok: " << top);
+
+            // // find bot
+            // for (int row = roiImg.rows - 1; row >= 0; row--)
+            // {
+            //     int n = 0;
+            //     for (int col = 0; col < roiImg.cols; col++)
+            //     {
+            //         if (roiImg.at<uchar>(row, col))
+            //         {
+            //             bot.x += col;
+            //             bot.y += row;
+            //             n++;
+            //         }
+            //     }
+            //     if (n > 0)
+            //     {
+            //         bot.x /= n * 1.0f;
+            //         bot.y /= n * 1.0f;
+            //         break;
+            //     }
+            // }
+
+            // ROS_INFO_STREAM("bot ok: " << bot);
+            // // find left
+            // for (int col = 0; col < roiImg.cols; col++)
+            // {
+            //     int n = 0;
+            //     for (int row = 0; row < roiImg.rows; row++)
+            //     {
+            //         if (roiImg.at<uchar>(row, col))
+            //         {
+            //             left.x += col;
+            //             left.y += row;
+            //             n++;
+            //         }
+            //     }
+            //     if (n > 0)
+            //     {
+            //         left.x /= n * 1.0f;
+            //         left.y /= n * 1.0f;
+            //         break;
+            //     }
+            // }
+            // ROS_INFO_STREAM("left ok: " << left);
+            // // find right
+            // for (int col = roiImg.cols - 1; col >= 0; col--)
+            // {
+            //     int n = 0;
+            //     for (int row = 0; row < roiImg.rows; row++)
+            //     {
+            //         if (roiImg.at<uchar>(row, col))
+            //         {
+            //             right.x += col;
+            //             right.y += row;
+            //             n++;
+            //         }
+            //     }
+            //     if (n > 0)
+            //     {
+            //         right.x /= n * 1.0f;
+            //         right.y /= n * 1.0f;
+            //         break;
+            //     }
+            // }
+            // ROS_INFO_STREAM("right ok: " << right);
+            // // std::swap(top, bot);
+            // // std::swap(left, right);
             {
-                // int W = roiImg.cols;
-                // int H = roiImg.rows;
-
-                cv::Point2f inQuad[4] = {
-                    top,
-                    right,
-                    bot,
-                    left};
-
-                cv::Point2f outQuad[4] = {
-                    cv::Point{roiImg.cols / 2, 0},
-                    cv::Point{roiImg.cols - 1, roiImg.rows / 2},
-                    cv::Point{roiImg.cols / 2, roiImg.rows - 1},
-                    cv::Point{0, roiImg.rows / 2}};
-
-                // cv::Point2f inQuad[4] = {
-                //     cv::Point(0, 0),
-                //     cv::Point(W - 1, 0),
-                //     cv::Point(0, H - 1),
-                //     cv::Point(W - 1, H - 1)};
-
-                // cv::Point2f outQuad[4] = {
-                //     cv::Point(0, 0),
-                //     cv::Point(SIZE_X - 1, 0),
-                //     cv::Point(0, SIZE_X - 1),
-                //     cv::Point(SIZE_X - 1, SIZE_X - 1)};
-
-                cv::Mat M = getPerspectiveTransform(inQuad, outQuad);
-                warpPerspective(roiImg, warppedROI, M, warppedROI.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-                // ROS_INFO_STREAM("warp in: " << inQuad[0] << inQuad[1] << inQuad[2] << inQuad[3]);
-                // ROS_INFO_STREAM("warp out: " << outQuad[0] << outQuad[1] << outQuad[2] << outQuad[3]);
+                cv::Mat resized;
+                cv::resize(roiImg, resized, cv::Size{64, 64});
+                cv::imshow("ROI resized", resized);
             }
-            cv::imshow("ROI img warpped", warppedROI);
+
+            // cv::Mat warppedROI(roiImg.rows, roiImg.cols, roiImg.type());
+            // {
+            //     // int W = roiImg.cols;
+            //     // int H = roiImg.rows;
+
+            //     cv::Point2f inQuad[4] = {
+            //         top,
+            //         right,
+            //         bot,
+            //         left};
+
+            //     cv::Point2f outQuad[4] = {
+            //         cv::Point{roiImg.cols / 2, 0},
+            //         cv::Point{roiImg.cols - 1, roiImg.rows / 2},
+            //         cv::Point{roiImg.cols / 2, roiImg.rows - 1},
+            //         cv::Point{0, roiImg.rows / 2}};
+
+            //     // cv::Point2f inQuad[4] = {
+            //     //     cv::Point(0, 0),
+            //     //     cv::Point(W - 1, 0),
+            //     //     cv::Point(0, H - 1),
+            //     //     cv::Point(W - 1, H - 1)};
+
+            //     // cv::Point2f outQuad[4] = {
+            //     //     cv::Point(0, 0),
+            //     //     cv::Point(SIZE_X - 1, 0),
+            //     //     cv::Point(0, SIZE_X - 1),
+            //     //     cv::Point(SIZE_X - 1, SIZE_X - 1)};
+
+            //     cv::Mat M = getPerspectiveTransform(inQuad, outQuad);
+            //     warpPerspective(roiImg, warppedROI, M, warppedROI.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
+            //     // ROS_INFO_STREAM("warp in: " << inQuad[0] << inQuad[1] << inQuad[2] << inQuad[3]);
+            //     // ROS_INFO_STREAM("warp out: " << outQuad[0] << outQuad[1] << outQuad[2] << outQuad[3]);
+            // }
+            // cv::imshow("ROI img warpped", warppedROI);
 
             int sign = classify(rgb(roi)(boundingBox));
             if (sign != 0)
@@ -352,7 +394,6 @@ int DetectSign::detectOneFrame()
             //     // showImage("DetectSign", depth);
             //     // showImage("DetectSignROI", roiImg);
             // }
-        }
     }
 
     return 0;

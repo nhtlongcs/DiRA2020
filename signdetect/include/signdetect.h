@@ -32,6 +32,10 @@ private:
     int canny = 255;
     int votes = 22;
     int frameCount = 0;
+
+    int low_minBlue[3] = {47, 18, 0};
+    int low_maxBlue[3] = {180, 150, 255};
+
     int minBlue[3] = {100, 90, 35};
     // int minBlue[3] = {77, 10, 20};
     int maxBlue[3] = {170, 142, 60};

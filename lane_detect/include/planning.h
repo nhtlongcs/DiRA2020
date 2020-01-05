@@ -56,6 +56,8 @@ private:
     int turnSign = 0;
     std::list<int> short_term_memory;
     bool isTurning = false;
+
+    cv::Mat depth;
 };
 
 #endif
