@@ -17,10 +17,10 @@ public:
     ~DetectLane();
 
     void detect();
-    void show(const cv::Point& carPos, const cv::Point* drivePoint=nullptr) const;
-    int whichLane(const cv::Mat& objectMask) const;
-    void updateBinary(const cv::Mat& binary);
-    void updateRGB(const cv::Mat& rgb);
+    void show(const cv::Point &carPos, const cv::Point *drivePoint = nullptr) const;
+    int whichLane(const cv::Mat &objectMask) const;
+    void updateBinary(const cv::Mat &binary);
+    void updateRGB(const cv::Mat &rgb);
 
     bool isAbleToTurn(int direct) const;
 
@@ -28,23 +28,23 @@ public:
     std::shared_ptr<LaneLine> getLeftLane() const;
     std::shared_ptr<LaneLine> getRightLane() const;
 
-    cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat& resultM) const;
+    cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const;
+    cv::Mat extractFeatureY(cv::Mat img) const;
 
 public:
-    void configlaneCallback(lane_detect::laneConfig& config, uint32_t level);
+    void configlaneCallback(lane_detect::laneConfig &config, uint32_t level);
 
 private:
     bool isWrongLane() const;
-    cv::Mat preprocess(const cv::Mat& src);
-    cv::Mat shadow(const cv::Mat& src);
-    cv::Mat morphological(const cv::Mat& img);
-    cv::Mat ROI(const cv::Mat& src);
+    cv::Mat preprocess(const cv::Mat &src);
+    cv::Mat shadow(const cv::Mat &src);
+    cv::Mat morphological(const cv::Mat &img);
+    cv::Mat ROI(const cv::Mat &src);
 
-    void drawLine(float slope, float yintercept, cv::Mat& HoughTransform);
-    cv::Point Hough(const cv::Mat& img, const cv::Mat& src);
+    void drawLine(float slope, float yintercept, cv::Mat &HoughTransform);
+    cv::Point Hough(const cv::Mat &img, const cv::Mat &src);
 
     bool isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const;
-
     std::shared_ptr<LaneLine> leftLane;
     std::shared_ptr<LaneLine> rightLane;
 
@@ -56,7 +56,7 @@ private:
 
     int minThreshold[3] = {0, 0, 180};
     int maxThreshold[3] = {179, 30, 255};
-    
+
     int minLaneInShadow[3] = {90, 35, 95};
     int maxLaneInShadow[3] = {180, 117, 158};
 

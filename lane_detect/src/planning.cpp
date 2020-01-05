@@ -5,7 +5,6 @@
 #include <iostream>
 #include <ros/ros.h>
 #include <ros/package.h>
-
 using namespace std;
 
 constexpr const char *CONF_PLAN_WINDOW = "ConfigPlanning";
@@ -61,6 +60,17 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     // {
     //     object = prevObject;
     // }
+
+    int notuse;
+    bool isTurnable = laneDetect->isAbleToTurn(notuse);
+    ROS_INFO("Is turnable = %d", isTurnable);
+    // kento fix this
+    short_term_memory.push_back(sign);  
+    if (short_term_memory.size() > KENTODEEPTRY)
+    {
+        short_term_memory.pop_front();
+    }
+
 
     if (sign != 0)
     {
@@ -130,51 +140,78 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     {
         driveSpeed = maxSpeed;
     }
-
     if (sign == 0)
     {
-        driveSpeed = maxSpeed;
-        if (leftLane->isFound() && rightLane->isFound())
+
+        if (isTurnable)
         {
-            drivePoint = driveStraight(object);
-        }
-        else if (leftLane->isFound())
+
+            int cntLeft = std::count(short_term_memory.begin(), short_term_memory.end(), -1);
+            int cntRight = std::count(short_term_memory.begin(), short_term_memory.end(), 1);
+            int cntStraight = std::count(short_term_memory.begin(), short_term_memory.end(), 0);
+
+            int max = std::max(cntLeft, std::max(cntRight, cntStraight));
+            
+            if (max == 1)
+            {
+                driveSpeed = minSpeed;
+                drivePoint = turnRight();
+            }
+            else if (max == -1)
+            {
+                driveSpeed = minSpeed;
+                drivePoint = turnLeft();
+            }
+            
+        } else
         {
-            if (rightLane->recover(leftLane, laneWidth))
+            driveSpeed = maxSpeed;
+            if (leftLane->isFound() && rightLane->isFound())
             {
                 drivePoint = driveStraight(object);
             }
+            else if (leftLane->isFound())
+            {
+                if (rightLane->recover(leftLane, laneWidth))
+                {
+                    drivePoint = driveStraight(object);
+                }
+                else
+                {
+                    drivePoint = driveCloseToLeft();
+                }
+            }
+            else if (rightLane->isFound())
+            {
+                if (leftLane->recover(rightLane, laneWidth))
+                {
+                    drivePoint = driveStraight(object);
+                }
+                else
+                {
+                    drivePoint = driveCloseToRight();
+                }
+            }
             else
             {
-                drivePoint = driveCloseToLeft();
+                ROS_INFO("BOTH LANES NOT FOUND!");
+                // drivePoint = cv::Point{330 * sign, 200};
             }
         }
-        else if (rightLane->isFound())
-        {
-            if (leftLane->recover(rightLane, laneWidth))
-            {
-                drivePoint = driveStraight(object);
-            }
-            else
-            {
-                drivePoint = driveCloseToRight();
-            }
-        }
-        else
-        {
-            ROS_INFO("BOTH LANES NOT FOUND!");
-            // drivePoint = cv::Point{330 * sign, 200};
-        }
-    }
+        
+    }    
     else if (sign > 0)
     {
         driveSpeed = minSpeed;
-        drivePoint = turnRight();
+
+        drivePoint = driveCloseToRight();
+        // drivePoint = turnRight();
     }
     else
     {
         driveSpeed = minSpeed;
-        drivePoint = turnLeft();
+        // drivePoint = turnLeft();
+        drivePoint = driveCloseToLeft();
     }
 }
 

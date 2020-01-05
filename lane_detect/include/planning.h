@@ -5,7 +5,8 @@
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
 #include "lane_detect/planningConfig.h"
-
+#include <list>
+#define KENTODEEPTRY 5
 class DetectLane;
 class DetectObject;
 
@@ -53,6 +54,7 @@ private:
     int laneToDriveCloseTo;
 
     int turnSign = 0;
+    std::list<int> short_term_memory;
     bool isTurning = false;
 };
 

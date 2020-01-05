@@ -441,7 +441,7 @@ int DetectSign::detect()
 
     int sign = detectOneFrame();
     // return sign;
-    recentDetects.push_back(sign);
+    recentDetects.push_back(sign);  
     if (recentDetects.size() > MAX_FRAME_COUNT)
     {
         recentDetects.pop_front();
@@ -452,6 +452,7 @@ int DetectSign::detect()
     int cntStraight = std::count(recentDetects.begin(), recentDetects.end(), 0);
 
     int max = std::max(cntLeft, std::max(cntRight, cntStraight));
+    ///  WTF ??? 
     if (max == cntLeft)
         return -1;
     else if (max == cntRight)
