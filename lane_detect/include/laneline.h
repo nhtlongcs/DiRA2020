@@ -59,7 +59,7 @@ protected:
     std::vector<cv::Point> findPoints(const cv::Point& beginPoint, int direct) const;
     
 protected:
-    cv::Mat debugImage;
+    // cv::Mat debugImage;
     cv::Mat lineImage;
     cv::Rect lineImageRect;
     std::vector<cv::Point> listPoint;

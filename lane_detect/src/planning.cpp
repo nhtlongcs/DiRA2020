@@ -31,7 +31,7 @@ void Planning::updateSign(int signId)
 
 void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, int minSpeed)
 {
-    laneDetect->detect();
+    laneDetect->detect(lastPriority);
     auto laneWidth = laneDetect->getLaneWidth();
     auto leftLane = laneDetect->getLeftLane();
     auto rightLane = laneDetect->getRightLane();
@@ -81,7 +81,7 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
 
             leftLane->reset();
             rightLane->reset();
-            laneDetect->detect();
+            laneDetect->detect(sign);
             driveSpeed = minSpeed;
 
             _turnTimer.stop();
@@ -131,9 +131,13 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     if (!isTurningDone)
     {
         sign = prevSign;
-        leftLane->reset();
-        rightLane->reset();
-        laneDetect->detect();
+        // leftLane->reset();
+        // rightLane->reset();
+        if (sign > 0)
+            rightLane->reset();
+        else if (sign < 0)
+            leftLane->reset();
+        laneDetect->detect(sign);
         driveSpeed = minSpeed;
     }
     else
@@ -143,27 +147,36 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
     if (sign == 0)
     {
 
-        if (isTurnable)
+        int cntLeft = std::count(short_term_memory.begin(), short_term_memory.end(), -1);
+        int cntRight = std::count(short_term_memory.begin(), short_term_memory.end(), 1);
+        int cntStraight = std::count(short_term_memory.begin(), short_term_memory.end(), 0);
+        if (isTurnable && !isTurningDone && (cntLeft != 0 || cntRight != 0))
         {
 
-            int cntLeft = std::count(short_term_memory.begin(), short_term_memory.end(), -1);
-            int cntRight = std::count(short_term_memory.begin(), short_term_memory.end(), 1);
-            int cntStraight = std::count(short_term_memory.begin(), short_term_memory.end(), 0);
 
-            int max = std::max(cntLeft, std::max(cntRight, cntStraight));
+            // int max = std::max(cntLeft, std::max(cntRight, cntStraight));
             
-            if (max == 1)
+            if (cntRight > 0 )
             {
+                driveSpeed = minSpeed;
+                drivePoint = turnRight();          
+            } else if (cntLeft > 0){
                 driveSpeed = minSpeed;
                 drivePoint = turnRight();
             }
-            else if (max == -1)
-            {
-                driveSpeed = minSpeed;
-                drivePoint = turnLeft();
-            }
+            // if (max == 1)
+            // {
+            //     driveSpeed = minSpeed;
+            //     drivePoint = turnRight();
+            // }
+            // else if (max == -1)
+            // {
+            //     driveSpeed = minSpeed;
+            //     drivePoint = turnLeft();
+            // }
             
-        } else
+        } 
+        else
         {
             driveSpeed = maxSpeed;
             if (leftLane->isFound() && rightLane->isFound())
@@ -293,7 +306,7 @@ cv::Point Planning::turnLeft()
     ROS_INFO_ONCE("TURN LEFT");
     laneDetect->getRightLane()->reset();
     laneDetect->getLeftLane()->reset();
-    laneDetect->detect();
+    laneDetect->detect(-1);
     if (laneDetect->getLeftLane()->isFound())
     {
         return driveCloseToLeft();
@@ -309,7 +322,7 @@ cv::Point Planning::turnRight()
     ROS_INFO_ONCE("TURN RIGHT");
     laneDetect->getRightLane()->reset();
     laneDetect->getLeftLane()->reset();
-    laneDetect->detect();
+    laneDetect->detect(1);
 
     if (laneDetect->getRightLane()->isFound())
     {

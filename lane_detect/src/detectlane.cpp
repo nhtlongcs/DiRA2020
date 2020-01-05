@@ -86,10 +86,25 @@ void DetectLane::updateRGB(const cv::Mat &src)
 
 bool DetectLane::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
 {
-    return abs(leftBegin.x - rightBegin.x) < initLaneWidth;
+    if (leftLane->isFound() && rightLane->isFound())
+    {
+        std::vector<int> diff;
+        const auto& leftParams = leftLane->getLineParams();
+        const auto& rightParams = rightLane->getLineParams();
+        for (size_t y = 0; y < birdview.rows; y++)
+        {
+            int xleft = getXByY(leftParams, y * 1.0);
+            int xright = getXByY(rightParams, y * 1.0);
+            diff.push_back(abs(xleft - xright));
+        }
+        return std::any_of(diff.begin(), diff.end(), [this](const int& amount) {
+            return amount < this->initLaneWidth;
+        });
+    }
+    return false;
 }
 
-void DetectLane::detect()
+void DetectLane::detect(int turningDirect)
 {
     if (this->rgb.empty())
     {
@@ -137,11 +152,31 @@ void DetectLane::detect()
         leftLane->getBeginPoint(leftBegin);
         rightLane->getBeginPoint(rightBegin);
 
+        if (leftBegin.x > 160)
+        {
+            ROS_INFO("Invalid left");
+            leftLane->reset();
+        }
+
+        if (rightBegin.x < 100)
+        {
+            ROS_INFO("Invalid right");
+            rightLane->reset();
+        }
+
         if (isNeedRedetect(leftBegin, rightBegin))
         {
-            ROS_INFO("LaneWidth < %d. Redetect", initLaneWidth);
-            leftLane->reset();
-            rightLane->reset();
+            // ROS_INFO("LaneWidth < %d. Redetect", initLaneWidth);
+            if (turningDirect == 1)
+            {
+                leftLane->reset();
+            } else if (turningDirect == -1)
+            {
+                rightLane->reset();
+            } else {
+                leftLane->reset();
+                rightLane->reset();
+            }
             frameCount = 0;
             sumLaneWidth = 0;
         }
@@ -150,6 +185,14 @@ void DetectLane::detect()
             frameCount++;
             sumLaneWidth += abs(leftBegin.x - rightBegin.x);
         }
+    } else if (leftLane->isFound())
+    {
+        ROS_INFO_ONCE("\033[1;31mLoss right lane\033[0m");
+
+    } else if (rightLane->isFound())
+    {
+        ROS_INFO_ONCE("\033[1;32mLoss left lane\033[0m");
+        
     }
 }
 cv::Mat DetectLane::extractFeatureY(cv::Mat img) const

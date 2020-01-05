@@ -58,6 +58,8 @@ private:
     bool isTurning = false;
 
     cv::Mat depth;
+
+    int lastPriority = 0;
 };
 
 #endif

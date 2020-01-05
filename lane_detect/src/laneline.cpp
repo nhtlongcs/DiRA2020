@@ -18,10 +18,10 @@ void LaneLine::update(const cv::Mat& lineImage)
     this->lineImage = lineImage.clone();
     lineImageRect = cv::Rect{ 0, 0, lineImage.cols, lineImage.rows};
 
-    if (isDebug)
-    {
-        cv::cvtColor(lineImage, debugImage, cv::COLOR_GRAY2BGR);
-    }
+    // if (isDebug)
+    // {
+    //     cv::cvtColor(lineImage, debugImage, cv::COLOR_GRAY2BGR);
+    // }
 
     if (isFound())
     {
