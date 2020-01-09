@@ -1,10 +1,13 @@
 #include <common/libcommon.h>
 #include <cv_bridge/cv_bridge.h>
+#include <algorithm>
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
-#include "lane_detect.h"
-#include "laneline.h"
+
+#include "cds_msgs/lane.h"
+#include "lane_detect/lane_detect.h"
+#include "lane_detect/laneline.h"
 #include "lane_detect/LaneConfig.h"
 
 using namespace cv;
@@ -13,20 +16,16 @@ using namespace std;
 constexpr const char *CONF_BIRDVIEW_WINDOW = "Birdview";
 
 LaneDetect::LaneDetect()
-    : leftLane{nullptr}, rightLane{nullptr}, frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _configServer{_nh}, _debugImage{_nh}, _binaryImageTransport{_nh}
-// , midLane{nullptr}
+    : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _configServer{_nh}, _debugImage{_nh}, _binaryImageTransport{_nh}
 {
-    leftLane = std::make_shared<LeftLane>();
-    rightLane = std::make_shared<RightLane>();
-
-    _configServer.setCallback(boost::bind(&LaneDetect::configlaneCallback, this, _1, _2));
+    _configServer.setCallback(std::bind(&LaneDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     _birdviewPublisher = _debugImage.advertise("/debug/lane/birdview", 1, false);
     _lanePublisher = _debugImage.advertise("/debug/lane/lane", 1, false);
     _houghPublisher = _debugImage.advertise("/debug/lane/hough", 1, false);
 
-    _binaryImageSub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, boost::bind(&LaneDetect::updateBinaryCallback, this, _1));
-
+    _binaryImageSub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, std::bind(&LaneDetect::updateBinaryCallback, this, std::placeholders::_1));
+    _lanePub = _nh.advertise<cds_msgs::lane>("~lane", 1);
     // setUseOptimized(true);
     // setNumThreads(4);
 
@@ -62,7 +61,7 @@ LaneDetect::~LaneDetect()
 {
 }
 
-void LaneDetect::configlaneCallback(lane_detect::LaneConfig &config, uint32_t level)
+void LaneDetect::configCallback(lane_detect::LaneConfig &config, uint32_t level)
 {
     usebirdview = config.use_birdview;
     showDetectRegion = config.show_detect_region;
@@ -73,22 +72,33 @@ void LaneDetect::configlaneCallback(lane_detect::LaneConfig &config, uint32_t le
     skyline = config.skyline;
     offsetLeft = config.offset_birdview_left;
     offsetRight = config.offset_birdview_right;
-    leftLane->setFindBeginPointRegion(config.offset_left, config.left_width);
-    rightLane->setFindBeginPointRegion(config.offset_right, config.right_width);
+    left.setFindBeginPointRegion(config.offset_left, config.left_width);
+    right.setFindBeginPointRegion(config.offset_right, config.right_width);
 }
 
 void LaneDetect::update()
 {
-    // TODO: publish lane message
+    cds_msgs::lane lane_msg;
+    if (left.isFound())
+    {
+        const auto& params = left.getLineParams();
+        lane_msg.left_params.insert(lane_msg.left_params.begin(), params.begin(), params.end());
+    }
+    if (right.isFound())
+    {
+        const auto& params = right.getLineParams();
+        lane_msg.right_params.insert(lane_msg.right_params.begin(), params.begin(), params.end());
+    }
+    _lanePub.publish(lane_msg);
 }
 
 bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
 {
-    if (leftLane->isFound() && rightLane->isFound())
+    if (left.isFound() && right.isFound())
     {
         std::vector<int> diff;
-        const auto &leftParams = leftLane->getLineParams();
-        const auto &rightParams = rightLane->getLineParams();
+        const auto &leftParams = left.getLineParams();
+        const auto &rightParams = right.getLineParams();
         for (size_t y = 0; y < birdview.rows; y++)
         {
             int xleft = getXByY(leftParams, y * 1.0);
@@ -104,11 +114,6 @@ bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
 
 void LaneDetect::detect(int turningDirect)
 {
-    if (this->rgb.empty())
-    {
-        return;
-    }
-
     if (this->binary.empty())
     {
         return;
@@ -141,25 +146,25 @@ void LaneDetect::detect(int turningDirect)
     birdview(cv::Rect(0, 0, birdview.cols, dropTop)) = cv::Scalar{0};
     showImage(_birdviewPublisher, "mono8", birdview);
 
-    leftLane->update(birdview);
-    rightLane->update(birdview);
+    left.update(birdview);
+    right.update(birdview);
 
-    if (leftLane->isFound() && rightLane->isFound())
+    if (left.isFound() && right.isFound())
     {
         cv::Point leftBegin, rightBegin;
-        leftLane->getBeginPoint(leftBegin);
-        rightLane->getBeginPoint(rightBegin);
+        left.getBeginPoint(leftBegin);
+        right.getBeginPoint(rightBegin);
 
         if (leftBegin.x > 160)
         {
             ROS_INFO("Invalid left");
-            leftLane->reset();
+            left.reset();
         }
 
         if (rightBegin.x < 100)
         {
             ROS_INFO("Invalid right");
-            rightLane->reset();
+            right.reset();
         }
 
         if (isNeedRedetect(leftBegin, rightBegin))
@@ -167,16 +172,16 @@ void LaneDetect::detect(int turningDirect)
             // ROS_INFO("LaneWidth < %d. Redetect", initLaneWidth);
             if (turningDirect == 1)
             {
-                leftLane->reset();
+                left.reset();
             }
             else if (turningDirect == -1)
             {
-                rightLane->reset();
+                right.reset();
             }
             else
             {
-                leftLane->reset();
-                rightLane->reset();
+                left.reset();
+                right.reset();
             }
             frameCount = 0;
             sumLaneWidth = 0;
@@ -187,18 +192,18 @@ void LaneDetect::detect(int turningDirect)
             sumLaneWidth += abs(leftBegin.x - rightBegin.x);
         }
     }
-    else if (leftLane->isFound())
+    else if (left.isFound())
     {
         ROS_INFO_ONCE("\033[1;31mLoss right lane\033[0m");
     }
-    else if (rightLane->isFound())
+    else if (right.isFound())
     {
         ROS_INFO_ONCE("\033[1;32mLoss left lane\033[0m");
     }
 }
+
 cv::Mat LaneDetect::extractFeatureY(cv::Mat img) const
 {
-
     cv::Mat binaryTemp = img.clone();
 
     cv::Mat skel(binaryTemp.size(), CV_8UC1, cv::Scalar(0));
@@ -283,8 +288,8 @@ void LaneDetect::show(const cv::Point &carPos, const cv::Point *drivePoint) cons
     }
     cv::Mat birdviewColor;
     cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
-    leftLane->show(birdviewColor, showDetectRegion);
-    rightLane->show(birdviewColor, showDetectRegion);
+    left.show(birdviewColor, showDetectRegion);
+    right.show(birdviewColor, showDetectRegion);
 
     if (drivePoint)
     {
@@ -310,8 +315,8 @@ int LaneDetect::whichLane(const cv::Mat &objectMask) const
         cv::Mat birdviewObjectMask = birdviewTransformation(objectMask, birdwidth, birdheight, offsetLeft, offsetRight, skyline, M);
 
         cv::Mat black = cv::Mat::zeros(birdview.rows, birdview.cols, CV_8UC1);
-        this->getLeftLane()->getMask(black);
-        this->getRightLane()->getMask(black);
+        left.getMask(black);
+        right.getMask(black);
 
         // cv::imshow("ObjectMask", objectMask);
 
@@ -491,14 +496,14 @@ int LaneDetect::getLaneWidth() const
     return this->sumLaneWidth / this->frameCount;
 }
 
-std::shared_ptr<LaneLine> LaneDetect::getLeftLane() const
+const LeftLane& LaneDetect::getLeftLane() const
 {
-    return this->leftLane;
+    return left;
 }
 
-std::shared_ptr<LaneLine> LaneDetect::getRightLane() const
+const RightLane& LaneDetect::getRightLane() const
 {
-    return this->rightLane;
+    return right;
 }
 
 void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
@@ -515,22 +520,5 @@ void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
     catch (cv_bridge::Exception &e)
     {
         ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
-    }
-}
-
-void LaneDetect::updateRGBCallback(const sensor_msgs::ImageConstPtr &msg)
-{
-    cv_bridge::CvImagePtr cv_ptr;
-    try
-    {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        if (!cv_ptr->image.empty())
-        {
-            this->binary = cv_ptr->image.clone();
-        }
-    }
-    catch (cv_bridge::Exception &e)
-    {
-        ROS_ERROR("Could not convert from '%s' to 'BGR8'.", msg->encoding.c_str());
     }
 }

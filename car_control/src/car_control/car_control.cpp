@@ -1,7 +1,9 @@
-#include "carcontrol.h"
+#include "car_control/car_control.h"
+using namespace cv;
+using namespace std;
 
 CarControl::CarControl()
-    : _nh{"carcontrol"}, _configServer{_nh}
+    : _nh{"car_control"}, _configServer{_nh}
 {
     _configServer.setCallback(boost::bind(&CarControl::configCallback, this, _1, _2));
     // cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
@@ -14,11 +16,12 @@ CarControl::CarControl()
     steer_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_angle", 20);
     speed_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_speed", 20);
     cam_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_camera_angle", 20);
+    control_subscriber = _nh.subscribe("/team220/control", 1, &CarControl::driveCallback, this);
 }
 
 CarControl::~CarControl() {}
 
-void CarControl::configCallback(lane_detect::carcontrolConfig &config, uint32_t level)
+void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t level)
 {
     kP = config.P;
     kI = config.I;
@@ -27,6 +30,11 @@ void CarControl::configCallback(lane_detect::carcontrolConfig &config, uint32_t 
     carPos.y = config.carpos_y;
     minVelocity = config.min_velocity;
     maxVelocity = config.max_velocity;
+}
+
+void CarControl::driveCallback(const cds_msgs::control& msg)
+{
+
 }
 
 cv::Point CarControl::getCarPos() const

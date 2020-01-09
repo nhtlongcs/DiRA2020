@@ -24,7 +24,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES api_${PROJECT_NAME}
+  LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS roscpp cds_msgs
 )
 
@@ -33,18 +33,18 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(api_${PROJECT_NAME}
-  src/laneline.cpp
-  src/lane_detect.cpp
+add_library(${PROJECT_NAME}
+  src/${PROJECT_NAME}/laneline.cpp
+  src/${PROJECT_NAME}/lane_detect.cpp
 )
 
-add_dependencies(api_${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 add_executable(${PROJECT_NAME}_node src/lane_detect_node.cpp)
 
 target_link_libraries(
   ${PROJECT_NAME}_node
-  api_${PROJECT_NAME}
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${Boost_LIBRARIES}
@@ -53,11 +53,16 @@ target_link_libraries(
 
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
-install(TARGETS api_${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
-   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
- )
+
+install(TARGETS ${PROJECT_NAME}_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 install(DIRECTORY include/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

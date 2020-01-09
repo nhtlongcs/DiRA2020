@@ -1,48 +1,47 @@
 #ifndef CARCONTROL_H
 #define CARCONTROL_H
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 
-#include <ros/ros.h>
-#include "std_msgs/Float32.h"
 
+#include <ros/ros.h>
+#include <std_msgs/Float32.h>
+#include <cds_msgs/control.h>
 #include <dynamic_reconfigure/server.h>
-#include "lane_detect/carcontrolConfig.h"
+#include "car_control/CarControlConfig.h"
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <iostream>
-
-#include "detectlane.h"
-
-using namespace std;
-using namespace cv;
 
 class CarControl
 {
 public:
     CarControl();
     ~CarControl();
-    void driverCar(const Point &cur, float velocity);
+    void driverCar(const cv::Point &cur, float velocity);
     int getMaxSpeed() const;
     int getMinSpeed() const;
     void steerCamera(float angle);
     cv::Point getCarPos() const;
 
 public:
-    void configCallback(lane_detect::carcontrolConfig &config, uint32_t level);
+    void configCallback(car_control::CarControlConfig &config, uint32_t level);
+    void driveCallback(const cds_msgs::control& msg);
 
 private:
     ros::NodeHandle _nh;
     ros::Publisher steer_publisher;
     ros::Publisher speed_publisher;
     ros::Publisher cam_publisher;
+    ros::Subscriber control_subscriber;
 
-    dynamic_reconfigure::Server<lane_detect::carcontrolConfig> _configServer;
+    dynamic_reconfigure::Server<car_control::CarControlConfig> _configServer;
 
-    Point carPos;
-    float errorAngle(const Point &dst);
+    cv::Point carPos;
+    float errorAngle(const cv::Point &dst);
     float minVelocity = 10;
     float maxVelocity = 30;
     float preError;

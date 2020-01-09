@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <common/libcommon.h>
-#include "object_detect.h"
+#include "object_detect/object_detect.h"
 
 constexpr const char *CONF_OBJ_WINDOW = "ConfigObjectDetect";
 
@@ -16,7 +16,12 @@ enum OBJ_STRATEGY
 };
 
 ObjectDetect::ObjectDetect()
-    : pBackSub{cv::createBackgroundSubtractorMOG2()}, _nh{"object_detect"}, _serverConfig{_nh}, _debugImage{_nh}, _depthImageTransport{_nh}, _binaryImageTransport{_nh}
+    : pBackSub{cv::createBackgroundSubtractorMOG2()}
+    , _nh{"object_detect"}
+    , _serverConfig{_nh}
+    , _debugImage{_nh}
+    , _depthImageTransport{_nh}
+    , _binaryImageTransport{_nh}
 {
     _serverConfig.setCallback(boost::bind(&ObjectDetect::configCallback, this, _1, _2));
     _houghPublisher = _debugImage.advertise("/debug/object/hough", 1, false);

@@ -52,11 +52,14 @@
   <build_depend>lane_detect</build_depend>
   <build_depend>object_detect</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>cds_msgs</build_depend>
   <build_depend>sign_detect</build_depend>
   <build_export_depend>lane_detect</build_export_depend>
+  <build_export_depend>cds_msgs</build_export_depend>
   <build_export_depend>object_detect</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sign_detect</build_export_depend>
+  <exec_depend>cds_msgs</exec_depend>
   <exec_depend>lane_detect</exec_depend>
   <exec_depend>object_detect</exec_depend>
   <exec_depend>roscpp</exec_depend>

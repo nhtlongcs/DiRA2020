@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "object_detect.h"
+#include "object_detect/object_detect.h"
 
 int main(int argc, char **argv)
 {

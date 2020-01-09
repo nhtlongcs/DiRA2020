@@ -1,23 +1,28 @@
 #ifndef SIGN_DETECT_H
 #define SIGN_DETECT_H
 
-#include <opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
 #include <list>
 #include <image_transport/image_transport.h>
+#include <sensor_msgs/Image.h>
+#include <cv_bridge/cv_bridge.h>
+#include <cds_msgs/sign.h>
 #include <dynamic_reconfigure/server.h>
 #include "sign_detect/SignConfig.h"
 
-class DetectSign
+class SignDetect
 {
 public:
-    DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate);
-    ~DetectSign();
-    void updateRGB(const cv::Mat &rgb);
-    void updateDepth(const cv::Mat &depth);
+    SignDetect();
+    ~SignDetect();
+    
+    void update();
     int detect();
-
+public:
     void configCallback(sign_detect::SignConfig &config, uint32_t level);
-
+    void updateRGBCallback(const sensor_msgs::ImageConstPtr &msg);
+    void updateDepthCallback(const sensor_msgs::ImageConstPtr &msg);
+    
 private:
     int detectOneFrame();
     int classify(const cv::Mat &colorROI) const;
@@ -46,13 +51,18 @@ private:
     int diffToClassify = 5;
     int classifyStrategy = 1; // 0 - TemplateMatching, 1 - countBlue
 
-    const cv::Mat LEFT_TEMPLATE, RIGHT_TEMPLATE;
+    cv::Mat LEFT_TEMPLATE, RIGHT_TEMPLATE;
     int MAX_DIFF;
 
 private:
     dynamic_reconfigure::Server<sign_detect::SignConfig> _server;
 
     ros::NodeHandle _nh;
+    ros::Publisher _signPub;
+    image_transport::ImageTransport _itSub;
+    image_transport::Subscriber _rgbSub;
+    image_transport::Subscriber _depthSub;
+
     image_transport::ImageTransport _debugImage;
     image_transport::Publisher _roiPublisher;
     image_transport::Publisher _detectPublisher;

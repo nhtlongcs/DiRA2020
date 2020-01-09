@@ -13,6 +13,7 @@ add_message_files(
   sign.msg
   object.msg
   lane.msg
+  control.msg
 )
 
 generate_messages(

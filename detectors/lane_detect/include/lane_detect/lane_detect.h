@@ -7,8 +7,7 @@
 #include <image_transport/publisher.h>
 #include <image_transport/image_transport.h>
 #include "lane_detect/LaneConfig.h"
-
-class LaneLine;
+#include "lane_detect/laneline.h"
 
 class LaneDetect
 {
@@ -25,16 +24,15 @@ public:
     bool isAbleToTurn(cv::Mat depth) const;
 
     int getLaneWidth() const;
-    std::shared_ptr<LaneLine> getLeftLane() const;
-    std::shared_ptr<LaneLine> getRightLane() const;
+    const LeftLane& getLeftLane() const;
+    const RightLane& getRightLane() const;
 
     cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const;
     cv::Mat extractFeatureY(cv::Mat img) const;
 
 public:
-    void configlaneCallback(lane_detect::LaneConfig &config, uint32_t level);
+    void configCallback(lane_detect::LaneConfig &config, uint32_t level);
     void updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg);
-    void updateRGBCallback(const sensor_msgs::ImageConstPtr &msg);
 
 private:
     bool isWrongLane() const;
@@ -47,12 +45,11 @@ private:
     cv::Point Hough(const cv::Mat &img, const cv::Mat &src);
 
     bool isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const;
-    std::shared_ptr<LaneLine> leftLane;
-    std::shared_ptr<LaneLine> rightLane;
+    
+    LeftLane left;
+    RightLane right;
 
     cv::Mat binary;
-    cv::Mat rgb;
-    cv::Mat debug;
     cv::Mat birdview;
     cv::Mat birdviewTransformMatrix;
 
@@ -90,8 +87,9 @@ private:
 
 private:
     ros::NodeHandle _nh;
-    image_transport::Subscriber _binaryImageSub;
+    ros::Publisher _lanePub;
     image_transport::ImageTransport _binaryImageTransport;
+    image_transport::Subscriber _binaryImageSub;
 
     dynamic_reconfigure::Server<lane_detect::LaneConfig> _configServer;
 

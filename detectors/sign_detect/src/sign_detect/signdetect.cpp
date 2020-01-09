@@ -1,4 +1,4 @@
-#include "signdetect.h"
+#include "sign_detect/signdetect.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -7,6 +7,8 @@
 #include <string>
 #include <exception>
 #include <ros/ros.h>
+#include <ros/package.h>
+#include <cds_msgs/sign.h>
 #include <common/libcommon.h>
 
 using namespace cv;
@@ -41,16 +43,30 @@ static double matching(cv::Mat image, cv::Mat templ)
     return minVal;
 }
 
-DetectSign::DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate)
-    : recentDetects{MAX_FRAME_COUNT, 0}, LEFT_TEMPLATE{leftTemplate}, RIGHT_TEMPLATE{rightTemplate}, _nh{"signdetect"}, _debugImage{_nh}
+SignDetect::SignDetect()
+    : recentDetects{MAX_FRAME_COUNT, 0}, _nh{"signdetect"}, _debugImage{_nh}
+    , _itSub{_nh}
 {
-    _server.setCallback(std::bind(&DetectSign::configCallback, this, std::placeholders::_1, std::placeholders::_2));
+
+    const std::string &packagePath = ros::package::getPath("signdetect");
+    const std::string &leftTemplate = packagePath + "/images/left.png";
+    const std::string &rightTemplate = packagePath + "/images/right.png";
+
+    LEFT_TEMPLATE = cv::imread(leftTemplate, cv::IMREAD_GRAYSCALE);
+    RIGHT_TEMPLATE = cv::imread(rightTemplate, cv::IMREAD_GRAYSCALE);
+
+    _rgbSub = _itSub.subscribe("team220/camera/rgb", 1, std::bind(&SignDetect::updateRGBCallback, this, std::placeholders::_1));
+    _depthSub = _itSub.subscribe("team220/camera/depth", 1, std::bind(&SignDetect::updateDepthCallback, this, std::placeholders::_1));
+
+    _signPub = _nh.advertise<cds_msgs::sign>("/team220/sign", 1);
+
+    _server.setCallback(std::bind(&SignDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
 
     _roiPublisher = _debugImage.advertise("/debug/sign/ROI", 1, false);
     _thresholdedPublisher = _debugImage.advertise("/debug/sign/blue", 1, false);
     _detectPublisher = _debugImage.advertise("/debug/sign/detect", 1, false);
 
-    cv::namedWindow(CONF_SIGN_WINDOW);
+    // cv::namedWindow(CONF_SIGN_WINDOW);
     // cv::createTrackbar("canny", CONF_SIGN_WINDOW, &canny, 255);
     // cv::createTrackbar("votes", CONF_SIGN_WINDOW, &votes, 255);
 
@@ -59,12 +75,12 @@ DetectSign::DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate
     // cv::createTrackbar("ClassifyConfident", CONF_SIGN_WINDOW, &classifyConfident, 100);
     // cv::createTrackbar("DiffToClassify", CONF_SIGN_WINDOW, &diffToClassify, 100);
 
-    cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &low_minBlue[0], 179);
-    cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &low_minBlue[1], 255);
-    cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &low_minBlue[2], 255);
-    cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &low_maxBlue[0], 179);
-    cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &low_maxBlue[1], 255);
-    cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &low_maxBlue[2], 255);
+    // cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &low_minBlue[0], 179);
+    // cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &low_minBlue[1], 255);
+    // cv::createTrackbar("MinBlue V", CONF_SIGN_WINDOW, &low_minBlue[2], 255);
+    // cv::createTrackbar("MaxBlue H", CONF_SIGN_WINDOW, &low_maxBlue[0], 179);
+    // cv::createTrackbar("MaxBlue S", CONF_SIGN_WINDOW, &low_maxBlue[1], 255);
+    // cv::createTrackbar("MaxBlue V", CONF_SIGN_WINDOW, &low_maxBlue[2], 255);
 
     // cv::createTrackbar("MinBlue H", CONF_SIGN_WINDOW, &minBlue[0], 179);
     // cv::createTrackbar("MinBlue S", CONF_SIGN_WINDOW, &minBlue[1], 255);
@@ -76,14 +92,8 @@ DetectSign::DetectSign(const cv::Mat &leftTemplate, const cv::Mat &rightTemplate
     MAX_DIFF = matching(LEFT_TEMPLATE, cv::Scalar(255) - LEFT_TEMPLATE);
 }
 
-void DetectSign::configCallback(sign_detect::SignConfig &config, uint32_t level)
+void SignDetect::configCallback(sign_detect::SignConfig &config, uint32_t level)
 {
-    // ROS_INFO("Reconfigure Request: %d %f %s %s %d",
-    //         config.int_param, config.double_param,
-    //         config.str_param.c_str(),
-    //         config.bool_param?"True":"False",
-    //         config.size);
-
     classifyStrategy = config.classify_method;
     detectConfident = config.detect_confident;
     diffToClassify = config.diff_classify;
@@ -97,22 +107,12 @@ void DetectSign::configCallback(sign_detect::SignConfig &config, uint32_t level)
     maxBlue[2] = config.max_V;
 }
 
-DetectSign::~DetectSign()
+SignDetect::~SignDetect()
 {
-    cv::destroyAllWindows();
+    // cv::destroyAllWindows();
 }
 
-void DetectSign::updateRGB(const cv::Mat &rgb)
-{
-    this->rgb = rgb.clone();
-}
-
-void DetectSign::updateDepth(const cv::Mat &depth)
-{
-    this->depth = depth.clone();
-}
-
-int DetectSign::detectOneFrame()
+int SignDetect::detectOneFrame()
 {
     if (this->depth.empty())
     {
@@ -122,7 +122,7 @@ int DetectSign::detectOneFrame()
     Mat gray;
     inRange(depth, cv::Scalar{10}, cv::Scalar{180}, gray);
     cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
-    cv::imshow("Gray", gray);
+    // cv::imshow("Gray", gray);
 
     Mat blue_low_pass;
     Mat hsv;
@@ -130,10 +130,10 @@ int DetectSign::detectOneFrame()
     inRange(hsv, Scalar(low_minBlue[0], low_minBlue[1], low_minBlue[2]), Scalar(low_maxBlue[0], low_maxBlue[1], low_maxBlue[2]), blue_low_pass);
     cv::medianBlur(blue_low_pass, blue_low_pass, 5);
 
-    cv::imshow("Blue Low Pass", blue_low_pass);
+    // cv::imshow("Blue Low Pass", blue_low_pass);
 
     gray &= blue_low_pass;
-    cv::imshow("GrayAfter", gray);
+    // cv::imshow("GrayAfter", gray);
 
     vector<Vec3f> circles;
 
@@ -203,7 +203,6 @@ int DetectSign::detectOneFrame()
         }
 
         cv::Rect boundingBox{real_x1, real_y1, w, h};
-        ROS_INFO_STREAM(boundingBox);
         roiImg = roiImg(boundingBox);
         cv::imshow("ROI Img before", roiImg);
 
@@ -211,192 +210,29 @@ int DetectSign::detectOneFrame()
         cv::imshow("ROI Img after", roiImg);
 
         float percent = cv::countNonZero(roiImg) * 100.0f / (roiImg.rows * roiImg.cols);
-        ROS_INFO("percent sign = %.2f", percent);
         if (percent < detectConfident)
         {
             continue;
         }
 
-        cv::imshow("threshold + ROI", roiImg);
-        cv::waitKey(1);
-        // showImage(_detectPublisher, "mono8", depth);
-
-        // cv::Point top, bot, left, right;
-        // // find top
-        // for (int row = 0; row < roiImg.rows; row++)
-        // {
-        //     int n = 0;
-        //     for (int col = 0; col < roiImg.cols; col++)
-        //     {
-        //         if (roiImg.at<uchar>(row, col))
-        //         {
-        //             top.x += col;
-        //             top.y += row;
-        //             n++;
-        //         }
-        //     }
-        //     if (n > 0)
-        //     {
-        //         top.x /= n * 1.0f;
-        //         top.y /= n * 1.0f;
-        //         break;
-        //     }
-        // }
-
-        // ROS_INFO_STREAM("top ok: " << top);
-
-        // // find bot
-        // for (int row = roiImg.rows - 1; row >= 0; row--)
-        // {
-        //     int n = 0;
-        //     for (int col = 0; col < roiImg.cols; col++)
-        //     {
-        //         if (roiImg.at<uchar>(row, col))
-        //         {
-        //             bot.x += col;
-        //             bot.y += row;
-        //             n++;
-        //         }
-        //     }
-        //     if (n > 0)
-        //     {
-        //         bot.x /= n * 1.0f;
-        //         bot.y /= n * 1.0f;
-        //         break;
-        //     }
-        // }
-
-        // ROS_INFO_STREAM("bot ok: " << bot);
-        // // find left
-        // for (int col = 0; col < roiImg.cols; col++)
-        // {
-        //     int n = 0;
-        //     for (int row = 0; row < roiImg.rows; row++)
-        //     {
-        //         if (roiImg.at<uchar>(row, col))
-        //         {
-        //             left.x += col;
-        //             left.y += row;
-        //             n++;
-        //         }
-        //     }
-        //     if (n > 0)
-        //     {
-        //         left.x /= n * 1.0f;
-        //         left.y /= n * 1.0f;
-        //         break;
-        //     }
-        // }
-        // ROS_INFO_STREAM("left ok: " << left);
-        // // find right
-        // for (int col = roiImg.cols - 1; col >= 0; col--)
-        // {
-        //     int n = 0;
-        //     for (int row = 0; row < roiImg.rows; row++)
-        //     {
-        //         if (roiImg.at<uchar>(row, col))
-        //         {
-        //             right.x += col;
-        //             right.y += row;
-        //             n++;
-        //         }
-        //     }
-        //     if (n > 0)
-        //     {
-        //         right.x /= n * 1.0f;
-        //         right.y /= n * 1.0f;
-        //         break;
-        //     }
-        // }
-        // ROS_INFO_STREAM("right ok: " << right);
-        // // std::swap(top, bot);
-        // // std::swap(left, right);
+        // cv::imshow("threshold + ROI", roiImg);
         {
             cv::Mat resized;
             cv::resize(roiImg, resized, cv::Size{64, 64});
-            cv::imshow("ROI resized", resized);
+            // cv::imshow("ROI resized", resized);
         }
-
-        // cv::Mat warppedROI(roiImg.rows, roiImg.cols, roiImg.type());
-        // {
-        //     // int W = roiImg.cols;
-        //     // int H = roiImg.rows;
-
-        //     cv::Point2f inQuad[4] = {
-        //         top,
-        //         right,
-        //         bot,
-        //         left};
-
-        //     cv::Point2f outQuad[4] = {
-        //         cv::Point{roiImg.cols / 2, 0},
-        //         cv::Point{roiImg.cols - 1, roiImg.rows / 2},
-        //         cv::Point{roiImg.cols / 2, roiImg.rows - 1},
-        //         cv::Point{0, roiImg.rows / 2}};
-
-        //     // cv::Point2f inQuad[4] = {
-        //     //     cv::Point(0, 0),
-        //     //     cv::Point(W - 1, 0),
-        //     //     cv::Point(0, H - 1),
-        //     //     cv::Point(W - 1, H - 1)};
-
-        //     // cv::Point2f outQuad[4] = {
-        //     //     cv::Point(0, 0),
-        //     //     cv::Point(SIZE_X - 1, 0),
-        //     //     cv::Point(0, SIZE_X - 1),
-        //     //     cv::Point(SIZE_X - 1, SIZE_X - 1)};
-
-        //     cv::Mat M = getPerspectiveTransform(inQuad, outQuad);
-        //     warpPerspective(roiImg, warppedROI, M, warppedROI.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT);
-        //     // ROS_INFO_STREAM("warp in: " << inQuad[0] << inQuad[1] << inQuad[2] << inQuad[3]);
-        //     // ROS_INFO_STREAM("warp out: " << outQuad[0] << outQuad[1] << outQuad[2] << outQuad[3]);
-        // }
-        // cv::imshow("ROI img warpped", warppedROI);
 
         int sign = classify(rgb(roi)(boundingBox));
         if (sign != 0)
         {
             return sign;
         }
-
-        // fit bounding box
-        // std::vector<std::vector<cv::Point>> contours;
-        // std::vector<cv::Vec4i> hierarchy;
-        // cv::findContours(roiImg, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-        // ROS_INFO("contours size = %ull", contours.size());
-        // for (size_t i = 0; i < contours.size(); i++)
-        // {
-        //     ROS_INFO("cv::contourArea(contours[%d]) = %.2lf", i, cv::contourArea(contours[i]));
-        //     if (cv::contourArea(contours[i]) < 50)
-        //     {
-        //         continue;
-        //     }
-
-        //     cv::Rect &&boundingBox = cv::boundingRect(contours[i]); // fitter to the sign
-        //     cv::Rect &&newROI = cv::Rect{0, 0, roiImg.cols, roiImg.rows} & boundingBox;
-        //     roiImg = roiImg(newROI);
-        //     cv::imshow("ROI Img", roiImg);
-        //     // cv::Mat colorBlue;
-        //     // cv::cvtColor(roiImg, colorBlue, cv::COLOR_GRAY2BGR);
-        //     // cv::Mat thresholdconcat;
-        //     // cv::hconcat((rgb(roi))(boundingBox), colorBlue, thresholdconcat);
-        //     // showImage(_roiPublisher, "bgr8", thresholdconcat);
-
-        //     int sign = classify(rgb(roi)(newROI));
-        //     if (sign != 0)
-        //     {
-        //         return sign;
-        //     }
-
-        //     // showImage("DetectSign", depth);
-        //     // showImage("DetectSignROI", roiImg);
-        // }
     }
 
     return 0;
 }
 
-int DetectSign::classify(const cv::Mat &colorROI) const
+int SignDetect::classify(const cv::Mat &colorROI) const
 {
     switch (classifyStrategy)
     {
@@ -409,7 +245,7 @@ int DetectSign::classify(const cv::Mat &colorROI) const
     }
 }
 
-int DetectSign::classifyTemplateMatching(const cv::Mat &colorROI) const
+int SignDetect::classifyTemplateMatching(const cv::Mat &colorROI) const
 {
     cv::imshow("ClassifyInput", colorROI);
     cv::Mat gray;
@@ -445,7 +281,7 @@ int DetectSign::classifyTemplateMatching(const cv::Mat &colorROI) const
     return 0;
 }
 
-int DetectSign::classifyCountBlue(const cv::Mat &colorROI) const
+int SignDetect::classifyCountBlue(const cv::Mat &colorROI) const
 {
     cv::Mat blue;
     cv::cvtColor(colorROI, blue, cv::COLOR_BGR2HSV);
@@ -470,7 +306,19 @@ int DetectSign::classifyCountBlue(const cv::Mat &colorROI) const
     return 0;
 }
 
-int DetectSign::detect()
+void SignDetect::update()
+{
+    int sign = detect();
+    {
+        cds_msgs::sign signmsg;
+        signmsg.header.stamp = ros::Time::now();
+        signmsg.sign_id = sign;
+        _signPub.publish(signmsg);
+    }
+    cv::waitKey(1);
+}
+
+int SignDetect::detect()
 {
     if (rgb.empty())
     {
@@ -499,7 +347,7 @@ int DetectSign::detect()
         return 0;
 }
 
-// int DetectSign::detect() {
+// int SignDetect::detect() {
 //     if (rgb.empty())
 //     {
 //         return 0;
@@ -589,3 +437,38 @@ int DetectSign::detect()
 //     else if (max == cntRight) return 1;
 //     else return 0;
 // }
+
+
+void SignDetect::updateRGBCallback(const sensor_msgs::ImageConstPtr &msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        if (!cv_ptr->image.empty())
+        {
+            rgb = cv_ptr->image.clone();
+        }
+    }
+    catch (cv_bridge::Exception &e)
+    {
+        ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+    }
+}
+
+void SignDetect::updateDepthCallback(const sensor_msgs::ImageConstPtr &msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        if (!cv_ptr->image.empty())
+        {
+            cv::cvtColor(cv_ptr->image, this->depth, cv::COLOR_BGR2GRAY);
+        }
+    }
+    catch (cv_bridge::Exception &e)
+    {
+        ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+    }
+}
