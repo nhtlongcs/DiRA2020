@@ -179,10 +179,6 @@ srv/_*.py
 qtcreator-*
 *.user
 
-/planning/cfg
-/planning/docs
-/planning/src
-
 *~
 
 # Emacs
