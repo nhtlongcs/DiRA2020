@@ -10,9 +10,14 @@ find_package(catkin REQUIRED COMPONENTS
   common
   sensor_msgs
   cds_msgs
+  message_generation
   dynamic_reconfigure
 )
 
+add_service_files(
+  FILES
+  ResetLane.srv
+)
 
 generate_dynamic_reconfigure_options(
   cfg/Lane.cfg

@@ -2,18 +2,21 @@
 #define PLANNING_H
 
 #include <opencv2/core.hpp>
+#include <cds_msgs/lane.h>
+#include <cds_msgs/object.h>
+#include <cds_msgs/sign.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include "lane_detect/planningConfig.h"
+#include <planning/PlanningConfig.h>
 #include <list>
 #define KENTODEEPTRY 5
-class DetectLane;
-class DetectObject;
+
+class LineParams;
 
 class Planning
 {
 public:
-    Planning(DetectLane *laneDetect, DetectObject *objectDetect);
+    Planning();
 
     void updateBinary(cv::Mat binaryImage);
     void updateColor(cv::Mat colorImage);
@@ -22,7 +25,11 @@ public:
     void planning(cv::Point &drivePoint, int &speed, int maxSpeed, int minSpeed);
 
 public:
-    void configCallback(lane_detect::planningConfig& config, uint32_t level);
+    void configCallback(planning::PlanningConfig& config, uint32_t level);
+    void laneCallback(const cds_msgs::lane& msg);
+
+private:
+    void requestResetLane(int lane) const;
 
 private:
     void onTurnTimeout(const ros::TimerEvent& event);
@@ -37,11 +44,11 @@ private:
 
 private:
     ros::NodeHandle _nh;
-    dynamic_reconfigure::Server<lane_detect::planningConfig> _configServer;
+    dynamic_reconfigure::Server<planning::PlanningConfig> _configServer;
     ros::Timer _objectTimer, _turnTimer;
 
-    DetectLane *laneDetect;
-    DetectObject *objectDetect;
+    std::unique_ptr<LineParams> leftParams, rightParams;
+    std::vector<cv::Rect> objectBoxes;
 
     bool isAvoidObjectDone, isTurningDone;
     int turningTime = 40, avoidObjectTime = 35; // 1/10 seconds

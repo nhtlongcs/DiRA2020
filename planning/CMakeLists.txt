@@ -5,6 +5,13 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  cds_msgs
+  lane_detect
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/Planning.cfg
 )
 
 catkin_package(

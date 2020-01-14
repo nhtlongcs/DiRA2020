@@ -123,9 +123,9 @@ bool LaneLine::isFound() const
 std::vector<cv::Point> LaneLine::calcGradient(const std::vector<cv::Point> &points) const
 {
     std::vector<cv::Point> gradients;
-    for (int i = 0; i < listPoint.size() - 1; i++)
+    for (int i = 0; i < points.size() - 1; i++)
     {
-        gradients.push_back(listPoint[i + 1] - listPoint[i]);
+        gradients.push_back(points[i + 1] - points[i]);
     }
     return gradients;
 }
@@ -155,7 +155,7 @@ bool LaneLine::getBeginPoint(cv::Point &returnPoint) const
     if (isFound())
     {
         int x = getXByY(*lineParams, beginPointIndex*1.0);
-        returnPoint = cv::Point{x, beginPointIndex};
+        returnPoint = cv::Point{x, int(beginPointIndex)};
         return true;
     }
     return false;
@@ -166,7 +166,7 @@ bool LaneLine::getDrivePoint(cv::Point &returnPoint) const
     if (isFound())
     {
         int x = getXByY(*lineParams, drivePointIndex*1.0);
-        returnPoint = cv::Point{x, drivePointIndex};
+        returnPoint = cv::Point{x, int(drivePointIndex)};
         return true;
     }
     return false;
@@ -213,13 +213,7 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat &trackingImage, cv::P
 
 void LaneLine::swap(std::shared_ptr<LaneLine> other)
 {
-    std::vector<cv::Point> tmpListPoint = this->listPoint;
-    listPoint = other->listPoint;
-    other->listPoint = tmpListPoint;
-
-    std::shared_ptr<LineParams> tmpLineParams = this->lineParams;
-    this->lineParams = other->lineParams;
-    other->lineParams = tmpLineParams;
+    std::swap(other->lineParams, this->lineParams);
 }
 
 void LaneLine::setFindBeginPointRegion(int offset, int width)
@@ -351,7 +345,6 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine> &lane, int laneWidth)
     if (newParams)
     {
         lineParams = newParams;
-        listPoint = getPointsFromParams(lineParams);
         return isFound();
     }
     else
@@ -401,9 +394,10 @@ void LeftLane::printDetectCount() const
 
 void LeftLane::showLinePoints(cv::Mat &drawImage) const
 {
-    for (size_t i = 0; i < listPoint.size(); i += 20)
+    for (int y = 0; y < drawImage.rows; y += 20)
     {
-        circle(drawImage, listPoint[i], 5, getLaneColor(), -1, 1, 0);
+        const cv::Point point{getXByY(*lineParams, y*1.0),y};
+        circle(drawImage, point, 5, getLaneColor(), -1, 1, 0);
     }
 }
 
@@ -433,9 +427,10 @@ void RightLane::printDetectCount() const
 
 void RightLane::showLinePoints(cv::Mat &drawImage) const
 {
-    for (size_t i = 7; i < listPoint.size(); i += 20)
+    for (int y = 7; y < drawImage.rows; y += 20)
     {
-        circle(drawImage, listPoint[i], 5, getLaneColor(), -1, 1, 0);
+        const cv::Point point{getXByY(*lineParams, y*1.0),y};
+        circle(drawImage, point, 5, getLaneColor(), -1, 1, 0);
     }
 }
 
