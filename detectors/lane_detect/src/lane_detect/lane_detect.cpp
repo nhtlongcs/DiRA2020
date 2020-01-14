@@ -302,52 +302,6 @@ void LaneDetect::show(const cv::Point &carPos, const cv::Point *drivePoint) cons
     showImage(_lanePublisher, "bgr8", birdviewColor);
 }
 
-int LaneDetect::whichLane(const cv::Mat &objectMask) const
-{
-    if (this->binary.empty())
-    {
-        return 0;
-    }
-
-    if (usebirdview)
-    {
-        cv::Mat M;
-        cv::Mat birdviewObjectMask = birdviewTransformation(objectMask, birdwidth, birdheight, offsetLeft, offsetRight, skyline, M);
-
-        cv::Mat black = cv::Mat::zeros(birdview.rows, birdview.cols, CV_8UC1);
-        left.getMask(black);
-        right.getMask(black);
-
-        // cv::imshow("ObjectMask", objectMask);
-
-        black |= birdviewObjectMask;
-        // cv::imshow("TwoLaneMask", black);
-
-        // std::vector<cv::Point2f> points = {
-        //     cv::Point2f{boundingBox.tl()},
-        //     cv::Point2f{boundingBox.br().x, boundingBox.tl().y},
-        //     cv::Point2f{boundingBox.br()},
-        //     cv::Point2f{boundingBox.tl().x, boundingBox.br().y}
-        // };
-        // std::vector<cv::Point2f> birdviewBoundingBox;
-        // cv::perspectiveTransform(points, birdviewBoundingBox, birdviewTransformMatrix);
-
-        // cv::Mat colorBirdview;
-        // cv::cvtColor(this->birdview, colorBirdview, cv::COLOR_GRAY2BGR);
-
-        // for (int i = 0; i < 3; i++)
-        //     cv::line(colorBirdview, birdviewBoundingBox[i], birdviewBoundingBox[i+1], cv::Scalar{255,255,0});
-        // cv::line(colorBirdview, birdviewBoundingBox[0], birdviewBoundingBox[3], cv::Scalar{255,255,0});
-
-        // cv::imshow("BoundingBoxBirdview", colorBirdview);
-
-        return 0;
-    }
-
-    // I dont know
-    return 0;
-}
-
 cv::Mat LaneDetect::birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const
 {
     cv::Mat birdviewResult = birdviewTransformation(inputImage, birdwidth, birdheight, skyline, offsetLeft, offsetRight, resultM);

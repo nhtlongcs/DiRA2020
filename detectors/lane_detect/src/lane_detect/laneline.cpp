@@ -16,11 +16,6 @@ void LaneLine::update(const cv::Mat &lineImage)
     this->lineImage = lineImage.clone();
     lineImageRect = cv::Rect{0, 0, lineImage.cols, lineImage.rows};
 
-    // if (isDebug)
-    // {
-    //     cv::cvtColor(lineImage, debugImage, cv::COLOR_GRAY2BGR);
-    // }
-
     if (isFound())
     {
         track();
@@ -34,29 +29,26 @@ void LaneLine::update(const cv::Mat &lineImage)
 
 void LaneLine::reset()
 {
-    listPoint.clear();
     lineParams = nullptr;
 }
 
 void LaneLine::track()
 {
-    auto iter = listPoint.begin();
-    while (iter != listPoint.end())
+    // TODO: fix me
+    std::vector<cv::Point> trackingPoints;
+    for (int y = lineImage.rows - 1; y > 0; y-=10)
     {
-        if (!updateNewCenter(lineImage, *iter, nullptr))
+        int x = getXByY(*lineParams, y*1.0);
+        cv::Point center{x, y};
+        if (updateNewCenter(lineImage, center, nullptr))
         {
-            iter = listPoint.erase(iter);
-        }
-        else
-        {
-            iter++;
+            trackingPoints.push_back(center);
         }
     }
 
-    if (listPoint.size() > minPointTrack)
+    if (trackingPoints.size() >= minPointTrack)
     {
-        lineParams = calcLineParams(listPoint);
-        listPoint = getPointsFromParams(lineParams);
+        lineParams = calcLineParams(trackingPoints);
     }
     else
     {
@@ -87,7 +79,6 @@ void LaneLine::detect()
         if (points.size() > minPointDetect)
         {
             lineParams = calcLineParams(points);
-            listPoint = getPointsFromParams(lineParams);
         }
     }
 }
@@ -126,7 +117,7 @@ std::vector<cv::Point> LaneLine::getPointsFromParams(const std::shared_ptr<LineP
 
 bool LaneLine::isFound() const
 {
-    return listPoint.size() > minPointTrack && lineParams != nullptr;
+    return lineParams != nullptr;
 }
 
 std::vector<cv::Point> LaneLine::calcGradient(const std::vector<cv::Point> &points) const
@@ -159,19 +150,12 @@ void LaneLine::show(cv::Mat &drawImage, bool showDetectRegion) const
     }
 }
 
-void LaneLine::getMask(cv::Mat &birdviewInputBackground) const
-{
-    for (size_t i = 0; i < listPoint.size(); ++i)
-    {
-        circle(birdviewInputBackground, listPoint[i], 5, cv::Scalar{255}, -1, 1, 0);
-    }
-}
-
 bool LaneLine::getBeginPoint(cv::Point &returnPoint) const
 {
-    if (isFound() && listPoint.size() > beginPointIndex)
+    if (isFound())
     {
-        returnPoint = *(listPoint.rbegin() + beginPointIndex);
+        int x = getXByY(*lineParams, beginPointIndex*1.0);
+        returnPoint = cv::Point{x, beginPointIndex};
         return true;
     }
     return false;
@@ -179,9 +163,10 @@ bool LaneLine::getBeginPoint(cv::Point &returnPoint) const
 
 bool LaneLine::getDrivePoint(cv::Point &returnPoint) const
 {
-    if (isFound() && listPoint.size() > drivePointIndex)
+    if (isFound())
     {
-        returnPoint = *(listPoint.rbegin() + drivePointIndex);
+        int x = getXByY(*lineParams, drivePointIndex*1.0);
+        returnPoint = cv::Point{x, drivePointIndex};
         return true;
     }
     return false;
@@ -224,11 +209,6 @@ bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat &trackingImage, cv::P
     returnPoint = maxPoint;
     returnValue = maxCount;
     return true;
-}
-
-std::vector<cv::Point> LaneLine::getPoints() const
-{
-    return this->listPoint;
 }
 
 void LaneLine::swap(std::shared_ptr<LaneLine> other)

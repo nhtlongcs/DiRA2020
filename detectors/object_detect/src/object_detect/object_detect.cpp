@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <common/libcommon.h>
+#include <cds_msgs/object.h>
 #include "object_detect/object_detect.h"
 
 constexpr const char *CONF_OBJ_WINDOW = "ConfigObjectDetect";
@@ -27,6 +28,7 @@ ObjectDetect::ObjectDetect()
     _houghPublisher = _debugImage.advertise("/debug/object/hough", 1, false);
     _depthThresholdedPublisher = _debugImage.advertise("/debug/object/depth_threshold", 1, false);
 
+    _objPub = _nh.advertise<cds_msgs::object>("/team220/object", 1);
     _depthSub = _depthImageTransport.subscribe("team220/camera/depth", 1, &ObjectDetect::updateDepthCallback, this);
     _binarySub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, &ObjectDetect::updateBinaryCallback, this);
 
@@ -57,7 +59,6 @@ ObjectDetect::ObjectDetect()
 
 ObjectDetect::~ObjectDetect()
 {
-    // cv::destroyAllWindows();
 }
 
 void ObjectDetect::configCallback(object_detect::ObjectDetectConfig &config, uint32_t level)
@@ -482,7 +483,15 @@ void ObjectDetect::drawLine(float slope, float y_intercept, cv::Mat &HoughTransf
 
 void ObjectDetect::update()
 {
-    // int object = detectOneFrame();
+    int object = detectOneFrame();
+
+    cds_msgs::object msg;
+    _objPub.publish(msg);
+
+    // TODO: handle multiple object in one frame
+    // geometry_msgs::Polygon bbox;
+    // bbox.points.push_back
+
 
     // return object;
     // objectHistories.push_back(object);

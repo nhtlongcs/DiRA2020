@@ -71,6 +71,7 @@ private:
     int kCluster = 3;
 
     ros::NodeHandle _nh;
+    ros::Publisher _objPub;
     dynamic_reconfigure::Server<object_detect::ObjectDetectConfig> _serverConfig;
 
     image_transport::ImageTransport _depthImageTransport;

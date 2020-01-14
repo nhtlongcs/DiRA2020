@@ -20,7 +20,6 @@ public:
     bool isFound() const;
     bool isOutOfImage(const cv::Point &point) const;
     void show(cv::Mat &drawImage, bool showDetectRegion = true) const;
-    void getMask(cv::Mat &birdviewInputBackground) const;
     void setFindBeginPointRegion(int offset, int width);
 
     // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
@@ -61,7 +60,6 @@ protected:
     // cv::Mat debugImage;
     cv::Mat lineImage;
     cv::Rect lineImageRect;
-    std::vector<cv::Point> listPoint;
     std::shared_ptr<LineParams> lineParams;
     bool isDebug;
 
