@@ -7,19 +7,25 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   roscpp
   std_msgs
+  message_generation
 )
+find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(
   cfg/CarControl.cfg
 )
 
+
+add_service_files(
+  FILES
+  GetDriveSpeed.srv
+)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS dynamic_reconfigure roscpp std_msgs
+  CATKIN_DEPENDS roscpp std_msgs dynamic_reconfigure message_runtime
 )
-
-find_package(OpenCV REQUIRED)
 
 include_directories(
   include
@@ -30,11 +36,11 @@ add_library(${PROJECT_NAME}
   src/${PROJECT_NAME}/car_control.cpp
 )
 
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 add_executable(${PROJECT_NAME}_node src/car_control_node.cpp)
 
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(${PROJECT_NAME}
   ${OpenCV_LIBRARIES}

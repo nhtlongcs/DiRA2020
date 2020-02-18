@@ -26,35 +26,6 @@ LaneDetect::LaneDetect()
 
     _binaryImageSub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, std::bind(&LaneDetect::updateBinaryCallback, this, std::placeholders::_1));
     _lanePub = _nh.advertise<cds_msgs::lane>("~lane", 1);
-    // setUseOptimized(true);
-    // setNumThreads(4);
-
-    // cvCreateTrackbar("Hough", "Threshold", &hough_lowerbound, max_houghThreshold);
-    // cvCreateTrackbar("Hough_minLinlength", "Threshold", &minLinlength, 150);
-
-    // cv::namedWindow("Threshold");
-    // cv::createTrackbar("Min Threshold:", "Threshold", &highThreshold, 255);
-    // cv::createTrackbar("Max Threshold:", "Threshold", &lowThreshold, 255);
-
-    // cv::namedWindow("Threshold");
-    // cv::createTrackbar("MinShadow H", "Threshold", &minLaneInShadow[0], 255);
-    // cv::createTrackbar("MinShadow S", "Threshold", &minLaneInShadow[1], 255);
-    // cv::createTrackbar("MinShadow V", "Threshold", &minLaneInShadow[2], 255);
-    // cv::createTrackbar("MaxShadow H", "Threshold", &maxLaneInShadow[0], 255);
-    // cv::createTrackbar("MaxShadow S", "Threshold", &maxLaneInShadow[1], 255);
-    // cv::createTrackbar("MaxShadow V", "Threshold", &maxLaneInShadow[2], 255);
-    // cv::createTrackbar( "Min Threshold:", "Threshold", &lowThreshold, 15);
-
-    // cv::namedWindow(CONF_BIRDVIEW_WINDOW);
-    // cv::createTrackbar("Use Birdview", CONF_BIRDVIEW_WINDOW, &usebirdview, 1);
-    // cv::createTrackbar("InitLanewidth", CONF_BIRDVIEW_WINDOW, &initLaneWidth, 200);
-    // cv::createTrackbar("Birdwidth", CONF_BIRDVIEW_WINDOW, &birdwidth, 400);
-    // cv::createTrackbar("Birdheight", CONF_BIRDVIEW_WINDOW, &birdheight, 400);
-    // cv::createTrackbar("Skyline", CONF_BIRDVIEW_WINDOW, &skyline, 200);
-    // cv::createTrackbar("OffsetLeft", CONF_BIRDVIEW_WINDOW, &offsetLeft, 200);
-    // cv::createTrackbar("OffsetRight", CONF_BIRDVIEW_WINDOW, &offsetRight, 200);
-
-    // midLane = new MidLane(*leftLane, *rightLane);
 }
 
 LaneDetect::~LaneDetect()

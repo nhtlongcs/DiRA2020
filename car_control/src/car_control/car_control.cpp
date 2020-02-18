@@ -1,4 +1,7 @@
 #include "car_control/car_control.h"
+#include <vector>
+#include <cmath>
+
 using namespace cv;
 using namespace std;
 
@@ -13,10 +16,9 @@ CarControl::CarControl()
 
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_angle", 20);
-    speed_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_speed", 20);
-    cam_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_camera_angle", 20);
-    control_subscriber = _nh.subscribe("/team220/control", 1, &CarControl::driveCallback, this);
+    steer_publisher = _nh.advertise<std_msgs::Float32>("set_angle", 20);
+    speed_publisher = _nh.advertise<std_msgs::Float32>("set_speed", 20);
+    control_subscriber = _nh.subscribe("control", 1, &CarControl::driveCallback, this);
 }
 
 CarControl::~CarControl() {}
@@ -37,11 +39,6 @@ void CarControl::driveCallback(const cds_msgs::control& msg)
 
 }
 
-cv::Point CarControl::getCarPos() const
-{
-    return this->carPos;
-}
-
 int CarControl::getMaxSpeed() const
 {
     return maxVelocity;
@@ -58,13 +55,6 @@ float CarControl::errorAngle(const Point &dst)
     float Y = dst.y;
     float angle = atan2(Y, X) * 180.0 / CV_PI - 90.0;
     return angle;
-}
-
-void CarControl::steerCamera(float angle)
-{
-    std_msgs::Float32 angleMsg;
-    angleMsg.data = angle;
-    cam_publisher.publish(angleMsg);
 }
 
 void CarControl::driverCar(const Point &cur, float velocity)

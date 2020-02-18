@@ -16,6 +16,13 @@ add_message_files(
   control.msg
 )
 
+add_service_files(
+  FILES
+  ResetLane.srv
+  GetDrivePoint.srv
+  RecoverLane.srv
+)
+
 generate_messages(
   DEPENDENCIES
   std_msgs

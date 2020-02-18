@@ -2,7 +2,12 @@
 #include <iostream>
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <lane_detect/ResetLane.h>
+#include "cds_msgs/ResetLane.h"
+#include "cds_msgs/GetDrivePoint.h"
+#include "cds_msgs/RecoverLane.h"
+#include "car_control/GetDriveSpeed.h"
+#include "lane_detect/lane_detect.h"
+#include "common/libcommon.h"
 using namespace std;
 
 constexpr const char *CONF_PLAN_WINDOW = "ConfigPlanning";
@@ -12,8 +17,10 @@ Planning::Planning()
     , _configServer{_nh}
     , isAvoidObjectDone{true}, isTurningDone{true}, prevObject{0}, object{0}, laneToDriveCloseTo{2}
 {
-    _configServer.setCallback(std::bind(&Planning::configCallback, this, std::placeholders::_1, std::placeholders::_2));
+    _resetLaneClient = _nh.serviceClient<cds_msgs::ResetLane>("reset_lane");
+    _recoverClient = _nh.serviceClient<cds_msgs::GetDrivePoint>("recover");
 
+    _configServer.setCallback(std::bind(&Planning::configCallback, this, std::placeholders::_1, std::placeholders::_2));
     // cv::namedWindow(CONF_PLAN_WINDOW);
     // cv::createTrackbar("AvoidTime", CONF_PLAN_WINDOW, &avoidObjectTime, 50);
     // cv::createTrackbar("TurningTime", CONF_PLAN_WINDOW, &turningTime, 100);
@@ -29,16 +36,17 @@ void Planning::updateSign(int signId)
     sign = signId;
 }
 
-void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, int minSpeed)
+void Planning::planning()
 {
     
-    laneDetect->detect(lastPriority);
-    auto laneWidth = laneDetect->getLaneWidth();
-    auto leftLane = laneDetect->getLeftLane();
-    auto rightLane = laneDetect->getRightLane();
+    // laneDetect->detect(lastPriority);
+    // auto laneWidth = laneDetect->getLaneWidth();
+    // auto leftLane = laneDetect->getLeftLane();
+    // auto rightLane = laneDetect->getRightLane();
 
     prevObject = object;
-    object = objectDetect->detect();
+    // TODO: fix
+    // object = objectDetect->detect();
 
     ROS_INFO("object = %d", object);
     ROS_INFO("sign = %d", sign);
@@ -79,9 +87,10 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
             prevSign = sign; // important
             isTurningDone = false;
 
-            leftLane->reset();
-            rightLane->reset();
-            laneDetect->detect(sign);
+            requestResetLane(sign);
+            // leftLane->reset();
+            // rightLane->reset();
+            // laneDetect->detect(sign);
             driveSpeed = minSpeed;
 
             _turnTimer.stop();
@@ -134,9 +143,11 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         // leftLane->reset();
         // rightLane->reset();
         if (sign > 0)
-            rightLane->reset();
+            requestResetLane(1);
+            // rightLane->reset();
         else if (sign < 0)
-            leftLane->reset();
+            // leftLane->reset();
+            requestResetLane(-1);
         laneDetect->detect(sign);
         driveSpeed = minSpeed;
     }
@@ -179,11 +190,11 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
         else
         {
             driveSpeed = maxSpeed;
-            if (leftLane->isFound() && rightLane->isFound())
+            if (leftParams && rightParams)
             {
                 drivePoint = driveStraight(object);
             }
-            else if (leftLane->isFound())
+            else if (leftParams)
             {
                 if (rightLane->recover(leftLane, laneWidth))
                 {
@@ -194,7 +205,7 @@ void Planning::planning(cv::Point &drivePoint, int &driveSpeed, int maxSpeed, in
                     drivePoint = driveCloseToLeft();
                 }
             }
-            else if (rightLane->isFound())
+            else if (rightParams)
             {
                 if (leftLane->recover(rightLane, laneWidth))
                 {
@@ -231,7 +242,7 @@ cv::Point Planning::driveCloseToLeft()
 {
     ROS_INFO("DRIVE CLOSE TO THE LEFT SIDE");
     cv::Point leftDrive{0, 120};
-    if (laneDetect->getLeftLane()->getDrivePoint(leftDrive))
+    if (requestDrivePoint(-1, leftDrive))
     {
         leftDrive = cv::Point{leftDrive.x + 30, leftDrive.y};
     }
@@ -243,7 +254,7 @@ cv::Point Planning::driveCloseToRight()
 {
     ROS_INFO("DRIVE CLOSE TO THE RIGHT SIDE");
     cv::Point rightDrive{319, 120};
-    if (laneDetect->getRightLane()->getDrivePoint(rightDrive))
+    if (requestDrivePoint(1, rightDrive))
     {
         rightDrive = cv::Point{rightDrive.x - 30, rightDrive.y};
     }
@@ -269,11 +280,13 @@ cv::Point Planning::driveStraight(int object)
     }
     else if (laneToDriveCloseTo == 1)
     {
-        cv::Point leftDrive, rightDrive;
+        // cv::Point leftDrive, rightDrive;
         // return driveCloseToRight();
-        laneDetect->getLeftLane()->getDrivePoint(leftDrive);
-        laneDetect->getRightLane()->getDrivePoint(rightDrive);
-        return (leftDrive + rightDrive) / 2;
+        LineParams midParams;
+        for (int i = 0; i < midParams.size(); i++)
+            midParams[i] = (*leftParams)[i] + (*rightParams)[i];
+        int x = getXByY(midParams, 70); // TODO: change to ros::getParam
+        return cv::Point{x, 70};
     }
     else
     {
@@ -284,10 +297,11 @@ cv::Point Planning::driveStraight(int object)
 cv::Point Planning::turnLeft()
 {
     ROS_INFO_ONCE("TURN LEFT");
-    laneDetect->getRightLane()->reset();
-    laneDetect->getLeftLane()->reset();
-    laneDetect->detect(-1);
-    if (laneDetect->getLeftLane()->isFound())
+    requestResetLane(-1);
+    // laneDetect->getRightLane()->reset();
+    // laneDetect->getLeftLane()->reset();
+    // laneDetect->detect(-1);
+    if (leftParams)
     {
         return driveCloseToLeft();
     }
@@ -300,14 +314,15 @@ cv::Point Planning::turnLeft()
 cv::Point Planning::turnRight()
 {
     ROS_INFO_ONCE("TURN RIGHT");
-    laneDetect->getRightLane()->reset();
-    laneDetect->getLeftLane()->reset();
-    laneDetect->detect(1);
+    requestResetLane(1);
+    // laneDetect->getRightLane()->reset();
+    // laneDetect->getLeftLane()->reset();
+    // laneDetect->detect(1);
 
-    if (laneDetect->getRightLane()->isFound())
+    if (rightParams)
     {
         cv::Point rightDrive;
-        if (laneDetect->getRightLane()->getDrivePoint(rightDrive))
+        if (requestDrivePoint(1, rightDrive))
         {
             rightDrive = cv::Point{rightDrive.x, rightDrive.y};
             return rightDrive;
@@ -342,41 +357,114 @@ void Planning::configCallback(planning::PlanningConfig &config, uint32_t level)
 
 void Planning::laneCallback(const cds_msgs::lane& msg)
 {
+    if (msg.left_params.empty())
+    {
+        leftParams = nullptr;
+    } else
+    {
+        if (!leftParams)
+        {
+            leftParams = std::make_shared<LineParams>();
+        }
+        std::copy_n(msg.left_params.begin(), leftParams->size(), leftParams->begin());
+    }
+    
+    if (msg.right_params.empty())
+    {
+        rightParams = nullptr;
+    } 
+    else
+    {
+        if (!rightParams)
+        {
+            rightParams = std::make_shared<LineParams>();
+        }
+        std::copy_n(msg.right_params.begin(), rightParams->size(), rightParams->begin());
+    }
     
 }
 
-void Planning::requestResetLane(int lane) const
+void Planning::signCallback(const cds_msgs::sign& msg)
 {
-    ros::ServiceClient client = _nh.serviceClient<lane_detect::ResetLane>("reset_lane");
-    lane_detect::ResetLane srv;
+
+}
+
+void Planning::objectCallback(const cds_msgs::object& msg)
+{
+
+}
+
+void Planning::requestResetLane(int lane)
+{
+    cds_msgs::ResetLane srv;
     srv.request.lane = lane;
-    if (client.call(srv))
+    if (_resetLaneClient.call(srv))
     {
-        leftParams = std::make_unique<LineParams>();
+        leftParams = std::make_shared<LineParams>();
         if (lane < 0)
         {
-            (*leftParams)[0] = srv.response.left_a;
-            (*leftParams)[1] = srv.response.left_b;
-            (*leftParams)[2] = srv.response.left_c;
+            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), leftParams->begin());
         }
         else if (lane > 0)
         {
-            (*rightParams)[0] = srv.response.right_a;
-            (*rightParams)[1] = srv.response.right_b;
-            (*rightParams)[2] = srv.response.right_c;
+            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), rightParams->begin());
         }
         else
         {
-            (*leftParams)[0] = srv.response.left_a;
-            (*leftParams)[1] = srv.response.left_b;
-            (*leftParams)[2] = srv.response.left_c;
-            (*rightParams)[0] = srv.response.right_a;
-            (*rightParams)[1] = srv.response.right_b;
-            (*rightParams)[2] = srv.response.right_c;
+            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), leftParams->begin());
+            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), rightParams->begin());
         }
     }
     else
     {
         ROS_ERROR("Failed to call service reset_lane");
     }
+}
+
+bool Planning::requestRecover(int lane)
+{
+    cds_msgs::RecoverLane srv;
+    srv.request.lane = lane;
+    if (_recoverClient.call(srv))
+    {
+        if (srv.response.lane == -1)
+        {
+            std::copy(srv.response.params.begin(), srv.response.params.end(), leftParams->begin());
+        } else if (srv.response.lane == 1)
+        {
+            std::copy(srv.response.params.begin(), srv.response.params.end(), rightParams->begin());
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service drive_point");
+    }
+}
+
+bool Planning::requestDrivePoint(int lane, cv::Point& resultPoint)
+{
+    cds_msgs::GetDrivePoint srv;
+    srv.request.lane = lane;
+    if (_drivePointClient.call(srv))
+    {
+        if (srv.response.found)
+        {
+            resultPoint.x = srv.response.point.x;
+            resultPoint.y = srv.response.point.y;
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service drive_point");
+    }
+    return false;
+}
+
+bool Planning::requestDriveSpeed(float& speed)
+{
+    cds_msgs::
 }

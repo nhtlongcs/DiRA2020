@@ -1,20 +1,13 @@
-#ifndef CARCONTROL_H
-#define CARCONTROL_H
+#ifndef CAR_CONTROL_H
+#define CAR_CONTROL_H
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv.hpp>
-
-
-#include <ros/ros.h>
-#include <std_msgs/Float32.h>
-#include <cds_msgs/control.h>
 #include <dynamic_reconfigure/server.h>
 #include "car_control/CarControlConfig.h"
-
-#include <vector>
-#include <cmath>
-#include <iostream>
+#include "cds_msgs/control.h"
+#include <opencv2/opencv.hpp>
+#include <ros/ros.h>
+#include <std_msgs/Float32.h>
+#include <std_msgs/Int16.h>
 
 class CarControl
 {
@@ -24,7 +17,6 @@ public:
     void driverCar(const cv::Point &cur, float velocity);
     int getMaxSpeed() const;
     int getMinSpeed() const;
-    void steerCamera(float angle);
     cv::Point getCarPos() const;
 
 public:
@@ -33,13 +25,13 @@ public:
 
 private:
     ros::NodeHandle _nh;
+    ros::ServiceServer _getCarPosService;
     ros::Publisher steer_publisher;
     ros::Publisher speed_publisher;
-    ros::Publisher cam_publisher;
     ros::Subscriber control_subscriber;
-
     dynamic_reconfigure::Server<car_control::CarControlConfig> _configServer;
 
+private:
     cv::Point carPos;
     float errorAngle(const cv::Point &dst);
     float minVelocity = 10;

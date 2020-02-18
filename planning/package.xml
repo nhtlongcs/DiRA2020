@@ -60,7 +60,6 @@
   <build_export_depend>object_detect</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>sign_detect</build_export_depend>
-  <build_export_depend>dynamic_reconfigure</build_export_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>cds_msgs</exec_depend>
   <exec_depend>lane_detect</exec_depend>

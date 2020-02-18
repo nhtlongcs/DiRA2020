@@ -1,0 +1,7 @@
+# 0: both
+# 1: right
+# -1: left
+int8 lane
+---
+float32[] left_params
+float32[] right_params

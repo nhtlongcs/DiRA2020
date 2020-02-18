@@ -60,6 +60,7 @@
   <build_export_depend>cv_bridge</build_export_depend>
   <build_export_depend>common</build_export_depend>
   <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>cds_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>image_transport</exec_depend>
