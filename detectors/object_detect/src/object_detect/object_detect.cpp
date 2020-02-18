@@ -1,10 +1,13 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include <limits>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 #include <common/libcommon.h>
-#include <cds_msgs/object.h>
+#include <std_msgs/Int8.h>
 #include "object_detect/object_detect.h"
 
 constexpr const char *CONF_OBJ_WINDOW = "ConfigObjectDetect";
@@ -17,20 +20,16 @@ enum OBJ_STRATEGY
 };
 
 ObjectDetect::ObjectDetect()
-    : pBackSub{cv::createBackgroundSubtractorMOG2()}
+    : pBackSub{cv::createBackgroundSubtractorMOG2() }
     , _nh{"object_detect"}
     , _serverConfig{_nh}
-    , _debugImage{_nh}
-    , _depthImageTransport{_nh}
-    , _binaryImageTransport{_nh}
+    , _it{_nh}
 {
+    std::string transport_hint = _nh.param<std::string>("transport_hint", "compressed");
     _serverConfig.setCallback(boost::bind(&ObjectDetect::configCallback, this, _1, _2));
-    _houghPublisher = _debugImage.advertise("/debug/object/hough", 1, false);
-    _depthThresholdedPublisher = _debugImage.advertise("/debug/object/depth_threshold", 1, false);
-
-    _objPub = _nh.advertise<cds_msgs::object>("/team220/object", 1);
-    _depthSub = _depthImageTransport.subscribe("team220/camera/depth", 1, &ObjectDetect::updateDepthCallback, this);
-    _binarySub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, &ObjectDetect::updateBinaryCallback, this);
+    _objPub = _nh.advertise<std_msgs::Int8>("object", 1);
+    _depthSub = _it.subscribe("/team220/camera/depth", 1, &ObjectDetect::updateDepthCallback, this, image_transport::TransportHints{transport_hint});
+    _binarySub = _it.subscribe("/mobile_net/lane_seg", 1, &ObjectDetect::updateBinaryCallback, this, image_transport::TransportHints{transport_hint});
 
     // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     // cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
@@ -83,7 +82,7 @@ void ObjectDetect::updateDepthCallback(const sensor_msgs::ImageConstPtr &msg)
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         if (!cv_ptr->image.empty())
         {
-            depth_raw = cv_ptr->image.clone();
+            cv::cvtColor(cv_ptr->image, depth, cv::COLOR_BGR2GRAY);
         }
     }
     catch (cv_bridge::Exception &e)
@@ -101,7 +100,7 @@ void ObjectDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
         if (!cv_ptr->image.empty())
         {
-            binary_raw = cv_ptr->image.clone();
+            binary = cv_ptr->image.clone();
         }
     }
     catch (cv_bridge::Exception &e)
@@ -175,12 +174,12 @@ int ObjectDetect::estimateDirect(const cv::Mat &binaryROI)
     float percentLeft = countLeft * 100.0f / (ImageLeft.rows * ImageLeft.cols);     // 0-100%
     float percentRight = countRight * 100.0f / (ImageRight.rows * ImageRight.cols); // 0-100%
 
-    ROS_INFO("Diff Object = %.2f", percentLeft - percentRight);
+    ROS_DEBUG("Percent left = %.2f, right = %.2f, diff = %.2f", percentLeft, percentRight, percentLeft - percentRight);
     if (abs(percentLeft - percentRight) > diffDirectPercent)
     {
-        return (percentLeft > percentRight) ? -1 : 1;
+        return (percentLeft > percentRight) ? static_cast<int>(LEFT) : static_cast<int>(RIGHT);
     }
-    return 0;
+    return static_cast<int>(NONE);
 }
 
 int ObjectDetect::getDirect(const cv::Rect &objectROI)
@@ -209,7 +208,8 @@ int ObjectDetect::getDirectOnRawBinary(const cv::Rect &objectROI)
     depthThresholded = this->depth(objectROI);
     cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin * 1.0}, cv::Scalar{depthThresholdMax * 1.0}, depthThresholded);
 
-    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
+    cv::imshow("DepthThresholded", depthThresholded);
+    cv::waitKey(1);
     return estimateDirect(depthThresholded);
 }
 
@@ -249,7 +249,7 @@ int ObjectDetect::getDirectOnKmeanBGSub(const cv::Rect &objectROI)
         tmp = estimateDirect(depthThresholded);
     }
 
-    showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
+    // showImage(_depthThresholdedPublisher, "mono8", depthThresholded);
 
     return tmp;
 }
@@ -258,6 +258,7 @@ int ObjectDetect::detectOneFrame()
 {
     if (this->binary.empty() || this->depth.empty())
     {
+        ROS_ERROR("Binary image empty or depth empty. Make sure subscribing right topic");
         return 0;
     }
 
@@ -299,52 +300,9 @@ int ObjectDetect::detectOneFrame()
     }
 
     Hough(this->binary);
-    // ROS_INFO("objectROI = %d, %d, %d, %d", objectROIRect.x, objectROIRect.y, objectROIRect.width, objectROIRect.height);
+    ROS_DEBUG("objectROI = %d, %d, %d, %d", objectROIRect.x, objectROIRect.y, objectROIRect.width, objectROIRect.height);
 
     return getDirect(objectROIRect);
-
-    // this->depth = birdviewTransformation(this->depth);
-
-    // cv::rectangle(this->depth, objectROI, cv::Scalar{0, 0, 255}, 2);
-    // cv::Mat objectROIImage = this->depth(objectROI);
-    // cv::Mat kmeanImage = kmean(objectROIImage, kCluster);
-
-    // cv::imshow("DepthObjectROI", kmeanImage);
-    // {
-    //     double minVal, maxVal;
-    //     cv::minMaxLoc(kmeanImage, &minVal, &maxVal, NULL, NULL);
-    //     int minValInt = cvRound(minVal), maxValInt = cvRound(maxVal);
-    //     cv::Mat mask = (kmeanImage != maxValInt);
-    //     cv::imshow("Mask", mask);
-    // }
-
-    // cv::Mat hsv;
-    // cv::Mat mask;
-    // cv::cvtColor(kmeanImage, hsv, cv::COLOR_BGR2HSV);
-    // cv::inRange(hsv, cv::Scalar(configObjectmin[0], configObjectmin[1], configObjectmin[2]),
-    //                 cv::Scalar(configObjectmax[0], configObjectmax[1], configObjectmax[2]), mask);
-    // cv::imshow(CONF_OBJ_WINDOW, mask);
-
-    // cv::Mat fgMask;
-    // pBackSub->apply(kmeanImage, fgMask);
-
-    // fgMask &= mask;
-    // cv::imshow("foreground", fgMask);
-
-    // float percent = cv::countNonZero(fgMask) * 100.0f/ (fgMask.rows * fgMask.cols);
-    // if ( percent >= detectThreshold)
-    // {
-    //     // cv::Mat laneImagePerspective;
-    //     // this->lane->show(laneImagePerspective);
-
-    //     // laneImagePerspective |= fgMask;
-    //     // cv::imshow("ObjectAndLane", laneImagePerspective);
-
-    //     // int direct = this->lane->whichLane(objectROI);
-    //     // ROS_INFO("Object on the %d", direct);
-
-    //     return true;
-    // }
 }
 
 void ObjectDetect::Hough(const cv::Mat &binary)
@@ -428,8 +386,11 @@ void ObjectDetect::Hough(const cv::Mat &binary)
 
     cv::Mat colorBinary;
 
-    cv::Mat depthThresholded = this->depth.clone();
-    cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin * 1.0}, cv::Scalar{depthThresholdMax * 1.0}, depthThresholded);
+
+    cv::Mat depthThresholded;
+    cv::inRange(depth, depthThresholdMin, depthThresholdMax, depthThresholded);
+    cv::imshow("Depth", depthThresholded);
+    cv::waitKey(1);
 
     cv::cvtColor(depthThresholded, colorBinary, cv::COLOR_GRAY2BGR);
     cv::addWeighted(colorBinary, 0.5, HoughTransform, 1, 1, HoughTransform);
@@ -467,8 +428,9 @@ void ObjectDetect::Hough(const cv::Mat &binary)
         objectROIRect.width = std::abs(right_most_x - left_most_x);
         cv::rectangle(HoughTransform, objectROIRect, cv::Scalar{255, 0, 0}, 2);
 
-        // showImage("HoughLines", HoughTransform);
-        showImage(_houghPublisher, "bgr8", HoughTransform);
+        cv::imshow("HoughLines", HoughTransform);
+        cv::waitKey(1);
+        // showImage(_houghPublisher, "bgr8", HoughTransform);
     }
 }
 
@@ -484,14 +446,15 @@ void ObjectDetect::drawLine(float slope, float y_intercept, cv::Mat &HoughTransf
 void ObjectDetect::update()
 {
     int object = detectOneFrame();
+    ROS_DEBUG("Object = %d", object);
 
-    cds_msgs::object msg;
+    std_msgs::Int8 msg;
+    msg.data = object;
     _objPub.publish(msg);
 
     // TODO: handle multiple object in one frame
     // geometry_msgs::Polygon bbox;
     // bbox.points.push_back
-
 
     // return object;
     // objectHistories.push_back(object);

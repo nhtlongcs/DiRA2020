@@ -13,22 +13,15 @@
 class LaneLine
 {
 public:
-    LaneLine(bool debug = true);
-    ~LaneLine();
+    LaneLine();
 
     void update(const cv::Mat &lineImage);
     bool isFound() const;
     bool isOutOfImage(const cv::Point &point) const;
-    void show(cv::Mat &drawImage, bool showDetectRegion = true) const;
     void setFindBeginPointRegion(int offset, int width);
 
-    // virtual void setLineParams(std::shared_ptr<LineParams> params, size_t laneSize);
+    virtual void showLinePoints(cv::Mat &drawImage) const = 0;
     LineParams getLineParams() const;
-    bool getBeginPoint(cv::Point &returnPoint) const;
-    // bool getDrivePoint(std::shared_ptr<LaneLine> other, cv::Point& returnPoint) const;
-    bool getDrivePoint(cv::Point &returnPoint) const;
-
-    std::vector<cv::Point> getPoints() const;
 
     void swap(std::shared_ptr<LaneLine> other);
 
@@ -40,9 +33,7 @@ protected:
     std::vector<cv::Point> calcGradient(const std::vector<cv::Point> &points) const;
     virtual cv::Point calcPerpendicular(const cv::Point &point) const = 0;
     void track();
-    virtual void detect();
-    virtual void printDetectCount() const = 0;
-    virtual void showLinePoints(cv::Mat &drawImage) const = 0;
+    void detect();
 
     virtual cv::Rect getDetectBeginPointRegion() const;
     std::vector<cv::Point> getPointsFromParams(const std::shared_ptr<LineParams> params) const;
@@ -61,18 +52,14 @@ protected:
     cv::Mat lineImage;
     cv::Rect lineImageRect;
     std::shared_ptr<LineParams> lineParams;
-    bool isDebug;
 
     // const size_t maxNonZeroThreshold = W_TRACKING / N_BINS * H_TRACKING;
     const size_t maxNonZeroThreshold = 10;
     const size_t minPointTrack = 50;
     const size_t minPointDetect = 5;
-    const size_t beginPointIndex = 40;
-    const size_t drivePointIndex = beginPointIndex + 20;
 
     int offsetX = 0;
     int width = 160;
-    int count_detect;
 };
 
 class LeftLane : public LaneLine
@@ -80,10 +67,7 @@ class LeftLane : public LaneLine
 public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
-    virtual void printDetectCount() const;
     virtual cv::Point calcPerpendicular(const cv::Point &point) const override;
-
-protected:
     virtual void showLinePoints(cv::Mat &drawImage) const override;
 };
 
@@ -92,29 +76,10 @@ class RightLane : public LaneLine
 public:
     virtual cv::Scalar getLaneColor() const override;
     virtual cv::Rect getDetectBeginPointRegion() const override;
-    virtual void printDetectCount() const;
     virtual cv::Point calcPerpendicular(const cv::Point &point) const override;
-
-protected:
     virtual void showLinePoints(cv::Mat &drawImage) const override;
 
 private:
 };
-
-// class MidLane : public LaneLine
-// {
-// public:
-//     MidLane(LaneLine& leftLane, LaneLine& rightLane);
-//     virtual cv::Scalar getLaneColor() const override;
-
-// protected:
-//     virtual void detect() override;
-//     void detectIfHaveBothLanes();
-
-// private:
-//     size_t laneSize;
-//     LaneLine& leftLane;
-//     LaneLine& rightLane;
-// };
 
 #endif

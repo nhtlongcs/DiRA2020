@@ -11,16 +11,14 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   sign.msg
-  object.msg
   lane.msg
-  control.msg
 )
 
 add_service_files(
   FILES
   ResetLane.srv
-  GetDrivePoint.srv
   RecoverLane.srv
+  IsTurnable.srv
 )
 
 generate_messages(

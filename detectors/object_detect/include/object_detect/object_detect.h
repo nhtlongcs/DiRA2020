@@ -3,7 +3,6 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/video.hpp>
-#include <cv_bridge/cv_bridge.h>
 #include <list>
 #include <dynamic_reconfigure/server.h>
 #include <image_transport/image_transport.h>
@@ -14,7 +13,7 @@ class ObjectDetect
 public:
     ObjectDetect();
     ~ObjectDetect();
-
+    
     void update();
 
 public:
@@ -34,9 +33,6 @@ private:
     void drawLine(float slope, float y_intercept, cv::Mat &HoughTransform);
 
 private:
-    cv::Mat depth_raw;
-    cv::Mat binary_raw;
-
     cv::Mat depth;
     cv::Mat binary;
     cv::Rect objectROIRect = {115, 100, 61, 49};
@@ -74,15 +70,9 @@ private:
     ros::Publisher _objPub;
     dynamic_reconfigure::Server<object_detect::ObjectDetectConfig> _serverConfig;
 
-    image_transport::ImageTransport _depthImageTransport;
-    image_transport::ImageTransport _binaryImageTransport;
-    image_transport::ImageTransport _debugImage;
-
+    image_transport::ImageTransport _it;
     image_transport::Subscriber _depthSub;
     image_transport::Subscriber _binarySub;
-
-    image_transport::Publisher _houghPublisher;
-    image_transport::Publisher _depthThresholdedPublisher;
 };
 
 #endif

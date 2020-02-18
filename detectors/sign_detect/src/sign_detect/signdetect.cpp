@@ -44,21 +44,21 @@ static double matching(cv::Mat image, cv::Mat templ)
 }
 
 SignDetect::SignDetect()
-    : recentDetects{MAX_FRAME_COUNT, 0}, _nh{"signdetect"}, _debugImage{_nh}
+    : recentDetects{MAX_FRAME_COUNT, 0}, _nh{"sign_detect"}, _debugImage{_nh}
     , _itSub{_nh}
 {
 
-    const std::string &packagePath = ros::package::getPath("signdetect");
+    const std::string &packagePath = ros::package::getPath("sign_detect");
     const std::string &leftTemplate = packagePath + "/images/left.png";
     const std::string &rightTemplate = packagePath + "/images/right.png";
 
     LEFT_TEMPLATE = cv::imread(leftTemplate, cv::IMREAD_GRAYSCALE);
     RIGHT_TEMPLATE = cv::imread(rightTemplate, cv::IMREAD_GRAYSCALE);
 
-    _rgbSub = _itSub.subscribe("team220/camera/rgb", 1, std::bind(&SignDetect::updateRGBCallback, this, std::placeholders::_1));
-    _depthSub = _itSub.subscribe("team220/camera/depth", 1, std::bind(&SignDetect::updateDepthCallback, this, std::placeholders::_1));
+    _rgbSub = _itSub.subscribe("/team220/camera/rgb", 1, std::bind(&SignDetect::updateRGBCallback, this, std::placeholders::_1));
+    _depthSub = _itSub.subscribe("/team220/camera/depth", 1, std::bind(&SignDetect::updateDepthCallback, this, std::placeholders::_1));
 
-    _signPub = _nh.advertise<cds_msgs::sign>("/team220/sign", 1);
+    _signPub = _nh.advertise<cds_msgs::sign>("sign", 1);
 
     _server.setCallback(std::bind(&SignDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -145,17 +145,17 @@ int SignDetect::detectOneFrame()
                  0, 100); // min and max radius
 
     // debug
-    ROS_INFO("Circles size = %zu", circles.size());
-    for (size_t i = 0; i < circles.size(); i++)
-    {
-        Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-        int radius = cvRound(circles[i][2]);
-        // circle center
-        circle(gray, center, 3, Scalar(127), -1, 8, 0);
-        // // circle outline
-        circle(gray, center, radius, Scalar(100), 3, 8, 0);
-        cv::imshow("Draw Gray", gray);
-    }
+    // ROS_DEBUG("Circles size = %zu", circles.size());
+    // for (size_t i = 0; i < circles.size(); i++)
+    // {
+    //     Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
+    //     int radius = cvRound(circles[i][2]);
+    //     // circle center
+    //     circle(gray, center, 3, Scalar(127), -1, 8, 0);
+    //     // // circle outline
+    //     circle(gray, center, radius, Scalar(100), 3, 8, 0);
+    //     cv::imshow("Draw Gray", gray);
+    // }
 
     // TODO: Debug
     // return 0;
@@ -265,7 +265,7 @@ int SignDetect::classifyTemplateMatching(const cv::Mat &colorROI) const
     double right_val = matching(resized, RIGHT_TEMPLATE);
     double right_percent = (1.0 - right_val / MAX_DIFF) * 100;
 
-    ROS_INFO("TM: left = %.2lf, right = %.2lf, classifyConf = %d, diff = %d", left_percent, right_percent, diffToClassify, diffToClassify);
+    ROS_DEBUG("TM: left = %.2lf, right = %.2lf, classifyConf = %d, diff = %d", left_percent, right_percent, diffToClassify, diffToClassify);
 
     if (left_percent > classifyConfident || right_percent > classifyConfident)
     {
@@ -294,7 +294,7 @@ int SignDetect::classifyCountBlue(const cv::Mat &colorROI) const
     float right_percent = bottomRightCount * 100.0f / (blue.cols / 2 * blue.rows / 2);
 
     int delta = (left_percent - right_percent);
-    ROS_INFO("CountBlue: left = %.2f, right = %.2f, diff = %d", left_percent, right_percent, diffToClassify);
+    ROS_DEBUG("CountBlue: left = %.2f, right = %.2f, diff = %d", left_percent, right_percent, diffToClassify);
 
     if (abs(delta) >= diffToClassify)
     {

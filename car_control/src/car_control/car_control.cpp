@@ -1,4 +1,5 @@
 #include "car_control/car_control.h"
+#include <geometry_msgs/Twist.h>
 #include <vector>
 #include <cmath>
 
@@ -9,19 +10,13 @@ CarControl::CarControl()
     : _nh{"car_control"}, _configServer{_nh}
 {
     _configServer.setCallback(boost::bind(&CarControl::configCallback, this, _1, _2));
-    // cv::namedWindow("PID config", cv::WINDOW_GUI_NORMAL);
-    // cv::createTrackbar("kP", "PID config", &kP, 20);
-    // cv::createTrackbar("kI", "PID config", &kI, 20);
-    // cv::createTrackbar("kD", "PID config", &kD, 20);
 
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = _nh.advertise<std_msgs::Float32>("set_angle", 20);
-    speed_publisher = _nh.advertise<std_msgs::Float32>("set_speed", 20);
-    control_subscriber = _nh.subscribe("control", 1, &CarControl::driveCallback, this);
+    steer_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_angle", 1);
+    speed_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_speed", 1);
+    control_subscriber = _nh.subscribe("/control", 1, &CarControl::driveCallback, this);
 }
-
-CarControl::~CarControl() {}
 
 void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t level)
 {
@@ -34,45 +29,44 @@ void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t 
     maxVelocity = config.max_velocity;
 }
 
-void CarControl::driveCallback(const cds_msgs::control &msg)
+void CarControl::driveCallback(const geometry_msgs::Twist &msg)
 {
-}
+    std_msgs::Float32 angle_msg;
+    std_msgs::Float32 speed_msg;
 
-float CarControl::errorAngle(const Point &dst)
-{
-    float X = dst.x - carPos.x;
-    float Y = dst.y;
-    float angle = atan2(Y, X) * 180.0 / CV_PI - 90.0;
-    return angle;
-}
+    float speed = msg.linear.x;
+    float error = msg.angular.z * 180 / M_PI;
 
-void CarControl::driverCar(const Point &cur, float velocity)
-{
-    std_msgs::Float32 angle;
-    std_msgs::Float32 speed;
+    error = -error;
+
+    ROS_DEBUG("Recv speed = %.2f, steer = %.2f", speed, error);
+
     // carPos.x = 165;
-    float error = -errorAngle(cur);
     //PID controller
     t_kP = error;
     t_kI += error;
     t_kD = error - preError;
-    angle.data = (kP * t_kP + kI * t_kI + kD * t_kD) / 1000.;
+    angle_msg.data = (kP * t_kP + kI * t_kI + kD * t_kD) / 1000.;
     // speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
 
-    float newSpeed = velocity;
-    if (abs(angle.data) > 40)
+    if (abs(angle_msg.data) > 40)
     {
-        newSpeed = 5;
+        speed = 5;
     }
     else
     {
-        newSpeed = velocity * (1 - abs(angle.data) / 45.0f);
+        // speed = speed * (1 - abs(angle_msg.data) / 45.0f);
     }
 
+    ROS_DEBUG("Send speed = %.2f, steer = %.2f", speed, error);
+
     // speed.data = velocity;
-    speed.data = newSpeed;
+    speed_msg.data = speed;
     preError = error;
 
-    steer_publisher.publish(angle);
-    speed_publisher.publish(speed);
+    angle_msg.data = error;
+    speed_msg.data = speed;
+
+    steer_publisher.publish(angle_msg);
+    speed_publisher.publish(speed_msg);
 }

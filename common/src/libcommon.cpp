@@ -124,13 +124,10 @@ cv::Mat birdviewTransformation(const cv::Mat &src, int birdwidth, int birdheight
   return resultBirdview;
 }
 
-void showImage(const image_transport::Publisher &publisher, const std::string &encode, const cv::Mat &image)
+float errorAngle(const cv::Point &src, const cv::Point &dst)
 {
-  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), encode, image).toImageMsg();
-  publisher.publish(msg);
-}
-
-void showImage(const std::string &winname, const cv::Mat &image)
-{
-  cv::imshow(winname, image);
+  float X = dst.x - src.x;
+  float Y = dst.y;
+  float angle = atan2(Y, X) * 180.0 / CV_PI - 90.0;
+  return angle;
 }

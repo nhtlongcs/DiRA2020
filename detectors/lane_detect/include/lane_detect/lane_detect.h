@@ -8,34 +8,26 @@
 #include <image_transport/image_transport.h>
 #include "lane_detect/LaneConfig.h"
 #include "lane_detect/laneline.h"
+#include "cds_msgs/IsTurnable.h"
 
 class LaneDetect
 {
 public:
-    LaneDetect();
+    LaneDetect(bool isDebug);
     ~LaneDetect();
+    void detect();
+public:
+    void configCallback(lane_detect::LaneConfig &config, uint32_t level);
+    void updateDepthCallback(const sensor_msgs::ImageConstPtr& msg);
+    void updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg);
 
-    void update();
-
-    void detect(int turningDirect);
-    void show(const cv::Point &carPos, const cv::Point *drivePoint = nullptr) const;
-    int whichLane(const cv::Mat &objectMask) const;
-
-    bool isAbleToTurn(cv::Mat depth) const;
-
-    int getLaneWidth() const;
-    const LeftLane& getLeftLane() const;
-    const RightLane& getRightLane() const;
+    bool isTurnable(cds_msgs::IsTurnableRequest& req, cds_msgs::IsTurnableResponse& res);
+private:
+    void publishMessage() const;
+    void openCVVisualize() const;
 
     cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const;
     cv::Mat extractFeatureY(cv::Mat img) const;
-
-public:
-    void configCallback(lane_detect::LaneConfig &config, uint32_t level);
-    void updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg);
-
-private:
-    bool isWrongLane() const;
     cv::Mat preprocess(const cv::Mat &src);
     cv::Mat shadow(const cv::Mat &src);
     cv::Mat morphological(const cv::Mat &img);
@@ -45,13 +37,15 @@ private:
     cv::Point Hough(const cv::Mat &img, const cv::Mat &src);
 
     bool isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const;
-    
+
     LeftLane left;
     RightLane right;
 
     cv::Mat binary;
     cv::Mat birdview;
     cv::Mat birdviewTransformMatrix;
+    cv::Mat debugImage;
+    cv::Mat depth;
 
     int roadInside_min[3] = {0, 0, 0};
     int roadInside_max[3] = {179, 40, 140};
@@ -61,6 +55,8 @@ private:
 
     int minLaneInShadow[3] = {90, 35, 95};
     int maxLaneInShadow[3] = {180, 117, 158};
+
+    bool isDebug {false};
 
     int initLaneWidth = 50;
     int dropTop = 80;
@@ -88,14 +84,12 @@ private:
 private:
     ros::NodeHandle _nh;
     ros::Publisher _lanePub;
-    image_transport::ImageTransport _binaryImageTransport;
+    ros::ServiceServer _isTurnableSrv;
+
+    image_transport::ImageTransport _image_transport;
     image_transport::Subscriber _binaryImageSub;
+    image_transport::Subscriber _depthImageSub;
 
     dynamic_reconfigure::Server<lane_detect::LaneConfig> _configServer;
-
-    image_transport::ImageTransport _debugImage;
-    image_transport::Publisher _birdviewPublisher;
-    image_transport::Publisher _lanePublisher;
-    image_transport::Publisher _houghPublisher;
 };
 #endif

@@ -1,15 +1,15 @@
 #!/usr/bin/env python2
 import os
-import time
-import cv2
-import numpy as np
-import tensorflow as tf
-import keras
-from keras.applications.mobilenet_v2 import MobileNetV2
-from keras.models import *
-from keras.layers import *
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from keras.optimizers import *
-
+from keras.layers import *
+from keras.models import *
+from keras.applications.mobilenet_v2 import MobileNetV2
+import keras
+import tensorflow as tf
+import numpy as np
+import cv2
+import time
 import rospy
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
@@ -18,7 +18,7 @@ from keras.backend.tensorflow_backend import set_session
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-config.log_device_placement = True
+config.log_device_placement = False
 
 ###
 config.gpu_options.per_process_gpu_memory_fraction = 0.4
@@ -43,7 +43,8 @@ def image_to_data(image_np):
 
 def unet(input_size=(224, 224, 3)):
 
-    model = MobileNetV2(include_top=False, input_shape=input_size, weights=None )
+    model = MobileNetV2(include_top=False,
+                        input_shape=input_size, weights=None)
 
     conv1 = Conv2DTranspose(320, 3, activation='relu', padding='same',
                             kernel_initializer='he_normal')(model.layers[-1].output)
@@ -123,11 +124,12 @@ class mobilenet_node():
         self.bridge = CvBridge()
 
         self.sub_image = rospy.Subscriber(
-            self.image_topic, CompressedImage, self.img_callback, queue_size=1)#, buff_size=4294967296)
+            self.image_topic, CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
         self.pub_lane = rospy.Publisher(
-            '/lane_detect/lane_seg/compressed', CompressedImage, queue_size=1)
+            '~lane_seg/compressed', CompressedImage, queue_size=1)
 
         rospy.set_param('~ready', True)
+        rospy.loginfo('mobilenet init done')
 
     def init_model(self):
         # self.model = load_model(self.weight_path)

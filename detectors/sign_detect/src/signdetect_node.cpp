@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     SignDetect sign_detect;
     ros::Rate rate{15};
 
-    ROS_INFO_NAMED("signdetect", "Sign detect init success");
+    ROS_INFO("Sign detect init success");
     while (ros::ok())
     {
         ros::spinOnce();

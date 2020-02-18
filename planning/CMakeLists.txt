@@ -5,11 +5,15 @@ add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  common
   cds_msgs
   lane_detect
   sign_detect
+  geometry_msgs
   dynamic_reconfigure
 )
+
+find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(
   cfg/Planning.cfg
@@ -39,6 +43,8 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 target_link_libraries(${PROJECT_NAME}_node
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${common_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 
 

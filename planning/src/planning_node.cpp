@@ -1,11 +1,10 @@
 #include <ros/ros.h>
-#include <image_transport/image_transport.h>
 #include <iostream>
 #include <string>
 #include "planning/planning.h"
 
 static constexpr const int RATE = 15;
-static constexpr const char* NODE_NAME = "planning_node";
+static constexpr const char *NODE_NAME = "planning_node";
 
 int main(int argc, char **argv)
 {

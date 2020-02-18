@@ -8,6 +8,7 @@ int main(int argc, char **argv)
     ObjectDetect objectDetect;
 
     ros::Rate rate{15};
+    ROS_INFO("Object detect started");
     while (ros::ok())
     {
         ros::spinOnce();

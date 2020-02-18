@@ -3,7 +3,7 @@ project(common)
 
 add_compile_options(-std=c++11)
 
-find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge)
 
 find_package(OpenCV REQUIRED)
 
@@ -22,7 +22,7 @@ add_library(${PROJECT_NAME}
   src/libcommon.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
 
 install(TARGETS ${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
+#include <geometry_msgs/Point32.h>
 
 #include "cds_msgs/lane.h"
 #include "lane_detect/lane_detect.h"
@@ -14,22 +15,21 @@ using namespace cv;
 using namespace std;
 
 constexpr const char *CONF_BIRDVIEW_WINDOW = "Birdview";
+constexpr const char *LANE_WINDOW = "LaneDetect";
 
-LaneDetect::LaneDetect()
-    : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _configServer{_nh}, _debugImage{_nh}, _binaryImageTransport{_nh}
+LaneDetect::LaneDetect(bool isDebug)
+    : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
 {
+    _lanePub = _nh.advertise<cds_msgs::lane>("lane", 1);
+    _isTurnableSrv = _nh.advertiseService("IsTurnable", &LaneDetect::isTurnable, this);
+    _binaryImageSub = _image_transport.subscribe("/mobile_net/lane_seg", 1, std::bind(&LaneDetect::updateBinaryCallback, this, std::placeholders::_1));
+    _depthImageSub = _image_transport.subscribe("/team220/camera/depth", 1, std::bind(&LaneDetect::updateDepthCallback, this, std::placeholders::_1));
     _configServer.setCallback(std::bind(&LaneDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
-
-    _birdviewPublisher = _debugImage.advertise("/debug/lane/birdview", 1, false);
-    _lanePublisher = _debugImage.advertise("/debug/lane/lane", 1, false);
-    _houghPublisher = _debugImage.advertise("/debug/lane/hough", 1, false);
-
-    _binaryImageSub = _binaryImageTransport.subscribe("lane_detect/lane_seg", 1, std::bind(&LaneDetect::updateBinaryCallback, this, std::placeholders::_1));
-    _lanePub = _nh.advertise<cds_msgs::lane>("~lane", 1);
 }
 
 LaneDetect::~LaneDetect()
 {
+    cv::destroyAllWindows();
 }
 
 void LaneDetect::configCallback(lane_detect::LaneConfig &config, uint32_t level)
@@ -45,22 +45,6 @@ void LaneDetect::configCallback(lane_detect::LaneConfig &config, uint32_t level)
     offsetRight = config.offset_birdview_right;
     left.setFindBeginPointRegion(config.offset_left, config.left_width);
     right.setFindBeginPointRegion(config.offset_right, config.right_width);
-}
-
-void LaneDetect::update()
-{
-    cds_msgs::lane lane_msg;
-    if (left.isFound())
-    {
-        const auto& params = left.getLineParams();
-        lane_msg.left_params.insert(lane_msg.left_params.begin(), params.begin(), params.end());
-    }
-    if (right.isFound())
-    {
-        const auto& params = right.getLineParams();
-        lane_msg.right_params.insert(lane_msg.right_params.begin(), params.begin(), params.end());
-    }
-    _lanePub.publish(lane_msg);
 }
 
 bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
@@ -83,93 +67,46 @@ bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
     return false;
 }
 
-void LaneDetect::detect(int turningDirect)
+void LaneDetect::detect()
 {
     if (this->binary.empty())
     {
         return;
     }
 
-    // showImage("RGB", this->rgb);
+    cv::imshow("Receive segment", this->binary);
+    cv::waitKey(1);
 
-    // Mat binary = preprocess(this->rgb);
-
-    // Mat shadowMask = shadow(this->rgb);
-    // bitwise_or(binary, shadowMask, binary);
-    // showImage("binary", this->binary);
-
-    if (usebirdview)
-    {
-        // showImage("binary", this->binary);
-        this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
-
-        // showImage(CONF_BIRDVIEW_WINDOW, this->birdview);
-    }
-    else
-    {
-        birdview = this->binary;
-    }
-
-    // birdview = this->binary;
-
-    // Mat morphBirdview = morphological(birdview);
+    this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
 
     birdview(cv::Rect(0, 0, birdview.cols, dropTop)) = cv::Scalar{0};
-    showImage(_birdviewPublisher, "mono8", birdview);
+
+    if (isDebug)
+    {
+        cv::cvtColor(this->birdview, debugImage, cv::COLOR_GRAY2BGR);
+    }
 
     left.update(birdview);
     right.update(birdview);
 
     if (left.isFound() && right.isFound())
     {
-        cv::Point leftBegin, rightBegin;
-        left.getBeginPoint(leftBegin);
-        right.getBeginPoint(rightBegin);
-
-        if (leftBegin.x > 160)
-        {
-            ROS_INFO("Invalid left");
-            left.reset();
-        }
-
-        if (rightBegin.x < 100)
-        {
-            ROS_INFO("Invalid right");
-            right.reset();
-        }
-
-        if (isNeedRedetect(leftBegin, rightBegin))
-        {
-            // ROS_INFO("LaneWidth < %d. Redetect", initLaneWidth);
-            if (turningDirect == 1)
-            {
-                left.reset();
-            }
-            else if (turningDirect == -1)
-            {
-                right.reset();
-            }
-            else
-            {
-                left.reset();
-                right.reset();
-            }
-            frameCount = 0;
-            sumLaneWidth = 0;
-        }
-        else
-        {
-            frameCount++;
-            sumLaneWidth += abs(leftBegin.x - rightBegin.x);
-        }
+        // TODO: reset if both 
     }
-    else if (left.isFound())
+
+    if (isDebug)
     {
-        ROS_INFO_ONCE("\033[1;31mLoss right lane\033[0m");
-    }
-    else if (right.isFound())
-    {
-        ROS_INFO_ONCE("\033[1;32mLoss left lane\033[0m");
+        if (left.isFound())
+        {
+            left.showLinePoints(debugImage);
+        }
+        if (right.isFound())
+        {
+            right.showLinePoints(debugImage);
+        }
+        cv::imshow(LANE_WINDOW, debugImage);
+        cv::waitKey(1);
+        // openCVVisualize();
     }
 }
 
@@ -198,12 +135,14 @@ cv::Mat LaneDetect::extractFeatureY(cv::Mat img) const
     }
     return skel;
 }
-bool LaneDetect::isAbleToTurn(cv::Mat depth) const
+bool LaneDetect::isTurnable(cds_msgs::IsTurnableRequest& req, cds_msgs::IsTurnableResponse& res)
 {
     if (this->binary.empty())
     {
         return false;
     }
+
+    ROS_DEBUG("Service IsTurnable is called");
 
     // cv::imshow("binary", binary);
 
@@ -246,31 +185,14 @@ bool LaneDetect::isAbleToTurn(cv::Mat depth) const
     }
     // std::cout << cnt << std::endl;
     if (cnt > 4)
-        return 1;
-
-    return 0;
-}
-
-void LaneDetect::show(const cv::Point &carPos, const cv::Point *drivePoint) const
-{
-    if (birdview.empty())
     {
-        return;
+        res.ok = true;
     }
-    cv::Mat birdviewColor;
-    cv::cvtColor(birdview, birdviewColor, cv::COLOR_GRAY2BGR);
-    left.show(birdviewColor, showDetectRegion);
-    right.show(birdviewColor, showDetectRegion);
-
-    if (drivePoint)
+    else
     {
-        cv::circle(birdviewColor, *drivePoint, 25, cv::Scalar{0, 255, 255}, -1);
+        res.ok = false;
     }
-
-    cv::circle(birdviewColor, carPos, 25, cv::Scalar{0, 0, 255}, -1);
-
-    // showImage("Lanes", birdviewColor);
-    showImage(_lanePublisher, "bgr8", birdviewColor);
+    return true;
 }
 
 cv::Mat LaneDetect::birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const
@@ -355,9 +277,6 @@ Point LaneDetect::Hough(const Mat &img, const Mat &src)
     circle(HoughTransform, Point(midX, midY), 3, Scalar(0, 0, 255), -1);
     circle(HoughTransform, Point(offsetX, offsetY), 3, Scalar(0, 255, 0), -1);
 
-    // showImage("HoughLines", HoughTransform);
-    showImage(_houghPublisher, "bgr8", HoughTransform);
-
     return Point(midX, midY);
 }
 
@@ -412,25 +331,6 @@ Mat LaneDetect::preprocess(const Mat &src)
     return binary;
 }
 
-int LaneDetect::getLaneWidth() const
-{
-    if (this->frameCount == 0)
-    {
-        return 0;
-    }
-    return this->sumLaneWidth / this->frameCount;
-}
-
-const LeftLane& LaneDetect::getLeftLane() const
-{
-    return left;
-}
-
-const RightLane& LaneDetect::getRightLane() const
-{
-    return right;
-}
-
 void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
@@ -440,10 +340,45 @@ void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
         if (!cv_ptr->image.empty())
         {
             this->binary = cv_ptr->image.clone();
+            detect();
+            publishMessage();
         }
     }
     catch (cv_bridge::Exception &e)
     {
         ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
     }
+}
+
+void LaneDetect::updateDepthCallback(const sensor_msgs::ImageConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        if (!cv_ptr->image.empty())
+        {
+            this->depth = cv_ptr->image.clone();
+        }
+    }
+    catch (cv_bridge::Exception &e)
+    {
+        ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
+    }
+}
+
+void LaneDetect::publishMessage() const
+{
+    cds_msgs::lane lane_msg;
+    if (left.isFound())
+    {
+        const auto &params = left.getLineParams();
+        lane_msg.left_params.insert(lane_msg.left_params.begin(), params.begin(), params.end());
+    }
+    if (right.isFound())
+    {
+        const auto &params = right.getLineParams();
+        lane_msg.right_params.insert(lane_msg.right_params.begin(), params.begin(), params.end());
+    }
+    _lanePub.publish(lane_msg);
 }

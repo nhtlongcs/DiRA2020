@@ -1,9 +1,9 @@
 #include <ros/ros.h>
 #include "car_control/car_control.h"
 
-static constexpr const char* NODE_NAME = "car_control_node";
+static constexpr const char *NODE_NAME = "car_control_node";
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     ros::init(argc, argv, NODE_NAME);
     CarControl car_control;
