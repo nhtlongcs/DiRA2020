@@ -34,19 +34,8 @@ void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t 
     maxVelocity = config.max_velocity;
 }
 
-void CarControl::driveCallback(const cds_msgs::control& msg)
+void CarControl::driveCallback(const cds_msgs::control &msg)
 {
-
-}
-
-int CarControl::getMaxSpeed() const
-{
-    return maxVelocity;
-}
-
-int CarControl::getMinSpeed() const
-{
-    return minVelocity;
 }
 
 float CarControl::errorAngle(const Point &dst)

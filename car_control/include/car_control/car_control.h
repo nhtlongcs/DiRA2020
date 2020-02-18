@@ -21,7 +21,7 @@ public:
 
 public:
     void configCallback(car_control::CarControlConfig &config, uint32_t level);
-    void driveCallback(const cds_msgs::control& msg);
+    void driveCallback(const cds_msgs::control &msg);
 
 private:
     ros::NodeHandle _nh;

@@ -15,12 +15,6 @@ generate_dynamic_reconfigure_options(
   cfg/CarControl.cfg
 )
 
-
-add_service_files(
-  FILES
-  GetDriveSpeed.srv
-)
-
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
