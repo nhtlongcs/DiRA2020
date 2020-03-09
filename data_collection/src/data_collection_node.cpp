@@ -75,7 +75,7 @@ void process()
     // cv::imshow("DepthRaw", depthImage);
 
     cv::Mat depthThresholded;
-    cv::inRange(depthImage, cv::Scalar{minDepth}, cv::Scalar{maxDepth}, depthThresholded);
+    cv::inRange(depthImage, cv::Scalar{double(minDepth)}, cv::Scalar{double(maxDepth)}, depthThresholded);
     // cv::imshow("DepthThresholded", depthThresholded);
 
     cv::Mat result;

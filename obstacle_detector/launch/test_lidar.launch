@@ -1,0 +1,7 @@
+<launch>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="laser_frame" args="0 0 0 0 0 0 /base_link /laser" />
+    <!-- <include file="$(find rplidar_ros)/launch/rplidar.launch"></include> -->
+    <node pkg="obstacle_detector" type="LidarDetectorNode" name="lidar_detect" output="screen" />
+    <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="screen" />
+    <node pkg="rviz" type="rviz" output="screen" name="rviz" />
+</launch>

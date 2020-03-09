@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
 )
 
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(
   cfg/Sign.cfg

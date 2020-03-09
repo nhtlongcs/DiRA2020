@@ -1,0 +1,10 @@
+<launch>
+	<!--
+	<include file="$(find astra_camera)/launch/astra.launch">
+	</include>
+	-->
+	<node pkg="rosbag" type="play" name="player" output="screen" args="/home/ky/Documents/DiRA_Workspace/resource/fast.bag -l" />
+	<node pkg="obstacle_detector" type="PclDetectorNode" name="pcl_detect" output="screen" />
+	<node pkg="rqt_reconfigure" type="rqt_reconfigure" name="rqt_reconfigure" output="screen" />
+	<node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d /home/ky/Documents/DiRA_Workspace/rviz/pcl.rviz" />
+</launch>
