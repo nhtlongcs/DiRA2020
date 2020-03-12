@@ -36,7 +36,7 @@ private:
     void drawLine(float slope, float yintercept, cv::Mat &HoughTransform);
     cv::Point Hough(const cv::Mat &img, const cv::Mat &src);
 
-    bool isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const;
+    bool isNeedRedetect(const LaneLine& left, const LaneLine& right) const;
 
     LeftLane left;
     RightLane right;
@@ -57,6 +57,8 @@ private:
     int maxLaneInShadow[3] = {180, 117, 158};
 
     bool isDebug {false};
+    int countRedetectLane = 0;
+    int maxCountRedetectLane = 10;
 
     int initLaneWidth = 50;
     int dropTop = 80;

@@ -1,0 +1,26 @@
+<launch>
+    <!-- Turn off debug mode for better performance -->
+    <arg name="use_sim" value="true" />
+    <param name="debug_mode" value="true" />
+    <param     if="$(arg use_sim)" name="transport_hint" value="compressed" />
+    <param unless="$(arg use_sim)" name="transport_hint" value="raw" />
+
+    <node pkg="lane_detect" name="lane_detect" type="lane_detect_node" args="_image_transport:=compressed" required="true" output="screen">
+        <remap from="/mobile_net/lane_seg/compressed" to="/camera/rgb/image_raw/compressed" />
+        <param name="offset_birdview_left" value="100" />
+        <param name="offset_birdview_right" value="100" />
+        <param name="skyline" value="100" />
+    </node>
+
+    <node pkg="camera_record" name="video_publisher" type="publish.py">
+        <param name="video_path" value="$(find camera_record)/seg.avi" />
+        <param name="pause" value="true" />
+    </node>
+    <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
+    
+    <!-- Logging -->
+    <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" />
+
+    <node pkg="rviz" name="rviz" type="rviz" />
+    
+</launch>

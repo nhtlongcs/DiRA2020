@@ -19,6 +19,7 @@ constexpr const char *LANE_WINDOW = "LaneDetect";
 
 LaneDetect::LaneDetect(bool isDebug)
     : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
+    , left{debugImage}, right{debugImage}
 {
     _lanePub = _nh.advertise<cds_msgs::lane>("lane", 1);
     _isTurnableSrv = _nh.advertiseService("IsTurnable", &LaneDetect::isTurnable, this);
@@ -47,7 +48,7 @@ void LaneDetect::configCallback(lane_detect::LaneConfig &config, uint32_t level)
     right.setFindBeginPointRegion(config.offset_right, config.right_width);
 }
 
-bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
+bool LaneDetect::isNeedRedetect(const LaneLine& left, const LaneLine& right) const
 {
     if (left.isFound() && right.isFound())
     {
@@ -69,11 +70,6 @@ bool LaneDetect::isNeedRedetect(cv::Point leftBegin, cv::Point rightBegin) const
 
 void LaneDetect::detect()
 {
-    if (this->binary.empty())
-    {
-        return;
-    }
-
     cv::imshow("Receive segment", this->binary);
     cv::waitKey(1);
 
@@ -92,6 +88,109 @@ void LaneDetect::detect()
     if (left.isFound() && right.isFound())
     {
         // TODO: reset if both 
+        // std::cout << '\t' << "LeftConfScore: " << left.getConfScore() << " RightConfScore " << right.getConfScore() << std::endl;
+        if (isNeedRedetect(left, right))
+        {
+            // std::cout << "Redetect!!!" << std::endl;
+
+            {
+                // Plan 1: Reset 1 lane
+                if (left.getConfScore() < right.getConfScore())
+                {
+                    // std::cout << "Reset LEFT" << std::endl;
+                    left.reset();
+                    // left.update(birdview);
+                    if (left.recoverFrom(right, 90))
+                    {
+                        countRedetectLane = 0;
+                        // std::cout << "Recovered left from right!" <<  std::endl;
+                    } else
+                    {
+                        countRedetectLane++;
+                        // std::cout << "Cannot recover left from right!" <<  std::endl;
+                    }
+                } else if (right.getConfScore() < left.getConfScore())
+                {
+                    // std::cout << "Reset RIGHT" << std::endl;
+                    right.reset();
+                    // right.update(birdview);
+                    if (right.recoverFrom(left, 90))
+                    {
+                        // std::cout << "Recovered right from left" << std::endl;
+                        countRedetectLane = 0;
+                    } else
+                    {
+                        countRedetectLane++;
+                        // std::cout << "Cannot recover right from left" << std::endl;
+                    }
+                }
+            }
+
+            // std::cout << "Count Reset = " << countRedetectLane << std::endl;
+            {
+                if (countRedetectLane < maxCountRedetectLane)
+                {
+                    if (left.getConfScore() < right.getConfScore())
+                    {
+                        // std::cout << "Reset LEFT" << std::endl;
+                        left.reset();
+                    } else if (right.getConfScore() < left.getConfScore())
+                    {
+                        // std::cout << "Reset RIGHT" << std::endl;
+                        right.reset();
+                    }
+                }
+                else
+                {
+                    // std::cout << "Plan 2" << std::endl;
+                    countRedetectLane = 0; // reset counting
+                    // Plan 2: Reset 2 lanes
+                    cv::Mat newLaneDebug;
+                    cv::cvtColor(this->birdview, newLaneDebug, cv::COLOR_GRAY2BGR);
+
+                    LeftLane newLeft{newLaneDebug};
+                    RightLane newRight{newLaneDebug};
+
+                    newLeft.update(birdview);
+                    newRight.update(birdview);
+                    if (newLeft.isFound() && newRight.isFound())
+                    {
+                        if (isNeedRedetect(newLeft, newRight))
+                        {
+                            // std::cout << "Plan 2 still need redetect!!!" << std::endl;
+                            if (left.getConfScore() < right.getConfScore())
+                            {
+                                // std::cout << "Reset LEFT" << std::endl;
+                                left.reset();
+                            } else if (right.getConfScore() < left.getConfScore())
+                            {
+                                // std::cout << "Reset RIGHT" << std::endl;
+                                right.reset();
+                            }
+                        } else
+                        {
+                            // std::cout << "Use new lanes" << std::endl;
+                            left.setLineParams(newLeft.getLineParams());
+                            right.setLineParams(newRight.getLineParams());
+                        }
+                    } else if (newLeft.isFound())
+                    {
+                        left.setLineParams(newLeft.getLineParams());
+                        right.reset();
+                    } else if (newRight.isFound())
+                    {
+                        left.reset();
+                        right.setLineParams(newRight.getLineParams());
+                    } else
+                    {
+                        left.reset();
+                        right.reset();
+                        // std::cout << "BOTH LANE NOT FOUND!" << std::endl;
+                    }
+                }
+            }
+
+        }
     }
 
     if (isDebug)

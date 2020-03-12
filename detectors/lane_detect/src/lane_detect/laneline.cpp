@@ -1,9 +1,44 @@
 #include <algorithm>
 #include "lane_detect/laneline.h"
-#include "common/libcommon.h"
 
-LaneLine::LaneLine()
+static bool findPointInWindow(const cv::Mat& roi, cv::Point& outPoint, int& outVal)
+{
+    int maxCount = 0;
+    cv::Point maxPoint;
+
+    const int BIN_WIDTH = roi.cols / N_BINS;
+    cv::Mat binImage;
+    for (int bin = 0; bin < N_BINS; bin++)
+    {
+        cv::Rect binROI{bin * BIN_WIDTH, 0, BIN_WIDTH, roi.rows};
+        binImage = roi(binROI);
+        int nonZero = countNonZero(binImage);
+
+        if (nonZero > maxCount)
+        {
+            maxCount = nonZero;
+            maxPoint = cv::Point2i{int((bin + 0.5) * BIN_WIDTH), int(binImage.rows / 2)};
+        }
+    }
+
+    if (maxCount == 0)
+    {
+        return false;
+    }
+
+    outPoint = maxPoint;
+    outVal = maxCount;
+    return true;
+}
+
+static cv::Rect getROITracking(const cv::Point& centerPoint)
+{
+    return cv::Rect{centerPoint.x - W_TRACKING / 2, centerPoint.y - H_TRACKING / 2, W_TRACKING, H_TRACKING};
+}
+
+LaneLine::LaneLine(cv::Mat& debugImage)
     : lineParams{nullptr}
+    , debugImage{debugImage}
 {
 }
 
@@ -14,10 +49,12 @@ void LaneLine::update(const cv::Mat &lineImage)
 
     if (isFound())
     {
+        // std::cout << getName() << "TRACK!" << std::endl;
         track();
     }
     else
     {
+        // std::cout << getName() << "DETECT!" << std::endl;
         reset();
         detect();
     }
@@ -25,27 +62,35 @@ void LaneLine::update(const cv::Mat &lineImage)
 
 void LaneLine::reset()
 {
+    confident_score = 0;
     lineParams = nullptr;
 }
 
 void LaneLine::track()
 {
     // TODO: fix me
+    confident_score = 0;
     std::vector<cv::Point> trackingPoints;
-    for (int y = lineImage.rows - 1; y > 0; y -= 5)
+    for (int y = lineImage.rows - H_TRACKING / 2 - 1; y > H_TRACKING / 2 + 1; y -= 5)
     {
         int x = getXByY(*lineParams, y * 1.0);
         cv::Point center{x, y};
         int nonZeroValue = 0;
+
         if (updateNewCenter(lineImage, center, &nonZeroValue))
         {
             trackingPoints.push_back(center);
-        } else if (nonZeroValue < 10)
-        {
-            // Lost tracking
-            break;
+            confident_score+=1;
         }
+        //  else if (nonZeroValue < 10)
+        // {
+        //     // Lost tracking
+        //     break;
+        // }
+
     }
+    // std::cout << getName() << "Confident Score: " << confident_score << std::endl;
+    // std::cout.flush();
 
     if (trackingPoints.size() >= minPointTrack)
     {
@@ -54,15 +99,8 @@ void LaneLine::track()
     else
     {
         reset();
-        detect();
+        // detect();
     }
-
-    // for (const auto& point : listPoint)
-    // {
-    //     cv::circle(debugImage, point, 3, getLaneColor(), -1);
-    // }
-    // cv::imshow("debug tracking", debugImage);
-    // cv::waitKey(1);
 }
 
 void LaneLine::detect()
@@ -70,6 +108,9 @@ void LaneLine::detect()
     cv::Point beginPoint;
     if (findBeginPoint(beginPoint))
     {
+        // cv::circle(debugImage, beginPoint, 30, getLaneColor(), -1);
+        // cv::imshow("Debug", debugImage);
+        // cv::waitKey(0);
         std::vector<cv::Point> points;
         std::vector<cv::Point> &&pointsUp = findPoints(beginPoint, 1);
         std::vector<cv::Point> &&pointsDown = findPoints(beginPoint, -1);
@@ -130,39 +171,7 @@ bool LaneLine::isOutOfImage(const cv::Point &point) const
     return point.x < 0 || point.x >= lineImage.cols || point.y < 0 || point.y >= lineImage.rows;
 }
 
-cv::Rect LaneLine::getROITracking(cv::Point centerPoint) const
-{
-    return cv::Rect{centerPoint.x - W_TRACKING / 2, centerPoint.y - H_TRACKING / 2, W_TRACKING, H_TRACKING};
-}
 
-bool LaneLine::findPointHasBiggestValueInBin(const cv::Mat &trackingImage, cv::Point &returnPoint, int &returnValue) const
-{
-    int maxCount = 0;
-    cv::Point maxPoint;
-
-    const int BIN_WIDTH = trackingImage.cols / N_BINS;
-    for (int bin = 0; bin < N_BINS; bin++)
-    {
-        cv::Rect binROI{bin * BIN_WIDTH, 0, BIN_WIDTH, trackingImage.rows};
-        cv::Mat binImage = trackingImage(binROI);
-        int nonZero = countNonZero(binImage);
-
-        if (nonZero >= maxCount)
-        {
-            maxCount = nonZero;
-            maxPoint = cv::Point2i{int((bin + 0.5) * BIN_WIDTH), int(binImage.rows / 2)};
-        }
-    }
-
-    if (maxCount == 0)
-    {
-        return false;
-    }
-
-    returnPoint = maxPoint;
-    returnValue = maxCount;
-    return true;
-}
 
 void LaneLine::swap(std::shared_ptr<LaneLine> other)
 {
@@ -178,10 +187,12 @@ void LaneLine::setFindBeginPointRegion(int offset, int width)
 bool LaneLine::findBeginPoint(cv::Point &returnPoint) const
 {
     cv::Rect &&regionRect = getDetectBeginPointRegion();
+    // std::cout << "RightRegionRect: " << regionRect << ' ';
+    // std::cout.flush();
 
     const cv::Mat region = lineImage(regionRect);
 
-    for (int center_y = region.rows - 1 - H_TRACKING / 2; center_y > H_TRACKING / 2; center_y -= H_TRACKING)
+    for (int center_y = region.rows - 1 - H_TRACKING / 2; center_y > H_TRACKING / 2 + 1; center_y -= H_TRACKING)
     {
         int maxNonZero = 0;
         cv::Point maxPoint;
@@ -189,18 +200,31 @@ bool LaneLine::findBeginPoint(cv::Point &returnPoint) const
         for (int center_x = W_TRACKING / 2 + 1; center_x < region.cols - W_TRACKING / 2 - 1; center_x += W_TRACKING)
         {
             cv::Point center{center_x, center_y};
+    //         std::cout << "CenterBefore: " << center << ' ';
+    // std::cout.flush();
+
             int nonZeroValue = 0;
             updateNewCenter(region, center, &nonZeroValue);
+
+    //         std::cout << "CenterAfter: " << center << ' ';
+    // std::cout.flush();
+
+            // ROS_INFO("nonZeroValue: %d", nonZeroValue);
+            // std::cout.flush();
             if (nonZeroValue > maxNonZero)
             {
                 maxNonZero = nonZeroValue;
                 maxPoint = center;
+                // std::cout << "Max: " << center << ' ';
             }
         }
 
         if (maxNonZero > maxNonZeroThreshold)
         {
             returnPoint = regionRect.tl() + maxPoint;
+    //         std::cout << "Return: " << returnPoint << std::endl;
+    // std::cout.flush();
+
             return true;
         }
     }
@@ -227,17 +251,31 @@ std::vector<cv::Point> LaneLine::findPoints(const cv::Point &beginPoint, int dir
 
 bool LaneLine::updateNewCenter(const cv::Mat &region, cv::Point &center, int *const nonZeroValue) const
 {
-    const cv::Rect roiTracking = getROITracking(center);
+    cv::Rect&& roiTracking = getROITracking(center);
+    // std::cout << "ROI: " << roiTracking << " LineImageRect " << lineImageRect << ' ' << (roiTracking & lineImageRect) << std::endl;
 
     if ((roiTracking & lineImageRect) != roiTracking)
     {
+        // std::cout << "OUTTTT";
         return false;
     }
+    // cv::Mat d;
+    // cv::cvtColor(region, d, cv::COLOR_GRAY2BGR);
+    // cv::rectangle(d, roiTracking, getLaneColor(), 2);
+    // cv::imshow(getName() + "Tracking", d);
+    // cv::waitKey(1);
+
+    // cv::Mat d;
+    // cv::cvtColor(region, d, cv::COLOR_GRAY2BGR);
+    // cv::rectangle(d, roiTracking, getLaneColor(), 2);
+    // cv::imshow("DebugRight", d);
+    // cv::waitKey(2);
+
     const cv::Mat trackingImage = region(roiTracking);
 
     cv::Point maxPointResult;
     int value = 0;
-    bool found = findPointHasBiggestValueInBin(trackingImage, maxPointResult, value);
+    bool found = findPointInWindow(trackingImage, maxPointResult, value);
     if (found)
     {
         center = roiTracking.tl() + maxPointResult;
@@ -260,20 +298,20 @@ std::vector<cv::Point> LaneLine::moveByGradient(int distance) const
     return points;
 }
 
-bool LaneLine::recover(const std::shared_ptr<LaneLine> &lane, int laneWidth)
+bool LaneLine::recoverFrom(const LaneLine& lane, int laneWidth)
 {
-    if (!lane->isFound() || laneWidth <= 0)
+    if (!lane.isFound() || laneWidth <= 0)
     {
         return false;
     }
 
-    std::vector<cv::Point> &&movedPoints = lane->moveByGradient(laneWidth);
-
+    std::vector<cv::Point> &&movedPoints = lane.moveByGradient(laneWidth);
     auto newParams = calcLineParams(movedPoints);
     if (newParams)
     {
         lineParams = newParams;
-        return true;
+        track();
+        return isFound();
     }
     else
     {
@@ -281,12 +319,27 @@ bool LaneLine::recover(const std::shared_ptr<LaneLine> &lane, int laneWidth)
     }
 }
 
+void LaneLine::setLineParams(const LineParams& other)
+{
+    if (!this->lineParams)
+    {
+        this->lineParams = std::make_shared<LineParams>();
+    }
+    std::copy(other.begin(), other.end(), this->lineParams->begin());
+}
+
 //////////////////////////////////////////
+
+LeftLane::LeftLane(cv::Mat& debugImage)
+: LaneLine{debugImage}
+{
+}
 
 cv::Rect LeftLane::getDetectBeginPointRegion() const
 {
-    int real_width = std::min(width, lineImage.cols - offsetX - 1);
-    return cv::Rect{offsetX, 0, real_width, lineImage.rows};
+    // int real_width = std::min(width, lineImage.cols - offsetX - 1);
+    // return cv::Rect{offsetX, 0, real_width, lineImage.rows};
+    return cv::Rect{0, 0, lineImage.cols / 2, lineImage.rows};
 }
 
 cv::Scalar LeftLane::getLaneColor() const
@@ -308,13 +361,108 @@ cv::Point LeftLane::calcPerpendicular(const cv::Point &point) const
     return cv::Point{point.y, -point.x} / sqrt(point.y * point.y + point.x * point.x);
 }
 
+
+void LeftLane::visualizeTrackingPoint(cv::Mat& image, const std::vector<cv::Point>& points)
+{
+    // for (const auto& point : points)
+    // {
+    //     cv::circle(image, point, 3, getLaneColor(), -1);
+    // }
+    // cv::imshow("Left Tracking", image);
+    // cv::waitKey(1);
+}
+
+
+// bool LeftLane::findBeginPoint(cv::Point &returnPoint) const
+// {
+//     cv::Rect &&regionRect = getDetectBeginPointRegion();
+//     // std::cout << "RegionRect: " << regionRect << ' ';
+//     // std::cout.flush();
+
+//     const cv::Mat region = lineImage(regionRect);
+
+//     for (int center_y = region.rows - 1 - H_TRACKING / 2; center_y > H_TRACKING / 2; center_y -= H_TRACKING)
+//     {
+//         int maxNonZero = 0;
+//         cv::Point maxPoint;
+
+//         for (int center_x = W_TRACKING / 2 + 1; center_x < region.cols - W_TRACKING / 2 - 1; center_x += W_TRACKING)
+//         {
+//             cv::Point center{center_x, center_y};
+//             int nonZeroValue = 0;
+//             updateNewCenter(region, center, &nonZeroValue);
+//             // std::cout << "Center: " << center << ' ';
+//             // std::cout.flush();
+
+//             // cv::imshow("LeftRegion", region);
+//             // cv::waitKey(0);
+//             // ROS_INFO("nonZeroValue: %d", nonZeroValue);
+//             if (nonZeroValue > maxNonZero)
+//             {
+//                 maxNonZero = nonZeroValue;
+//                 maxPoint = center;
+//             }
+//         }
+
+//         if (maxNonZero > maxNonZeroThreshold)
+//         {
+//             returnPoint = regionRect.tl() + maxPoint;
+//             // std::cout << "Return: " << returnPoint << std::endl;
+//             // std::cout.flush();
+
+//             return true;
+//         }
+//     }
+
+//     return false;
+// }
+
+// bool LeftLane::updateNewCenter(const cv::Mat &region, cv::Point &center, int *const nonZeroValue) const
+// {
+//     const cv::Rect roiTracking = getROITracking(center);
+
+//     if ((roiTracking & lineImageRect) != roiTracking)
+//     {
+//         return false;
+//     }
+
+//     // cv::Mat d;
+//     // cv::cvtColor(region, d, cv::COLOR_GRAY2BGR);
+//     // cv::rectangle(d, roiTracking, getLaneColor(), 2);
+//     // cv::imshow("LeftUpdate", d);
+//     // cv::waitKey(1);
+
+
+//     const cv::Mat trackingImage = region(roiTracking);
+
+//     cv::Point maxPointResult;
+//     int value = 0;
+//     bool found = findPointHasBiggestValueInBin(trackingImage, maxPointResult, value);
+//     if (found)
+//     {
+//         center = roiTracking.tl() + maxPointResult;
+//         if (nonZeroValue)
+//         {
+//             *nonZeroValue = value;
+//         }
+//     }
+//     return found;
+// }
+
 //////////////////////////////////////////
+
+RightLane::RightLane(cv::Mat& debugImage)
+: LaneLine{debugImage}
+{
+}
 
 cv::Rect RightLane::getDetectBeginPointRegion() const
 {
-    int x = std::max(0, lineImage.cols - offsetX - width - 1);
-    int real_width = std::min(width, lineImage.cols - x);
-    return cv::Rect{x, 0, real_width, lineImage.rows};
+    // int x = std::max(0, lineImage.cols - offsetX - width - 1);
+    // int real_width = std::min(width, lineImage.cols - x);
+    // return cv::Rect{x, 0, real_width, lineImage.rows};
+    // return cv::Rect{lineImage.cols * 1 / 3, 0, lineImage.cols * 2 / 3, lineImage.rows};
+    return cv::Rect{lineImage.cols / 2, 0, lineImage.cols / 2, lineImage.rows};
 }
 
 cv::Scalar RightLane::getLaneColor() const
@@ -334,4 +482,14 @@ void RightLane::showLinePoints(cv::Mat &drawImage) const
 cv::Point RightLane::calcPerpendicular(const cv::Point &point) const
 {
     return {-point.y, point.x};
+}
+
+void RightLane::visualizeTrackingPoint(cv::Mat& image, const std::vector<cv::Point>& points)
+{
+    for (const auto& point : points)
+    {
+        cv::circle(image, point, 3, getLaneColor(), -1);
+    }
+    cv::imshow("Right Tracking", image);
+    cv::waitKey(1);
 }
