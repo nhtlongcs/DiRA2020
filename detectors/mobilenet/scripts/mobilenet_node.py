@@ -1,11 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from keras.optimizers import *
-from keras.layers import *
-from keras.models import *
-from keras.applications.mobilenet_v2 import MobileNetV2
-import keras
 import tensorflow as tf
 import numpy as np
 import cv2
@@ -13,18 +8,6 @@ import time
 import rospy
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
-from keras.backend.tensorflow_backend import set_session
-
-
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-config.log_device_placement = False
-
-###
-config.gpu_options.per_process_gpu_memory_fraction = 0.4
-
-sess = tf.Session(config=config)
-set_session(sess)
 
 
 def data_to_image(data):
@@ -39,75 +22,6 @@ def image_to_data(image_np):
     msg.format = "jpeg"
     msg.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
     return msg
-
-
-def unet(input_size=(224, 224, 3)):
-
-    model = MobileNetV2(include_top=False,
-                        input_shape=input_size, weights=None)
-
-    conv1 = Conv2DTranspose(320, 3, activation='relu', padding='same',
-                            kernel_initializer='he_normal')(model.layers[-1].output)
-    con1 = concatenate(
-        [model.get_layer('block_16_project_BN').output, conv1], axis=3)
-    conv2 = Conv2DTranspose(320, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(con1)
-    conv3 = Conv2DTranspose(192, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(conv2)
-
-    up1 = UpSampling2D(size=(2, 2))(conv3)
-    conv4 = Conv2DTranspose(192, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(up1)
-    con2 = concatenate([model.get_layer("block_12_add").output,
-                        model.get_layer("block_11_add").output, conv4], axis=3)
-    conv5 = Conv2DTranspose(192, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(con2)
-    conv6 = Conv2DTranspose(64, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(conv5)
-
-    up2 = UpSampling2D(size=(2, 2))(conv6)
-    conv7 = Conv2DTranspose(64, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(up2)
-    con3 = concatenate([model.get_layer("block_5_add").output,
-                        model.get_layer("block_4_add").output, conv7], axis=3)
-    conv8 = Conv2DTranspose(64, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(con3)
-    conv9 = Conv2DTranspose(32, 3, activation='relu',
-                            padding='same', kernel_initializer='he_normal')(conv8)
-
-    up3 = UpSampling2D(size=(2, 2))(conv9)
-    conv10 = Conv2DTranspose(24, 3, activation='relu',
-                             padding='same', kernel_initializer='he_normal')(up3)
-    con4 = concatenate(
-        [model.get_layer("block_2_add").output,  conv10], axis=3)
-    conv11 = Conv2DTranspose(
-        24, 3, activation='relu', padding='same', kernel_initializer='he_normal')(con4)
-    conv12 = Conv2DTranspose(
-        16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv11)
-
-    up4 = UpSampling2D(size=(2, 2))(conv12)
-    conv13 = Conv2DTranspose(16, 3, activation='relu',
-                             padding='same', kernel_initializer='he_normal')(up4)
-    con5 = concatenate(
-        [model.get_layer("expanded_conv_project_BN").output,  conv13], axis=3)
-    conv14 = Conv2DTranspose(
-        16, 3, activation='relu', padding='same', kernel_initializer='he_normal')(con5)
-    conv15 = Conv2DTranspose(
-        8, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv14)
-
-    up5 = UpSampling2D(size=(2, 2))(conv15)
-    conv16 = Conv2DTranspose(
-        4, 3, activation='relu', padding='same', kernel_initializer='he_normal')(up5)
-    conv17 = Conv2DTranspose(
-        2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv16)
-    conv18 = Conv2D(1, 1, activation='sigmoid', name='output1')(conv17)
-
-    model2 = Model(input=model.layers[0].input, output=conv18)
-
-    model2.compile(optimizer=Adam(lr=1e-4),
-                   loss='binary_crossentropy', metrics=['accuracy'])
-    return model2
-
 
 class mobilenet_node():
     def __init__(self):
@@ -128,25 +42,51 @@ class mobilenet_node():
         self.pub_lane = rospy.Publisher(
             '~lane_seg/compressed', CompressedImage, queue_size=1)
 
+        # print('Inference')
+        # self.image = cv2.imread('/home/ubuntu/catkin_ws/src/dira/camera_record/test.png')
+        # output = self.use_deep(self.image)
+        # n = 100
+        # for k in range(4):
+        #     now = time.time()
+        #     for i in range(n):
+        #         output = self.use_deep(self.image)
+        #     fps = float(n)/(time.time()-now)
+        #     print("FPS = ",fps)
+
+        # cv2.imshow('output', output)
+        # cv2.waitKey(0)
+
         rospy.set_param('~ready', True)
         rospy.loginfo('mobilenet init done')
 
     def init_model(self):
-        # self.model = load_model(self.weight_path)
-        self.model = unet()
-        self.model.load_weights(self.weight_path)
-        self.model.summary()
-        self.graph = tf.get_default_graph()
+
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.log_device_placement = False
+        config.gpu_options.per_process_gpu_memory_fraction = 0.4
+        
+        with tf.gfile.FastGFile(self.weight_path, 'rb') as f:
+            graph_def = tf.GraphDef()
+            graph_def.ParseFromString(f.read())
+        self.sess = tf.compat.v1.Session(config=config)
+        tf.import_graph_def(
+            graph_def,
+            name='',
+            return_elements=['output1/Sigmoid:0']
+        )
 
     def use_deep(self, cv_image):
-        with self.graph.as_default():
-            img = cv2.resize(cv_image, (224, 224))
-            img = img.squeeze() / 255.
-            img = np.expand_dims(img, 0)
-            seg = self.model.predict(img)
-            dst = cv2.resize(seg[0], (320, 240))
-            dst = dst.squeeze() * 255.
-            return dst
+        img = cv2.resize(cv_image, (224, 224))
+        img = img.squeeze() / 255.
+        img = np.expand_dims(img, 0)
+
+        input = self.sess.graph.get_tensor_by_name('input_1:0')
+        output = self.sess.graph.get_tensor_by_name('output1/Sigmoid:0')
+        out_pred = self.sess.run(output, feed_dict={input: img})
+
+        out_pred = (out_pred.squeeze(0).squeeze(2) * 255).astype(np.uint8)
+        return out_pred
 
     def use_imgproc(self, cv_image):
         cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
@@ -167,5 +107,6 @@ class mobilenet_node():
 
 if __name__ == "__main__":
     rospy.init_node('mobilenet_node')
-    mobilenet_node()
+    node = mobilenet_node()
     rospy.spin()
+    node.sess.close()

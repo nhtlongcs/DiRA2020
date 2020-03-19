@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
 
   try {
     ROS_INFO("[PCL Detect]: Initializing node");
-    PclDetector pd(nh, nh_local);
+    PclDetector pd(nh, pnh);
     ros::spin();
   } catch (char const* s) {
     ROS_FATAL_STREAM("[PCL Detect]: " << s);
