@@ -7,8 +7,8 @@ import cv2
 import time
 import rospy
 from sensor_msgs.msg import Image, CompressedImage
+from std_srvs.srv import Trigger
 from cv_bridge import CvBridge, CvBridgeError
-
 
 def data_to_image(data):
     np_arr = np.fromstring(data, np.uint8)
@@ -25,12 +25,15 @@ def image_to_data(image_np):
 
 class mobilenet_node():
     def __init__(self):
-        self.image_topic = rospy.get_param('~image_topic')
-        self.weight_path = rospy.get_param('~weight_path')
-        self.is_use_deep = rospy.get_param('~use_deep')
+        self.image_topic = rospy.get_param('~image_topic', '/camera/rgb/image_raw/compressed')
+        self.weight_path = rospy.get_param('~weight_path', None)
+        self.is_use_deep = rospy.get_param('~use_deep', True)
 
         if self.is_use_deep:
-            self.init_model()
+            assert self.weight_path is not None
+
+        self.init_model()
+        if self.is_use_deep:
             self.proc_func = self.use_deep
         else:
             self.proc_func = self.use_imgproc
@@ -41,6 +44,8 @@ class mobilenet_node():
             self.image_topic, CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
         self.pub_lane = rospy.Publisher(
             '~lane_seg/compressed', CompressedImage, queue_size=1)
+
+        self.switch_service = rospy.Service('switch_mode', Trigger, self.switch_mode_callback)
 
         # print('Inference')
         # self.image = cv2.imread('/home/ubuntu/catkin_ws/src/dira/camera_record/test.png')
@@ -65,7 +70,7 @@ class mobilenet_node():
         config.gpu_options.allow_growth = True
         config.log_device_placement = False
         config.gpu_options.per_process_gpu_memory_fraction = 0.4
-        
+
         with tf.gfile.FastGFile(self.weight_path, 'rb') as f:
             graph_def = tf.GraphDef()
             graph_def.ParseFromString(f.read())
@@ -85,7 +90,8 @@ class mobilenet_node():
         output = self.sess.graph.get_tensor_by_name('output1/Sigmoid:0')
         out_pred = self.sess.run(output, feed_dict={input: img})
 
-        out_pred = (out_pred.squeeze(0).squeeze(2) * 255).astype(np.uint8)
+        # out_pred = (out_pred.squeeze(0).squeeze(2) * 255).astype(np.uint8)
+        out_pred = (out_pred.squeeze(0)[:,:,0] * 255).astype(np.uint8)
         return out_pred
 
     def use_imgproc(self, cv_image):
@@ -104,6 +110,12 @@ class mobilenet_node():
         lane_seg = image_to_data(cv_image)
         self.pub_lane.publish(lane_seg)
 
+    def switch_mode_callback(self, req):
+        self.is_use_deep = not self.is_use_deep
+        if self.is_use_deep:
+            self.proc_func = self.use_deep
+        else:
+            self.proc_func = self.use_imgproc
 
 if __name__ == "__main__":
     rospy.init_node('mobilenet_node')
