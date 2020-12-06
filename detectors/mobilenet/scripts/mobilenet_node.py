@@ -10,22 +10,10 @@ from sensor_msgs.msg import Image, CompressedImage
 from std_srvs.srv import Trigger
 from cv_bridge import CvBridge, CvBridgeError
 
-def data_to_image(data):
-    np_arr = np.fromstring(data, np.uint8)
-    image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    return image_np
-
-
-def image_to_data(image_np):
-    msg = CompressedImage()
-    msg.header.stamp = rospy.Time.now()
-    msg.format = "jpeg"
-    msg.data = np.array(cv2.imencode('.jpg', image_np)[1]).tostring()
-    return msg
 
 class mobilenet_node():
     def __init__(self):
-        self.image_topic = rospy.get_param('~image_topic', '/camera/rgb/image_raw/compressed')
+        self.image_topic = rospy.get_param('~image_topic', '/camera/rgb/image_raw')
         self.weight_path = rospy.get_param('~weight_path', None)
         self.is_use_deep = rospy.get_param('~use_deep', True)
 
@@ -41,25 +29,11 @@ class mobilenet_node():
         self.bridge = CvBridge()
 
         self.sub_image = rospy.Subscriber(
-            self.image_topic, CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
+            self.image_topic, Image, self.img_callback, queue_size=1, buff_size=2**24)
         self.pub_lane = rospy.Publisher(
-            '~lane_seg/compressed', CompressedImage, queue_size=1)
+            '~lane_seg', Image, queue_size=1)
 
         self.switch_service = rospy.Service('switch_mode', Trigger, self.switch_mode_callback)
-
-        # print('Inference')
-        # self.image = cv2.imread('/home/ubuntu/catkin_ws/src/dira/camera_record/test.png')
-        # output = self.use_deep(self.image)
-        # n = 100
-        # for k in range(4):
-        #     now = time.time()
-        #     for i in range(n):
-        #         output = self.use_deep(self.image)
-        #     fps = float(n)/(time.time()-now)
-        #     print("FPS = ",fps)
-
-        # cv2.imshow('output', output)
-        # cv2.waitKey(0)
 
         rospy.set_param('~ready', True)
         rospy.loginfo('mobilenet init done')
@@ -101,14 +75,14 @@ class mobilenet_node():
 
     def img_callback(self, data):
         try:
-            cv_image = data_to_image(data.data)
+            cv_image = self.bridge.imgmsg_to_cv2(data)
         except:
             print('Cannot convert to cv_image')
             return
 
         cv_image = self.proc_func(cv_image)
-        lane_seg = image_to_data(cv_image)
-        self.pub_lane.publish(lane_seg)
+        cv_image = self.bridge.cv2_to_imgmsg(cv_image)
+        self.pub_lane.publish(cv_image)
 
     def switch_mode_callback(self, req):
         self.is_use_deep = not self.is_use_deep
