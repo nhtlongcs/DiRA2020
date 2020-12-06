@@ -13,8 +13,8 @@ CarControl::CarControl()
 
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_angle", 1);
-    speed_publisher = _nh.advertise<std_msgs::Float32>("/team220/set_speed", 1);
+    steer_publisher = _nh.advertise<std_msgs::Float32>("/set_angle", 1);
+    speed_publisher = _nh.advertise<std_msgs::Float32>("/set_speed", 1);
     control_subscriber = _nh.subscribe("/control", 1, &CarControl::driveCallback, this);
 }
 
