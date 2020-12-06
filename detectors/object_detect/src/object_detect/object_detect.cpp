@@ -28,7 +28,7 @@ ObjectDetect::ObjectDetect()
     std::string transport_hint = _nh.param<std::string>("transport_hint", "compressed");
     _serverConfig.setCallback(boost::bind(&ObjectDetect::configCallback, this, _1, _2));
     _objPub = _nh.advertise<std_msgs::Int8>("object", 1);
-    _depthSub = _it.subscribe("/team220/camera/depth", 1, &ObjectDetect::updateDepthCallback, this, image_transport::TransportHints{transport_hint});
+    _depthSub = _it.subscribe("/camera/depth/image", 1, &ObjectDetect::updateDepthCallback, this, image_transport::TransportHints{transport_hint});
     _binarySub = _it.subscribe("/mobile_net/lane_seg", 1, &ObjectDetect::updateBinaryCallback, this, image_transport::TransportHints{transport_hint});
 
     // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
