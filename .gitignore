@@ -551,3 +551,8 @@ MigrationBackup/
 lanenet/model/*
 !lanenet/model/README.md
 data_collection/images/*
+
+*.bak
+*.onnx
+*.trt
+

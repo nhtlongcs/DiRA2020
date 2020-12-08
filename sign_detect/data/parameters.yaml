@@ -1,0 +1,10 @@
+batchSize: 1
+channel: 3
+height: 288
+width: 384
+nbCls: 6
+onnxFile: data/yolov4-tiny_1_3_288_384_static
+keepTopK: 1
+topK: 100
+scoreThreshold: 0.4
+iouThreshold: 0.6

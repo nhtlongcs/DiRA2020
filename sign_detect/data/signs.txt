@@ -1,0 +1,6 @@
+forward
+left
+right
+nleft
+nright
+stop
