@@ -551,8 +551,13 @@ MigrationBackup/
 lanenet/model/*
 !lanenet/model/README.md
 data_collection/images/*
+<<<<<<< HEAD
 
 *.bak
 *.onnx
 *.trt
 
+=======
+*.pb
+*.h5
+>>>>>>> ignore .pb .h5 for weights files
