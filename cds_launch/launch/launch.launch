@@ -1,35 +1,56 @@
 <launch>
-    <arg name="use_sim" value="false" />
-
+    <!-- Use simulator or not -->
+    <arg name="use_sim" value="true" />
     <!-- Turn off debug mode for better performance -->
     <param name="debug_mode" value="true" />
-    <param     if="$(arg use_sim)" name="transport_hint" value="compressed" />
-    <param unless="$(arg use_sim)" name="transport_hint" value="raw" />
 
-    <include if="$(arg use_sim)" file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
-        <param name="port" value="9090" />
-    </include>
+    <!-- Input topics if using simulator -->
+    <group if="$(arg use_sim)">
+        <param name="rgb_topic" value="/team220/camera/rgb/compressed" />
+        <param name="depth_topic" value="/team220/camera/depth/compressed" />
+        <param name="transport_hint" value="compressed" />
+        <param name="set_speed_topic" value="/team220/set_speed" />
+        <param name="set_angle_topic" value="/team220/set_angle" />
+        <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+            <arg name="address" value="127.0.0.1" />
+            <arg name="port" value="9090" />
+        </include>
+    </group>
 
-    <node name="mobile_net" pkg="mobilenet" type="mobilenet_node.py" required="true" output="screen">
-        <param name="image_topic" value="/camera/rgb/image_raw/compressed" />
-        <!-- <param name="image_topic" value="/team220/camera/rgb/compressed" /> -->
-        <!-- <param name="weight_path" value="$(find mobilenet)/model/model_dira_v4.h5" /> -->
-        <param name="weight_path" value="/home/ubuntu/catkin_ws/src/dira/detectors/mobilenet/model/unet.pb" />
+    <!-- Input topics if not using simulator -->
+    <group unless="$(arg use_sim)">
+        <param name="rgb_topic" value="/camera/rgb/image_raw" />
+        <param name="depth_topic" value="/camera/depth/image_raw" />
+        <param name="transport_hint" value="raw" />
+        <param name="set_speed_topic" value="/set_speed" />
+        <param name="set_angle_topic" value="/set_angle" />
+    </group>
+
+    <!-- Common publish topics -->
+    <param name="control_topic" value="/control" />
+    <param name="lane_segmentation_topic" value="/lane_segmentation" />
+    <param name="sign_topic" value="/sign" />
+    <param name="lane_detect_topic" value="/lane" />
+    <param name="object_topic" value="/object" />
+
+    <!-- <node name="mobile_net" pkg="mobilenet" type="mobilenet_node.py" required="true" output="screen">
+        <param name="weight_path" value="$(find mobilenet)/model/unet.pb" />
         <param name="use_deep" value="true" />
-    </node>
+    </node> -->
+        <!-- <param name="weight_path" value="/home/ubuntu/catkin_ws/src/dira/detectors/mobilenet/model/unet.pb" /> -->
 
-    <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" args="_image_transport:=compressed" required="true" output="screen">
-    </node>
+    <!-- <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" /> -->
 
     <!-- <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" /> -->
     
     <!-- <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" /> -->
 
-    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen" args="_image_transport:=compressed" /> -->
+    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen" args="_image_transport:=compressed">
+    </node> -->
 
     <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" args="_image_transport:=compressed" /> -->
 
     <!-- Logging -->
-    <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" />
+    <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->
     
 </launch>

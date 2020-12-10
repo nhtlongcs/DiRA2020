@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 import numpy as np
 import cv2
 import time
@@ -13,7 +16,8 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class mobilenet_node():
     def __init__(self):
-        self.image_topic = rospy.get_param('~image_topic', '/camera/rgb/image_raw')
+        self.image_topic = rospy.get_param('/rgb_topic')
+        self.output_topic = rospy.get_param('/lane_segmentation_topic')
         self.weight_path = rospy.get_param('~weight_path', None)
         self.is_use_deep = rospy.get_param('~use_deep', True)
 
@@ -28,11 +32,15 @@ class mobilenet_node():
 
         self.bridge = CvBridge()
 
-        self.sub_image = rospy.Subscriber(
-            self.image_topic, Image, self.img_callback, queue_size=1, buff_size=2**24)
-        self.pub_lane = rospy.Publisher(
-            '~lane_seg', Image, queue_size=1)
-
+        if rospy.get_param('/transport_hint') == 'compressed':
+            self.sub_image = rospy.Subscriber(
+                self.image_topic, CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
+            self.image2cv = self.bridge.compressed_imgmsg_to_cv2
+        else:
+            self.sub_image = rospy.Subscriber(
+                self.image_topic, Image, self.img_callback, queue_size=1, buff_size=2**24)
+            self.image2cv = self.bridge.imgmsg_to_cv2
+        self.pub_lane = rospy.Publisher(self.output_topic, Image, queue_size=1)
         self.switch_service = rospy.Service('switch_mode', Trigger, self.switch_mode_callback)
 
         rospy.set_param('~ready', True)
@@ -75,7 +83,9 @@ class mobilenet_node():
 
     def img_callback(self, data):
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(data)
+            # cv_image = self.bridge.imgmsg_to_cv2(data)
+            # cv_image = self.bridge.compressed_imgmsg_to_cv2(data)
+            cv_image = self.image2cv(data)
         except:
             print('Cannot convert to cv_image')
             return
