@@ -33,17 +33,23 @@ class mobilenet_node():
         self.bridge = CvBridge()
 
         if rospy.get_param('/transport_hint') == 'compressed':
+            self.pub_lane = rospy.Publisher(self.output_topic + '/compressed', CompressedImage, queue_size=1)
             self.sub_image = rospy.Subscriber(
-                self.image_topic, CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
+                self.image_topic + '/compressed', CompressedImage, self.img_callback, queue_size=1, buff_size=2**24)
             self.image2cv = self.bridge.compressed_imgmsg_to_cv2
+            self.cv2mess = self.bridge.cv2_to_compressed_imgmsg
         else:
+            self.pub_lane = rospy.Publisher(self.output_topic, Image, queue_size=1)
             self.sub_image = rospy.Subscriber(
                 self.image_topic, Image, self.img_callback, queue_size=1, buff_size=2**24)
             self.image2cv = self.bridge.imgmsg_to_cv2
-        self.pub_lane = rospy.Publisher(self.output_topic, Image, queue_size=1)
+            self.cv2mess = self.bridge.cv2_to_imgmsg
         self.switch_service = rospy.Service('switch_mode', Trigger, self.switch_mode_callback)
 
         rospy.set_param('~ready', True)
+
+        self.use_deep(np.zeros((224,224,3), dtype=np.float32))
+
         rospy.loginfo('mobilenet init done')
 
     def init_model(self):
@@ -74,6 +80,8 @@ class mobilenet_node():
 
         # out_pred = (out_pred.squeeze(0).squeeze(2) * 255).astype(np.uint8)
         out_pred = (out_pred.squeeze(0)[:,:,0] * 255).astype(np.uint8)
+        out_pred = cv2.resize(out_pred, (cv_image.shape[1], cv_image.shape[0]))
+
         return out_pred
 
     def use_imgproc(self, cv_image):
@@ -91,7 +99,7 @@ class mobilenet_node():
             return
 
         cv_image = self.proc_func(cv_image)
-        cv_image = self.bridge.cv2_to_imgmsg(cv_image)
+        cv_image = self.cv2mess(cv_image)
         self.pub_lane.publish(cv_image)
 
     def switch_mode_callback(self, req):

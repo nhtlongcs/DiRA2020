@@ -21,10 +21,18 @@ LaneDetect::LaneDetect(bool isDebug)
     : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
     , left{debugImage}, right{debugImage}
 {
-    _lanePub = _nh.advertise<cds_msgs::lane>("lane", 1);
     _isTurnableSrv = _nh.advertiseService("IsTurnable", &LaneDetect::isTurnable, this);
-    _binaryImageSub = _image_transport.subscribe("/mobile_net/lane_seg", 1, std::bind(&LaneDetect::updateBinaryCallback, this, std::placeholders::_1));
-    _depthImageSub = _image_transport.subscribe("/team220/camera/depth", 1, std::bind(&LaneDetect::updateDepthCallback, this, std::placeholders::_1));
+
+    std::string lane_seg_topic, depth_topic, lane_output_topic, transport_hint_str;
+    ROS_ASSERT(ros::param::get("/lane_segmentation_topic", lane_seg_topic));
+    ROS_ASSERT(ros::param::get("/lane_detect_topic", lane_output_topic));
+    ROS_ASSERT(ros::param::get("/depth_topic", depth_topic));
+    ROS_ASSERT(ros::param::get("/transport_hint", transport_hint_str));
+
+    _lanePub = _nh.advertise<cds_msgs::lane>(lane_output_topic, 1);
+    image_transport::TransportHints transport_hint{transport_hint_str};
+    _binaryImageSub = _image_transport.subscribe(lane_seg_topic, 1, &LaneDetect::updateBinaryCallback, this, transport_hint);
+    _depthImageSub = _image_transport.subscribe(depth_topic, 1, &LaneDetect::updateDepthCallback, this, transport_hint);
     _configServer.setCallback(std::bind(&LaneDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
 }
 

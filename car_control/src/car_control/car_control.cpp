@@ -2,6 +2,7 @@
 #include <geometry_msgs/Twist.h>
 #include <vector>
 #include <cmath>
+#include <ros/ros.h>
 
 using namespace cv;
 using namespace std;
@@ -13,9 +14,14 @@ CarControl::CarControl()
 
     carPos.x = 165;
     carPos.y = 180;
-    steer_publisher = _nh.advertise<std_msgs::Float32>("/set_angle", 1);
-    speed_publisher = _nh.advertise<std_msgs::Float32>("/set_speed", 1);
-    control_subscriber = _nh.subscribe("/control", 1, &CarControl::driveCallback, this);
+
+    std::string speed_topic, steer_topic, control_topic;
+    ROS_ASSERT(ros::param::get("/set_speed_topic", speed_topic));
+    ROS_ASSERT(ros::param::get("/set_angle_topic", steer_topic));
+    ROS_ASSERT(ros::param::get("/control_topic", control_topic));
+    speed_publisher = _nh.advertise<std_msgs::Float32>(speed_topic, 1);
+    steer_publisher = _nh.advertise<std_msgs::Float32>(steer_topic, 1);
+    control_subscriber = _nh.subscribe(control_topic, 1, &CarControl::driveCallback, this);
 }
 
 void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t level)

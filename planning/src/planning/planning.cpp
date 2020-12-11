@@ -18,11 +18,17 @@ Planning::Planning()
     , objectState{AvoidObjectState::DONE}
     , turningState{TurningState::DONE}
 {
+    std::string control_topic, sign_topic, lane_topic, object_topic;
+    ROS_ASSERT(ros::param::get("/lane_detect_topic", lane_topic));
+    ROS_ASSERT(ros::param::get("/sign_topic", sign_topic));
+    ROS_ASSERT(ros::param::get("/object_topic", object_topic));
+    ROS_ASSERT(ros::param::get("/control_topic", control_topic));
+
     _resetLaneClient = _nh.serviceClient<cds_msgs::ResetLane>("reset_lane");
-    _controlPub = _nh.advertise<geometry_msgs::Twist>("/control", 1);
-    _laneSub = _nh.subscribe("/lane_detect/lane", 1, &Planning::laneCallback, this);
-    _signSub = _nh.subscribe("/sign_detect/sign", 1, &Planning::signCallback, this);
-    _objSub = _nh.subscribe("/object_detect/object", 1, &Planning::objectCallback, this);
+    _controlPub = _nh.advertise<geometry_msgs::Twist>(control_topic, 1);
+    _laneSub = _nh.subscribe(lane_topic, 1, &Planning::laneCallback, this);
+    _signSub = _nh.subscribe(sign_topic, 1, &Planning::signCallback, this);
+    _objSub = _nh.subscribe(object_topic, 1, &Planning::objectCallback, this);
 
     _configServer.setCallback(std::bind(&Planning::configCallback, this, std::placeholders::_1, std::placeholders::_2));
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime / 10.0f}, &Planning::onObjectTimeout, this, true);
