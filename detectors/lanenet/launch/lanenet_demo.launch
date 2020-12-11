@@ -1,0 +1,12 @@
+<launch>
+    <include file="$(find astra_camera)/launch/astra.launch" />
+
+    <node name="lanenet_demo" pkg="lanenet" type="lanenet-benchmark" output="screen" args="-o lane">
+        <param name="batchSize" value="1"/>
+        <param name="channel" value="3"/>
+        <param name="height" value="224"/>
+        <param name="width" value="224"/>
+        <param name="engineFile" value="data/mobilenet_unet.trt"/>
+    </node>
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find lanenet)/rviz/lanenet.rviz" />
+</launch>

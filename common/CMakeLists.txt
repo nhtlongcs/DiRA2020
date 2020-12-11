@@ -1,11 +1,13 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(common)
+cmake_minimum_required(VERSION 3.18)
+project(common LANGUAGES CUDA CXX)
 
-add_compile_options(-std=c++11)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge)
 
 find_package(OpenCV REQUIRED)
+find_package(CUDAToolkit REQUIRED)
+find_package(TensorRT REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -20,9 +22,23 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/libcommon.cpp
+  src/logger.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
+target_include_directories(${PROJECT_NAME} PUBLIC include   ${catkin_INCLUDE_DIRS}
+ ${OpenCV_INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  CUDA::cudart
+  opencv_imgproc
+  TensorRT::nvinfer_plugin
+  TensorRT::nvinfer
+  TensorRT::nvonnxparser
+  stdc++fs)
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17 cuda_std_17)
 
 install(TARGETS ${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -31,7 +47,7 @@ install(TARGETS ${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
  )
 
 install(DIRECTORY include/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
   PATTERN ".svn" EXCLUDE
 )
