@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.18)
 project(cds_msgs)
 
 find_package(catkin REQUIRED COMPONENTS message_generation sensor_msgs std_msgs
