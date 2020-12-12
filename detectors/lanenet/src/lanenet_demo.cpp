@@ -9,7 +9,7 @@
 #include <fstream>
 
 
-LaneNetDemo::LaneNetDemo(ros::NodeHandle const& nh, LaneNetParams const& params,
+LaneNetDemo::LaneNetDemo(ros::NodeHandle& nh, LaneNetParams const& params,
                          std::string const& rgbTopic,
                          std::string const& outLaneTopic,
                          std::string const& outRoadTopic,
@@ -17,12 +17,16 @@ LaneNetDemo::LaneNetDemo(ros::NodeHandle const& nh, LaneNetParams const& params,
     : lanenet(params),
       mIt(nh),
       mBatchSize(params.batchSize),
-      mVisualize(true) {
+      mVisualize(true),
+      isRoadUseDeep{true},
+      isLaneUseDeep{true} {
   mImgSub = mIt.subscribe(rgbTopic, 4, &LaneNetDemo::imgCallback, this, transportHint);
   if (mVisualize) {
     mImgPub1 = mIt.advertise(outLaneTopic, 1);
     mImgPub2 = mIt.advertise(outRoadTopic, 1);
   }
+  _srvLane = nh.advertiseService("setLaneUseDeep", &LaneNetDemo::setLaneUseDeepHandler, this);
+  _srvRoad = nh.advertiseService("setRoadUseDeep", &LaneNetDemo::setRoadUseDeepHandler, this);
 }
 
 void LaneNetDemo::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
@@ -33,30 +37,74 @@ void LaneNetDemo::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     ROS_ERROR_STREAM("cv_bridge exception: " << e.what());
     return;
   }
+
+  cv::Mat laneProcessed, roadProcessed;
   auto start = std::chrono::high_resolution_clock::now();
-  auto laneImgs = lanenet.inferLaneImg(inImgPtr->image);
+  if (!isRoadUseDeep && !isLaneUseDeep)
+  {
+    laneProcessed = laneImageProc(inImgPtr->image);
+    roadProcessed = roadImageProc(inImgPtr->image);
+  } else
+  {
+    auto laneImgs = lanenet.inferLaneImg(inImgPtr->image);
+    if (isRoadUseDeep)
+    {
+      cv::convertScaleAbs(laneImgs.second, roadProcessed, 255, 0);
+      cv::resize(roadProcessed, roadProcessed, inImgPtr->image.size());
+    } else
+    {
+      roadProcessed = roadImageProc(inImgPtr->image);
+    }
+
+    if (isLaneUseDeep)
+    {
+      cv::convertScaleAbs(laneImgs.first, laneProcessed, 255, 0);
+      cv::resize(laneProcessed, laneProcessed, inImgPtr->image.size());
+    } else
+    {
+      laneProcessed = laneImageProc(inImgPtr->image);
+    }
+  }
   auto end = std::chrono::high_resolution_clock::now();
   if (mVisualize && ++inferCount == 3) {
     cv_bridge::CvImage pubImg;
     pubImg.encoding = "mono8";
-    cv::convertScaleAbs(laneImgs.first, pubImg.image, 255, 0);
-    cv::resize(pubImg.image, pubImg.image, inImgPtr->image.size());
+    pubImg.image = laneProcessed;
     mImgPub1.publish(pubImg.toImageMsg());
-    cv::convertScaleAbs(laneImgs.second, pubImg.image, 255, 0);
-    cv::resize(pubImg.image, pubImg.image, inImgPtr->image.size());
+    pubImg.image = roadProcessed;
     mImgPub2.publish(pubImg.toImageMsg());
     inferCount = 0;
-  } else if (!mVisualize) {
-    runTime += std::chrono::duration<double, std::milli>(end - start).count();
-    ROS_INFO_STREAM("Iteration " << ++curBench);
-    int nbRun = nbBench / mBatchSize;
-    if (curBench >= nbRun) {
-      double msPerIteration = runTime / nbRun / mBatchSize;
-      ROS_INFO_STREAM("Time each image: " << int(msPerIteration) << " ms");
-      ROS_INFO_STREAM("FPS: " << int(1000 / msPerIteration));
-      ros::shutdown();
-    }
   }
+}
+
+cv::Mat LaneNetDemo::roadImageProc(const cv::Mat& image)
+{
+  cv::Mat gray;
+  cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+  cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY_INV);
+  return gray;
+}
+
+cv::Mat LaneNetDemo::laneImageProc(const cv::Mat& image)
+{
+  cv::Mat gray;
+  cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+  cv::threshold(gray, gray, 150, 255, cv::THRESH_BINARY);
+  return gray;
+}
+
+bool LaneNetDemo::setRoadUseDeepHandler(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp)
+{
+  isRoadUseDeep = req.data;
+  resp.success = true;
+  return true;
+}
+
+bool LaneNetDemo::setLaneUseDeepHandler(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp)
+{
+  isLaneUseDeep = req.data;
+  resp.success = true;
+  return true;
 }
 
 int main(int argc, char** argv) {
@@ -72,6 +120,7 @@ int main(int argc, char** argv) {
   std::string engineFile;
   ros::param::get("~engineFile", engineFile);
   params.enginePath = ros::package::getPath("lanenet") / fs::path(engineFile);
+  ROS_INFO("[LaneNet Benchmark] Load engine from %s", engineFile.c_str());
 
   std::string rgbTopic, laneSegTopic, roadSegTopic, transportHint;
   ROS_ASSERT(ros::param::get("/rgb_topic", rgbTopic));

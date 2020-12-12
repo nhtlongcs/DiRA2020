@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.18)
 project(lanenet LANGUAGES CUDA CXX)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS common cv_bridge image_transport roscpp
-                                        sensor_msgs)
+                                        sensor_msgs std_srvs)
 find_package(OpenCV 4 REQUIRED COMPONENTS core imgproc highgui)
 
 # TODO ???
 catkin_package(
    INCLUDE_DIRS include LIBRARIES sign_detect CATKIN_DEPENDS cv_bridge
-   image_transport roscpp sensor_msgs DEPENDS CUDAToolkit TensorRT OpenCV
+   image_transport roscpp sensor_msgs DEPENDS CUDAToolkit TensorRT OpenCV std_srvs
 )
 
 include_directories(
