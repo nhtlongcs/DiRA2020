@@ -32,7 +32,6 @@ struct BBox {
 };
 
 struct YoloParams {
-  fs::path onnxPath;
   fs::path enginePath;
   int nbCls;
   int batchSize, channel, width, height;
@@ -45,15 +44,12 @@ class YoloV4Tiny {
 
  public:
   YoloV4Tiny(YoloParams const &params);
-
-  std::vector<std::vector<BBox>> detectBatch(
-      std::vector<cv::Mat> const &inImgs);
+  std::vector<BBox> detectImg(cv::Mat const &inImgs);
 
  private:
-  void parseOnnxModel(fs::path const &onnxPath, fs::path const &enginePath);
   void loadEngine(fs::path const &enginePath);
-  bool processInput(std::vector<cv::Mat> const &inImgs);
-  std::vector<std::vector<BBox>> getBboxes();
+  bool processInput(cv::Mat const &inImg);
+  std::vector<BBox> getBboxes();
 
   std::shared_ptr<nvinfer1::ICudaEngine> mEngine;
   std::unique_ptr<trt_buf::BufferManager> mBuffers;
@@ -61,7 +57,7 @@ class YoloV4Tiny {
   int mBatchSize, mChannel, mWidth, mHeight;
   int mKeepTopK;
 
-  inline static std::string const mInTensorNames = "input";
+  inline static std::string const mInTensorName = "input";
   inline static std::array<std::string, 4> const mOutTensorNames = {
       "num_detections", "nmsed_boxes", "nmsed_scores", "nmsed_classes"};
 };

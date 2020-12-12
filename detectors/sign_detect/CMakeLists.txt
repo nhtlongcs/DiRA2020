@@ -1,65 +1,28 @@
 cmake_minimum_required(VERSION 3.18)
-project(sign_detect)
+project(sign_detect LANGUAGES CUDA CXX)
 
-add_compile_options(-std=c++11)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(catkin REQUIRED COMPONENTS
-  cv_bridge
-  image_transport
-  roscpp
-  cds_msgs
-  common
-  dynamic_reconfigure
-)
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport roscpp
+                                        sensor_msgs dynamic_reconfigure)
+find_package(CUDAToolkit REQUIRED)
+find_package(TensorRT REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc highgui)
 
-find_package(OpenCV REQUIRED)
 
 generate_dynamic_reconfigure_options(
   cfg/Sign.cfg
 )
 
+# TODO ???
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS cv_bridge image_transport roscpp common cds_msgs
+  # INCLUDE_DIRS include LIBRARIES sign_detect CATKIN_DEPENDS cv_bridge
+  # image_transport roscpp sensor_msgs DEPENDS CUDAToolkit TensorRT OpenCV
 )
 
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
+add_subdirectory(src)
 
-add_library(${PROJECT_NAME}
-  src/${PROJECT_NAME}/signdetect.cpp
-)
-
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})
-
-add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-add_executable(${PROJECT_NAME}_node src/signdetect_node.cpp)
-
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(${PROJECT_NAME}_node
-  ${PROJECT_NAME}
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBS}
-)
-
-
-install(TARGETS ${PROJECT_NAME}_node
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
+install(
+  DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  PATTERN ".svn" EXCLUDE)

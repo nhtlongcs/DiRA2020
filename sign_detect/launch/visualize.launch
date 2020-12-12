@@ -1,6 +1,0 @@
-<launch>
-    <include file="$(find astra_camera)/launch/astra.launch" />
-    <rosparam file="$(find sign_detect)/data/parameters.yaml" ns="sign_detect"/>
-    <node name="yolo_onnx_trt" pkg="sign_detect" type="yolo-onnx-trt" output="screen" args="" ns="sign_detect"/>
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find sign_detect)/rviz/sign_visualize.rviz" />
-</launch>
