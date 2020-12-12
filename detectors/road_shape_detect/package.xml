@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>road_shape_detect</name>
+  <version>0.0.0</version>
+  <description>The road_shape_detect package</description>
+  <maintainer email="ken@todo.todo">ken</maintainer>
+  <license>TODO</license>
+
+  <depend>lanenet</depend>
+  <depend>roscpp</depend>
+  <depend>image_transport</depend>
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
