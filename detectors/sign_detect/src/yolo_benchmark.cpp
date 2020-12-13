@@ -3,12 +3,14 @@
 #include <ros/package.h>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <cds_msgs/sign.h>
 
 #include <fstream>
 
 YoloOnnxTrt::YoloOnnxTrt(ros::NodeHandle const& nh, YoloParams const& params,
                          std::string const& subTopic,
-                         std::string const& pubTopic)
+                         std::string const& pubTopic,
+                         std::string const& pubIDTopic)
     : yolo(params),
       mNh(nh),
       mIt(nh),
@@ -20,6 +22,7 @@ YoloOnnxTrt::YoloOnnxTrt(ros::NodeHandle const& nh, YoloParams const& params,
   if (mVisualize) {
     mImgPub = mIt.advertise(pubTopic, 1);
   }
+  signPub = mNh.advertise<cds_msgs::sign>(pubIDTopic, 1);
   readClsName();
   ROS_ASSERT(mClsNames.size() == params.nbCls);
 }
@@ -62,6 +65,7 @@ cv::Mat YoloOnnxTrt::drawSampleBboxes(cv::Mat const& img,
 }
 
 void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
+  cds_msgs::sign signID_msg;
   cv_bridge::CvImageConstPtr inImgPtr;
   try {
     inImgPtr = cv_bridge::toCvShare(msg);
@@ -73,7 +77,12 @@ void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
   cv::Mat inputImage, outputImage;
   cv::cvtColor(inImgPtr->image, inputImage, cv::COLOR_BGR2RGB);
   auto bboxes = yolo.detectImg(inputImage);
-  ROS_INFO_STREAM("BBOXES LENGTH = " << bboxes.size());
+  if (bboxes.size() > 0)
+  {
+    signID_msg.sign_id = bboxes[0].cls + 1;
+    signPub.publish(signID_msg);
+  }
+  // ROS_INFO_STREAM("BBOXES LENGTH = " << bboxes.size());
   auto end = std::chrono::high_resolution_clock::now();
   if (mVisualize && ++inferCount == 3) {
     cv_bridge::CvImage outImg;
@@ -97,9 +106,10 @@ int main(int argc, char** argv) {
   ros::param::param<int>("~keepTopK", params.keepTopK, 1);
   ros::param::param<int>("~nbCls", params.nbCls, 6);
 
-  std::string rgbTopic, signTopic;
+  std::string rgbTopic, signTopic, signIdTopic;
   ROS_ASSERT(ros::param::get("/rgb_topic", rgbTopic));
   ROS_ASSERT(ros::param::get("/sign_topic", signTopic));
+  ROS_ASSERT(ros::param::get("/signid_topic", signIdTopic));
 
   std::string engineFile;
   ros::param::get("~engineFile", engineFile);
@@ -107,7 +117,7 @@ int main(int argc, char** argv) {
 
   try {
     ROS_INFO("[YoloOnnxTrt] Initializing node");
-    YoloOnnxTrt yot(nh, params, rgbTopic, signTopic);
+    YoloOnnxTrt yot(nh, params, rgbTopic, signTopic, signIdTopic);
     ros::spin();
   } catch (std::runtime_error const& err) {
     ROS_FATAL_STREAM(err.what());

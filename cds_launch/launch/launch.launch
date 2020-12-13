@@ -30,6 +30,7 @@
     <param name="control_topic" value="/control" />
     <param name="lane_segmentation_topic" value="/lane_segmentation" />
     <param name="sign_topic" value="/sign" />
+    <param name="signid_topic" value="/sign_id" />
     <param name="lane_detect_topic" value="/lane" />
     <param name="object_topic" value="/object" />
     <param name="road_segmentation_topic" value="            /road_segmentation" />

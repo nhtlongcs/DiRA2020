@@ -19,6 +19,17 @@ enum class TurningState : int{
     DONE,
 };
 
+enum class SignState : int{
+    NOSIGN,
+    LEFT,
+    FORWARD,
+    RIGHT,
+    NO_LEFT,
+    NO_RIGHT,
+    STOP,
+    DONE,
+};
+
 enum class AvoidObjectState : int{
     READY,
     ON_AVOIDING,
@@ -89,7 +100,7 @@ private:
     int drivePointY = 240 - 70;
 
     int countTurning, delay; // for turning
-    int prevSign, sign;      // for signDetect
+    SignState prevSign, sign;      // for signDetect
     int prevObject, object;  // for signDetect
     int rate;
 

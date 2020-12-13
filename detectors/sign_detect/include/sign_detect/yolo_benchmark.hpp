@@ -9,7 +9,7 @@
 class YoloOnnxTrt {
  public:
   YoloOnnxTrt(ros::NodeHandle const& nh, YoloParams const& params,
-              std::string const& subTopic, std::string const& pubTopic);
+              std::string const& subTopic, std::string const& pubTopic, std::string const& pubIDTopic);
 
  private:
   cv::Mat drawSampleBboxes(cv::Mat const& img, std::vector<BBox> const& bboxes);
@@ -19,6 +19,7 @@ class YoloOnnxTrt {
   image_transport::ImageTransport mIt;
   image_transport::Subscriber mImgSub;
   image_transport::Publisher mImgPub;
+  ros::Publisher signPub;
   void imgCallback(sensor_msgs::ImageConstPtr const& msg);
   bool mVisualize = true;
 
