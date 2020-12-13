@@ -4,6 +4,7 @@
 #include <cmath>
 #include <array>
 #include <cv_bridge/cv_bridge.h>
+#include "common/lineparams.h"
 using namespace Eigen;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +48,7 @@ double polyeval(Eigen::VectorXd coeffs, double x)
   return result;
 }
 
-std::shared_ptr<LineParams> calcLineParams(const std::vector<cv::Point> &listPoint)
+LineParams calcLineParams(const std::vector<cv::Point> &listPoint)
 {
   Eigen::VectorXd xvals{listPoint.size()}, yvals{listPoint.size()};
 
@@ -58,12 +59,9 @@ std::shared_ptr<LineParams> calcLineParams(const std::vector<cv::Point> &listPoi
   }
 
   auto coeff = polyfit(xvals, yvals, 2);
-  auto result = std::make_shared<LineParams>();
-  (*result)[0] = coeff[2];
-  (*result)[1] = coeff[1];
-  (*result)[2] = coeff[0];
-
-  return result;
+  return LineParams{static_cast<float>(coeff[2]),
+                    static_cast<float>(coeff[1]),
+                    static_cast<float>(coeff[0])};
 }
 
 int getXByY(const LineParams &params, double y)

@@ -17,6 +17,8 @@ Planning::Planning()
     : _nh{"planning"}, _configServer{_nh}, prevObject{0}, object{0}, laneToDriveCloseTo{RIGHT}
     , objectState{AvoidObjectState::DONE}
     , turningState{TurningState::DONE}
+    , leftParams{nullptr}
+    , rightParams{nullptr}
 {
     std::string control_topic, sign_topic, lane_topic, object_topic;
     ROS_ASSERT(ros::param::get("/lane_detect_topic", lane_topic));
@@ -24,7 +26,12 @@ Planning::Planning()
     ROS_ASSERT(ros::param::get("/object_topic", object_topic));
     ROS_ASSERT(ros::param::get("/control_topic", control_topic));
 
+    std::string recoverSrvTopic;
+    ROS_ASSERT(ros::param::get("/recover_lane_srv", recoverSrvTopic));
+
     _resetLaneClient = _nh.serviceClient<cds_msgs::ResetLane>("reset_lane");
+    _recoverClient = _nh.serviceClient<cds_msgs::RecoverLane>(recoverSrvTopic);
+
     _controlPub = _nh.advertise<geometry_msgs::Twist>(control_topic, 1);
     _laneSub = _nh.subscribe(lane_topic, 1, &Planning::laneCallback, this);
     _signSub = _nh.subscribe(sign_topic, 1, &Planning::signCallback, this);
@@ -59,7 +66,7 @@ void Planning::planning()
 
 void Planning::planningWhileDriveStraight(const float& min_speed, const float& max_speed)
 {
-    if (!leftParams || !rightParams)
+    if (!leftParams && !rightParams)
     {
         ROS_WARN("Both lanes not found. Not planning");
         return;
@@ -75,11 +82,11 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
     else if (leftParams)
     {
         ROS_DEBUG("Only left found.");
-        if (!requestRecover(RIGHT))
-        {
-            drivePoint = driveStraight();
-        }
-        else
+        // if (requestRecover(RIGHT))
+        // {
+        //     drivePoint = driveStraight();
+        // }
+        // else
         {
             drivePoint = driveCloseToLeft();
         }
@@ -87,15 +94,17 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
     else if (rightParams)
     {
         ROS_DEBUG("Only right found.");
-        if (!requestRecover(LEFT))
-        {
-            drivePoint = driveStraight();
-        }
-        else
+        // if (requestRecover(LEFT))
+        // {
+        //     drivePoint = driveStraight();
+        // }
+        // else
         {
             drivePoint = driveCloseToRight();
         }
     }
+
+    ROS_INFO_STREAM("drivePoint: " << drivePoint);
 
     publishMessage(drivePoint, max_speed);
 }
@@ -222,10 +231,8 @@ cv::Point Planning::driveStraight()
         return driveCloseToRight();
     } else
     {
-        LineParams midParams;
-        for (int i = 0; i < midParams.size(); i++)
-            midParams[i] = ((*leftParams)[i] + (*rightParams)[i]) / 2.0f;
-        int x = getXByY(midParams, drivePointY); // TODO: change to ros::getParam
+        LineParams midParams = (*leftParams + *rightParams) / 2.0;
+        int x = getXByY(midParams, drivePointY);
         return cv::Point{x, drivePointY};
     }
 }
@@ -289,7 +296,10 @@ void Planning::laneCallback(const cds_msgs::lane &msg)
         {
             leftParams = std::make_shared<LineParams>();
         }
-        std::copy_n(msg.left_params.begin(), leftParams->size(), leftParams->begin());
+        for (int i = 0; i < msg.left_params.size(); i++)
+        {
+            (*leftParams)[i] = msg.left_params[i];
+        }
     }
 
     if (msg.right_params.empty())
@@ -302,7 +312,10 @@ void Planning::laneCallback(const cds_msgs::lane &msg)
         {
             rightParams = std::make_shared<LineParams>();
         }
-        std::copy_n(msg.right_params.begin(), rightParams->size(), rightParams->begin());
+        for (int i = 0; i < msg.right_params.size(); i++)
+        {
+            (*rightParams)[i] = msg.right_params[i];
+        }
     }
 }
 
@@ -333,22 +346,32 @@ void Planning::objectCallback(const std_msgs::Int8 &msg)
 void Planning::requestResetLane(int lane)
 {
     cds_msgs::ResetLane srv;
-    srv.request.lane = lane;
+    if (lane == LEFT)
+    {
+        srv.request.lane = srv.request.LEFT;
+    } else if (lane == RIGHT)
+    {
+        srv.request.lane = srv.request.RIGHT;
+    }
     if (_resetLaneClient.call(srv))
     {
-        leftParams = std::make_shared<LineParams>();
-        if (lane < 0)
+        LineParams::ImplType params;
+        if (srv.request.lane == srv.request.LEFT)
         {
-            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), leftParams->begin());
+            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), params.begin());
+            leftParams = std::make_shared<LineParams>(params);
         }
-        else if (lane > 0)
+        else if (srv.request.lane == srv.request.RIGHT)
         {
-            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), rightParams->begin());
+            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), params.begin());
+            rightParams = std::make_shared<LineParams>(params);
         }
         else
         {
-            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), leftParams->begin());
-            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), rightParams->begin());
+            std::copy(srv.response.left_params.begin(), srv.response.left_params.end(), params.begin());
+            leftParams = std::make_shared<LineParams>(params);
+            std::copy(srv.response.right_params.begin(), srv.response.right_params.end(), params.begin());
+            rightParams = std::make_shared<LineParams>(params);
         }
     }
     else
@@ -359,24 +382,46 @@ void Planning::requestResetLane(int lane)
 
 bool Planning::requestRecover(int lane)
 {
-    // cds_msgs::RecoverLane srv;
-    // srv.request.lane = lane;
-    // if (_recoverClient.call(srv))
-    // {
-    //     if (srv.response.lane == -1)
-    //     {
-    //         std::copy(srv.response.params.begin(), srv.response.params.end(), leftParams->begin());
-    //     }
-    //     else if (srv.response.lane == 1)
-    //     {
-    //         std::copy(srv.response.params.begin(), srv.response.params.end(), rightParams->begin());
-    //     }
-    // }
-    // else
-    // {
-    //     ROS_ERROR("Failed to call service drive_point");
-    // }
-    return false;
+    cds_msgs::RecoverLane srv;
+    if (lane == RIGHT)
+    {
+        ROS_DEBUG("Request Recover Right lane");
+        srv.request.lane = srv.request.RIGHT;
+    } else if (lane == LEFT)
+    {
+        ROS_DEBUG("Request Recover Left lane");
+        srv.request.lane = srv.request.LEFT;
+    }
+
+    if (_recoverClient.call(srv))
+    {
+        ROS_DEBUG("Request Recover Receive results...");
+        std::shared_ptr<LineParams> params = nullptr;
+        if (srv.response.params.size() > 0)
+        {
+            ROS_DEBUG_STREAM("Request Recover Receive results OK, size = " << srv.response.params.size());
+            auto p = LineParams::ImplType();
+            std::copy(srv.response.params.begin(), srv.response.params.end(), p.begin());
+            params = std::make_shared<LineParams>(p);
+            ROS_DEBUG_STREAM("New params: " << p[0] << ' ' << p[1] << ' ' << p[2]);
+        }
+
+        if (srv.request.lane == srv.request.LEFT)
+        {
+            leftParams = params;
+        }
+        else if (srv.request.lane == srv.request.RIGHT)
+        {
+            rightParams = params;
+        }
+        ROS_DEBUG("OK");
+        return true;
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service requestRecover");
+        return false;
+    }
 }
 
 bool Planning::requestIsAbleToTurn(int direction)

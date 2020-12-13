@@ -9,6 +9,8 @@
 #include "lane_detect/LaneConfig.h"
 #include "lane_detect/laneline.h"
 #include "cds_msgs/IsTurnable.h"
+#include "cds_msgs/ResetLane.h"
+#include "cds_msgs/RecoverLane.h"
 
 class LaneDetect
 {
@@ -22,9 +24,11 @@ public:
     void updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg);
 
     bool isTurnable(cds_msgs::IsTurnableRequest& req, cds_msgs::IsTurnableResponse& res);
+    bool resetLaneSrv(cds_msgs::ResetLaneRequest& req, cds_msgs::ResetLaneResponse& res);
+    bool recoverLaneSrv(cds_msgs::RecoverLaneRequest& req, cds_msgs::RecoverLaneResponse& res);
+
 private:
     void publishMessage() const;
-    void openCVVisualize() const;
 
     cv::Mat birdviewTransform(cv::Mat inputImage, cv::Mat &resultM) const;
     cv::Mat extractFeatureY(cv::Mat img) const;
@@ -87,6 +91,8 @@ private:
     ros::NodeHandle _nh;
     ros::Publisher _lanePub;
     ros::ServiceServer _isTurnableSrv;
+    ros::ServiceServer _resetLaneSrv;
+    ros::ServiceServer _recoverLaneSrv;
 
     image_transport::ImageTransport _image_transport;
     image_transport::Subscriber _binaryImageSub;

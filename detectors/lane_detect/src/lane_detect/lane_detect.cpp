@@ -34,6 +34,13 @@ LaneDetect::LaneDetect(bool isDebug)
     _binaryImageSub = _image_transport.subscribe(lane_seg_topic, 1, &LaneDetect::updateBinaryCallback, this, transport_hint);
     _depthImageSub = _image_transport.subscribe(depth_topic, 1, &LaneDetect::updateDepthCallback, this, transport_hint);
     _configServer.setCallback(std::bind(&LaneDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
+
+    std::string resetSrvTopic, recoverSrvTopic;
+    ROS_ASSERT(ros::param::get("/reset_lane_srv", resetSrvTopic));
+    ROS_ASSERT(ros::param::get("/recover_lane_srv", recoverSrvTopic));
+
+    _resetLaneSrv = _nh.advertiseService(resetSrvTopic, &LaneDetect::resetLaneSrv, this);
+    _recoverLaneSrv = _nh.advertiseService(recoverSrvTopic, &LaneDetect::recoverLaneSrv, this);
 }
 
 LaneDetect::~LaneDetect()
@@ -76,11 +83,46 @@ bool LaneDetect::isNeedRedetect(const LaneLine& left, const LaneLine& right) con
     return false;
 }
 
+bool LaneDetect::resetLaneSrv(cds_msgs::ResetLaneRequest& req, cds_msgs::ResetLaneResponse& res)
+{
+    if (req.lane == req.LEFT)
+    {
+        this->left.reset();
+        res.left_params.clear();
+    } else if (req.lane == req.RIGHT)
+    {
+        this->right.reset();
+        res.right_params.clear();
+    } else
+    {
+        this->left.reset();
+        this->right.reset();
+        res.left_params.clear();
+        res.right_params.clear();
+    }
+    return true;
+}
+
+bool LaneDetect::recoverLaneSrv(cds_msgs::RecoverLaneRequest& req, cds_msgs::RecoverLaneResponse& res)
+{
+    ROS_DEBUG("Receive Recover Lane Request");
+    if (req.lane == req.LEFT && this->left.recoverFrom(right, this->initLaneWidth))
+    {
+        res.params.insert(res.params.begin(), left.getLineParams().begin(), left.getLineParams().end());
+        ROS_DEBUG("Recover Left lane OK");
+        return true;
+    } else if (req.lane == req.RIGHT && this->right.recoverFrom(left, this->initLaneWidth))
+    {
+        res.params.insert(res.params.begin(), right.getLineParams().begin(), right.getLineParams().end());
+        auto params = right.getLineParams();
+        return true;
+    }
+    ROS_DEBUG("Recover FAIL");
+    return false;
+}
+
 void LaneDetect::detect()
 {
-    cv::imshow("Receive segment", this->binary);
-    cv::waitKey(1);
-
     this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
 
     birdview(cv::Rect(0, 0, birdview.cols, dropTop)) = cv::Scalar{0};
@@ -212,8 +254,7 @@ void LaneDetect::detect()
             right.showLinePoints(debugImage);
         }
         cv::imshow(LANE_WINDOW, debugImage);
-        cv::waitKey(1);
-        // openCVVisualize();
+-       cv::waitKey(1);
     }
 }
 

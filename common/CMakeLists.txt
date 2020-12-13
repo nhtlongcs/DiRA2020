@@ -21,8 +21,9 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/libcommon.cpp
-  src/logger.cpp
+  src/common/libcommon.cpp
+  src/common/lineparams.cpp
+  src/trt/logger.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include   ${catkin_INCLUDE_DIRS}

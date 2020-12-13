@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include "common/lineparams.h"
 
 enum Direct {
     LEFT = -1,
@@ -12,10 +13,8 @@ enum Direct {
     RIGHT = 1,
 };
 
-typedef std::array<double, 3> LineParams;
-
 // x = ay^2 + by + c
-std::shared_ptr<LineParams> calcLineParams(const std::vector<cv::Point> &listPoint);
+LineParams calcLineParams(const std::vector<cv::Point> &listPoint);
 
 int getXByY(const LineParams &params, double y);
 

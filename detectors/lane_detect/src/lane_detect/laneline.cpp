@@ -94,7 +94,7 @@ void LaneLine::track()
 
     if (trackingPoints.size() >= minPointTrack)
     {
-        lineParams = calcLineParams(trackingPoints);
+        lineParams = std::make_shared<LineParams>(calcLineParams(trackingPoints));
     }
     else
     {
@@ -119,7 +119,7 @@ void LaneLine::detect()
 
         if (points.size() > minPointDetect)
         {
-            lineParams = calcLineParams(points);
+            lineParams = std::make_shared<LineParams>(calcLineParams(points));
         }
     }
 }
@@ -307,25 +307,17 @@ bool LaneLine::recoverFrom(const LaneLine& lane, int laneWidth)
 
     std::vector<cv::Point> &&movedPoints = lane.moveByGradient(laneWidth);
     auto newParams = calcLineParams(movedPoints);
-    if (newParams)
-    {
-        lineParams = newParams;
-        track();
-        return isFound();
-    }
-    else
-    {
-        return false;
-    }
+    lineParams = std::make_shared<LineParams>(newParams);
+    track();
+    return isFound();
 }
 
 void LaneLine::setLineParams(const LineParams& other)
 {
     if (!this->lineParams)
     {
-        this->lineParams = std::make_shared<LineParams>();
+        this->lineParams = std::make_shared<LineParams>(other);
     }
-    std::copy(other.begin(), other.end(), this->lineParams->begin());
 }
 
 //////////////////////////////////////////
