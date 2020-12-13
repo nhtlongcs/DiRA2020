@@ -55,13 +55,20 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
     angle_msg.data = (kP * t_kP + kI * t_kI + kD * t_kD) / 1000.;
     // speed.data = fabs(error) < 1 ? maxVelocity : (velocity - fabs(error) * 0.35);
 
-    if (abs(angle_msg.data) > 40)
+    if (abs(angle_msg.data) < 40)
     {
-        speed = 5;
+        speed = maxVelocity * (1 - abs(angle_msg.data) / 45.0f);
+        
     }
-    else
+    else 
     {
-        // speed = speed * (1 - abs(angle_msg.data) / 45.0f);
+        speed = minVelocity;
+        if (abs(angle_msg.data) > 50)
+        {
+            t_kP = 0.0;
+            t_kI = 0.0;
+            t_kD = 0.0;
+        }
     }
 
     ROS_DEBUG("Send speed = %.2f, steer = %.2f", speed, error);
@@ -71,7 +78,7 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
     preError = error;
 
     angle_msg.data = error;
-    speed_msg.data = speed;
+    speed_msg.data = speed;// speed;
 
     steer_publisher.publish(angle_msg);
     speed_publisher.publish(speed_msg);
