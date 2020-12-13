@@ -32,25 +32,33 @@
     <param name="sign_topic" value="/sign" />
     <param name="lane_detect_topic" value="/lane" />
     <param name="object_topic" value="/object" />
+    <param name="road_segmentation_topic" value="/road_segmentation" />
 
-    <!-- <node name="mobile_net" pkg="mobilenet" type="mobilenet_node.py" required="true" output="screen">
-        <param name="weight_path" value="$(find mobilenet)/model/unet.pb" />
-        <param name="use_deep" value="true" />
-    </node> -->
-        <!-- <param name="weight_path" value="/home/ubuntu/catkin_ws/src/dira/detectors/mobilenet/model/unet.pb" /> -->
+    <!-- Common publish services -->
+    <param name="lane_seg_mode_trigger_srv" value="/lane_seg_mode_trigger_srv" />
+    <param name="road_seg_mode_trigger_srv" value="/road_seg_mode_trigger_srv" />
+    <param name="reset_lane_srv" value="/reset_lane_srv" />
+    <param name="recover_lane_srv" value="/recover_lane_srv" />
+
+    <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" />
+
+    <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
+        <param name="batchSize" value="1"/>
+        <param name="channel" value="3"/>
+        <param name="height" value="224"/>
+        <param name="width" value="224"/>
+        <param name="engineFile" value="data/mobilenet_unet_v2.trt"/>
+    </node>
 
     <!-- <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" /> -->
 
     <!-- <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" /> -->
-    
-    <!-- <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" /> -->
 
-    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen" args="_image_transport:=compressed">
-    </node> -->
+    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen" /> -->
 
     <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" args="_image_transport:=compressed" /> -->
 
     <!-- Logging -->
-    <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->
+    <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" />
     
 </launch>
