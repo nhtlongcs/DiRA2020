@@ -76,21 +76,21 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
 
     cv::Point drivePoint;
 
-    if (leftParams && rightParams)
-    {
-        ROS_DEBUG("Both lanes found. DriveStraight");
+    if (leftParams || rightParams)
         drivePoint = driveStraight();
-    }
-    else if (leftParams)
-    {
-        ROS_DEBUG("Only left found.");
-        drivePoint = driveCloseToLeft();
-    }
-    else if (rightParams)
-    {
-        ROS_DEBUG("Only right found.");
-        drivePoint = driveCloseToRight();
-    }
+    // {
+        // ROS_DEBUG("Both lanes found. DriveStraight");
+    // }
+    // else if (leftParams)
+    // {
+    //     ROS_DEBUG("Only left found.");
+    //     drivePoint = driveCloseToLeft();
+    // }
+    // else if (rightParams)
+    // {
+    //     ROS_DEBUG("Only right found.");
+    //     drivePoint = driveCloseToRight();
+    // }
 
     ROS_INFO_STREAM("drivePoint: " << drivePoint);
 
@@ -153,14 +153,35 @@ cv::Point Planning::driveCloseToLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 20;
+    }
+    return leftDrive;
+}
+cv::Point Planning::driveCloseToRightFromLeft()
+{
+    ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    cv::Point leftDrive{0, drivePointY};
+    if (leftParams != nullptr)
+    {
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 100;
+    }
+    return leftDrive;
+}
+cv::Point Planning::driveStraightFromLeft()
+{
+    // ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    cv::Point leftDrive{0, drivePointY};
+    if (leftParams != nullptr)
+    {
         leftDrive.x = getXByY(*leftParams, drivePointY) + 50;
     }
     return leftDrive;
 }
 
-cv::Point Planning::driveCloseToRight()
+
+cv::Point Planning::driveStraightFromRight()
 {
-    ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    // ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
@@ -168,10 +189,31 @@ cv::Point Planning::driveCloseToRight()
     }
     return rightDrive;
 }
+cv::Point Planning::driveCloseToRight()
+{
+    ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    cv::Point rightDrive{319, drivePointY};
+    if (rightParams != nullptr)
+    {
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 20;
+    }
+    return rightDrive;
+}
+cv::Point Planning::driveCloseToLeftFromRight()
+{
+    ROS_DEBUG("DRIVE CLOSE TO THE LEFT SIDE");
+    cv::Point rightDrive{319, drivePointY};
+    if (rightParams != nullptr)
+    {
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 100;
+    }
+    return rightDrive;
+}
 
 cv::Point Planning::driveStraight()
 {
     ROS_DEBUG_COND(object != 0, "DRIVE STRAIGHT OBJECT = %d", object);
+    ROS_DEBUG_COND(object != 0, "OBJECT STATE = %d", objectState);
     switch (objectState)
     {
         case AvoidObjectState::READY:
@@ -185,18 +227,24 @@ cv::Point Planning::driveStraight()
             objectState = AvoidObjectState::ON_AVOIDING;
             objectDirect = object;
 
-            break;
+            // break;
         }
         case AvoidObjectState::ON_AVOIDING:
         {
             ROS_DEBUG("On avoiding");
             if (objectDirect == RIGHT)
             {
-                return driveCloseToLeft();
+                if (leftParams)
+                    return driveCloseToLeft();
+                else
+                    return driveCloseToLeftFromRight();
             }
             else if (objectDirect == LEFT)
             {
-                return driveCloseToRight();
+                if (rightParams)    
+                    return driveCloseToRight();
+                else 
+                    return driveCloseToRightFromLeft();
             }
             break;
         }
@@ -214,16 +262,29 @@ cv::Point Planning::driveStraight()
 
     if (laneToDriveCloseTo == LEFT)
     {
-        return driveCloseToLeft();
+        if (leftParams)
+            return driveCloseToLeft();
+        else
+            return driveCloseToLeftFromRight();
     } else if (laneToDriveCloseTo == RIGHT)
     {
-        return driveCloseToRight();
+        if (rightParams)    
+            return driveCloseToRight();
+        else 
+            return driveCloseToRightFromLeft();
     } else
     {
-        // ROS_DEBUG_STREAM("LEFT %.2f %.2f %.2f ");
-        LineParams midParams = (*leftParams + *rightParams) / 2.0;
-        int x = getXByY(midParams, drivePointY);
-        return cv::Point{x, drivePointY};
+        if (rightParams && leftParams){ 
+            LineParams midParams = (*leftParams + *rightParams) / 2.0;
+            int x = getXByY(midParams, drivePointY);
+            return cv::Point{x, drivePointY};
+        }
+        else if (rightParams){
+            return driveStraightFromRight();
+        }
+        else if (leftParams){
+            return driveStraightFromLeft();
+        }
     }
 }
 

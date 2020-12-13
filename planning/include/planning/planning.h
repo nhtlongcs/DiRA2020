@@ -52,7 +52,11 @@ private:
 private:
     void publishMessage(const cv::Point& drivePoint, float speed);
     cv::Point driveCloseToLeft();
+    cv::Point driveCloseToLeftFromRight();
     cv::Point driveCloseToRight();
+    cv::Point driveCloseToRightFromLeft();
+    cv::Point driveStraightFromLeft();
+    cv::Point driveStraightFromRight();
     cv::Point driveStraight();
     cv::Point turnLeft();
     cv::Point turnRight();
