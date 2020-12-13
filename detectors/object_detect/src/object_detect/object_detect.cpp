@@ -26,10 +26,17 @@ ObjectDetect::ObjectDetect()
     , _it{_nh}
 {
     std::string transport_hint = _nh.param<std::string>("transport_hint", "compressed");
+    std::string objectTopic;
+    ROS_ASSERT(ros::param::get("/object_topic", objectTopic));
+
     _serverConfig.setCallback(boost::bind(&ObjectDetect::configCallback, this, _1, _2));
-    _objPub = _nh.advertise<std_msgs::Int8>("object", 1);
-    _depthSub = _it.subscribe("/camera/depth/image", 1, &ObjectDetect::updateDepthCallback, this, image_transport::TransportHints{transport_hint});
-    _binarySub = _it.subscribe("/mobile_net/lane_seg", 1, &ObjectDetect::updateBinaryCallback, this, image_transport::TransportHints{transport_hint});
+    _objPub = _nh.advertise<std_msgs::Int8>(objectTopic, 1);
+
+    std::string depth_topic, lane_seg_topic;
+    ROS_ASSERT(ros::param::get("/depth_topic", depth_topic));
+    ROS_ASSERT(ros::param::get("/lane_segmentation_topic", lane_seg_topic));
+    _depthSub = _it.subscribe(depth_topic, 1, &ObjectDetect::updateDepthCallback, this, image_transport::TransportHints{transport_hint});
+    _binarySub = _it.subscribe(lane_seg_topic, 1, &ObjectDetect::updateBinaryCallback, this, image_transport::TransportHints{transport_hint});
 
     // cv::namedWindow(CONF_OBJ_WINDOW, cv::WINDOW_GUI_NORMAL);
     // cv::createTrackbar("clusterCount", CONF_OBJ_WINDOW, &kCluster, 10);
@@ -208,8 +215,8 @@ int ObjectDetect::getDirectOnRawBinary(const cv::Rect &objectROI)
     depthThresholded = this->depth(objectROI);
     cv::inRange(depthThresholded, cv::Scalar{depthThresholdMin * 1.0}, cv::Scalar{depthThresholdMax * 1.0}, depthThresholded);
 
-    cv::imshow("DepthThresholded", depthThresholded);
-    cv::waitKey(1);
+    // cv::imshow("DepthThresholded", depthThresholded);
+    // cv::waitKey(1);
     return estimateDirect(depthThresholded);
 }
 
@@ -260,43 +267,6 @@ int ObjectDetect::detectOneFrame()
     {
         ROS_ERROR("Binary image empty or depth empty. Make sure subscribing right topic");
         return 0;
-    }
-
-    {
-        using namespace std;
-        using namespace cv;
-        Mat gray;
-        gray = kmean(this->depth, 2);
-
-        // cvtColor(gray, gray, CV_BGR2GRAY);
-        cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0, 0);
-
-        vector<Vec3f> circles;
-
-        HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
-                     1,          // accumulator resolution (size of the image / 2)
-                     300,        // minimum distance between two circles
-                     canny_sign, // Canny high threshold
-                     votes_sign, // minimum number of votes
-                     0, 100);    // min and max radius
-
-        for (size_t i = 0; i < circles.size(); i++)
-        {
-            Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
-            int radius = cvRound(circles[i][2]);
-            // circle center
-            // circle(this->depth, center, 3, Scalar(127), -1, 8, 0);
-            // // circle outline
-            // circle(this->depth, center, radius, Scalar(100), 3, 8, 0);
-
-            radius += 10;
-            cv::Rect roi(center.x - radius, center.y - radius, radius * 2, radius * 2);
-
-            if ((roi & cv::Rect(0, 0, gray.cols, gray.rows)) == roi)
-            {
-                this->depth(roi) = cv::Scalar{0};
-            }
-        }
     }
 
     Hough(this->binary);
@@ -389,8 +359,8 @@ void ObjectDetect::Hough(const cv::Mat &binary)
 
     cv::Mat depthThresholded;
     cv::inRange(depth, depthThresholdMin, depthThresholdMax, depthThresholded);
-    cv::imshow("Depth", depthThresholded);
-    cv::waitKey(1);
+    // cv::imshow("Depth", depthThresholded);
+    // cv::waitKey(1);
 
     cv::cvtColor(depthThresholded, colorBinary, cv::COLOR_GRAY2BGR);
     cv::addWeighted(colorBinary, 0.5, HoughTransform, 1, 1, HoughTransform);
