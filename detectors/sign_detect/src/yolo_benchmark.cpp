@@ -70,13 +70,16 @@ void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     return;
   }
   auto start = std::chrono::high_resolution_clock::now();
-  auto bboxes = yolo.detectImg(inImgPtr->image);
+  cv::Mat inputImage, outputImage;
+  cv::cvtColor(inImgPtr->image, inputImage, cv::COLOR_BGR2RGB);
+  auto bboxes = yolo.detectImg(inputImage);
   ROS_INFO_STREAM("BBOXES LENGTH = " << bboxes.size());
   auto end = std::chrono::high_resolution_clock::now();
   if (mVisualize && ++inferCount == 3) {
     cv_bridge::CvImage outImg;
     outImg.encoding = "bgr8";
-    outImg.image = drawSampleBboxes(inImgPtr->image, bboxes);
+    outputImage = drawSampleBboxes(inImgPtr->image, bboxes);
+    cv::cvtColor(outputImage, outImg.image, cv::COLOR_RGB2BGR);
     mImgPub.publish(outImg.toImageMsg());
     inferCount = 0;
   }

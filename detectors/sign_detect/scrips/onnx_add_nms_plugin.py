@@ -15,20 +15,20 @@
 #
 
 #!/usr/bin/env python3
+import argparse
 import onnx_graphsurgeon as gs
 import onnx
 import numpy as np
-import yaml
 from pathlib import Path
+import re
 
 
-def create_and_add_plugin_node(graph, cfg):
+def create_and_add_plugin_node(graph, args):
     batch_size = graph.inputs[0].shape[0]
     tensors = graph.tensors()
     boxes_tensor = tensors["boxes"]
     confs_tensor = tensors["confs"]
-
-    keepTopK = int(cfg["keepTopK"])
+    keepTopK = int(args.keepTopK)
 
     num_detections = gs.Variable(name="num_detections").to_variable(
         dtype=np.int32, shape=[batch_size, 1]
@@ -50,11 +50,11 @@ def create_and_add_plugin_node(graph, cfg):
         attrs={
             "shareLocation": 1,
             "backgroundLabelId": -1,
-            "numClasses": int(cfg["nbCls"]),
-            "topK": int(cfg["topK"]),
+            "numClasses": int(args.nbCls),
+            "topK": int(args.topK),
             "keepTopK": keepTopK,
-            "scoreThreshold": float(cfg["scoreThreshold"]),
-            "iouThreshold": float(cfg["iouThreshold"]),
+            "scoreThreshold": float(args.score),
+            "iouThreshold": float(args.iou),
             "isNormalized": 1,
             "clipBoxes": 1,
             "plugin_version": "1",
@@ -69,34 +69,39 @@ def create_and_add_plugin_node(graph, cfg):
     return graph.cleanup().toposort()
 
 
-if __name__ == "__main__":
-    cfgPath = Path("data/parameters.yaml")
-    with cfgPath.open() as ifs:
-        try:
-            cfg = yaml.safe_load(ifs)
-        except yaml.YAMLError as err:
-            raise ValueError("Could not load params", err)
+parser = argparse.ArgumentParser(
+    description="Script to add nms layer to Yolo ONNX model"
+)
+parser.add_argument("onnx", metavar="FILE", help="path to onnx file")
+parser.add_argument(
+    "-k",
+    "--keepTopK",
+    metavar="FILE",
+    help="number of bounding boxes for nms",
+    default=1,
+)
+parser.add_argument("-t", "--topK", help="number of bounding boxes for nms", default=500)
+parser.add_argument(
+    "-s", "--score", help="number of bounding boxes for nms", default=0.4
+)
+parser.add_argument("-i", "--iou", help="number of bounding boxes for nms", default=0.6)
+parser.add_argument("--nbCls", help="number of classes", default=6)
 
-    onnxPath = Path(cfg["onnxFile"]).with_suffix(".onnx")
+if __name__ == "__main__":
+    args = parser.parse_args()
+    onnxPath = Path(args.onnx)
+
     if not onnxPath.exists():
         raise FileNotFoundError("Model not exists")
     if "nms" in str(onnxPath):
+        print(r"File name already has 'nms', do nothing")
         exit(0)
 
     graph = gs.import_onnx(onnx.load(onnxPath))
 
-    cfg["batchSize"] = graph.inputs[0].shape[0]
-    cfg["channel"] = graph.inputs[0].shape[1]
-    assert cfg["channel"] == 3
-    cfg["height"] = graph.inputs[0].shape[2]
-    cfg["width"] = graph.inputs[0].shape[3]
-
-    graph = create_and_add_plugin_node(graph, cfg)
+    graph = create_and_add_plugin_node(graph, args)
     print(f"Insert NMS layer to model {onnxPath} successfully")
 
     outPath = onnxPath.with_name(str(onnxPath.stem) + "_nms.onnx")
-    with cfgPath.open("w") as ofs:
-        yaml.safe_dump(cfg, ofs, sort_keys=False)
     onnx.save(gs.export_onnx(graph), outPath)
-
     print(f"Saved new model")
