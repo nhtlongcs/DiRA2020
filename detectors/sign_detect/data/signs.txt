@@ -1,5 +1,5 @@
 left
-forward
+forwardiPHONE
 right
 nleft
 nright

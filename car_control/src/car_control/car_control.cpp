@@ -26,9 +26,14 @@ CarControl::CarControl()
 
 void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t level)
 {
-    kP = config.P;
-    kI = config.I;
-    kD = config.D;
+    kCU = config.kCU;
+    PU = config.PU;
+    // kP = config.P;
+    // kI = config.I;
+    // kD = config.D;
+    kP = kCU / 1.7;
+    kI = PU / 2.0;
+    kD = PU / 8.0;
     carPos.x = config.carpos_x;
     carPos.y = config.carpos_y;
     minVelocity = config.min_velocity;
@@ -49,6 +54,10 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
 
     // carPos.x = 165;
     //PID controller
+    if (fabs(t_kI) > 200) // 40 * 5
+    {
+        t_kI = 0;
+    }
     t_kP = error;
     t_kI += error;
     t_kD = error - preError;
@@ -57,7 +66,7 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
 
     if (abs(angle_msg.data) < 40)
     {
-        speed = maxVelocity * (1 - abs(angle_msg.data) / 45.0f);
+        speed = maxVelocity * (1 - abs(angle_msg.data) / 40.0f);
         
     }
     else 

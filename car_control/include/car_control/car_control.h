@@ -29,9 +29,14 @@ private:
     float minVelocity = 10;
     float maxVelocity = 30;
     float preError;
-    int kP = 1;
-    int kI = 3;
-    int kD = 10;
+    // int kP = 1;
+    // int kI = 3;
+    // int kD = 10;
+    int kCU;
+    int PU;
+    float kP = 1;
+    float kI = 3;
+    float kD = 10;
     float t_kP = 0.0;
     float t_kI = 0.0;
     float t_kD = 0.0;

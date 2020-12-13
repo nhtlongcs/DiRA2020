@@ -32,7 +32,7 @@
     <param name="sign_topic" value="/sign" />
     <param name="lane_detect_topic" value="/lane" />
     <param name="object_topic" value="/object" />
-    <param name="road_segmentation_topic" value="/road_segmentation" />
+    <param name="road_segmentation_topic" value="            /road_segmentation" />
 
     <!-- Common publish services -->
     <param name="lane_seg_mode_trigger_srv" value="/lane_seg_mode_trigger_srv" />
@@ -40,7 +40,7 @@
     <param name="reset_lane_srv" value="/reset_lane_srv" />
     <param name="recover_lane_srv" value="/recover_lane_srv" />
 
-    <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" />
+    <!-- <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" /> -->
 
     <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
         <param name="batchSize" value="1"/>
@@ -50,15 +50,23 @@
         <param name="engineFile" value="data/mobilenet_unet_v2.trt"/>
     </node>
 
-    <!-- <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" /> -->
+    <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" />
 
-    <!-- <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" /> -->
+    <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
 
-    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen" /> -->
+    <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
+        <param name="batchSize" value="1"/>
+        <param name="channel" value="3"/>
+        <param name="height" value="288"/>
+        <param name="width" value="384"/>
+        <param name="keepTopK" value="1"/>
+        <param name="nbCls" value="6"/>
+        <param name="engineFile" value="data/yolov4.trt"/>
+    </node>
 
-    <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" args="_image_transport:=compressed" /> -->
+    <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" />
 
     <!-- Logging -->
-    <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" />
+    <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->
     
 </launch>
