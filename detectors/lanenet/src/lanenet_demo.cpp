@@ -51,6 +51,10 @@ void LaneNetDemo::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     {
       cv::convertScaleAbs(laneImgs.second, roadProcessed, 255, 0);
       cv::resize(roadProcessed, roadProcessed, inImgPtr->image.size());
+
+      cv::Mat road2 = roadProcessed.clone();
+      cv::floodFill(road2, cv::Point{roadProcessed.cols / 2, roadProcessed.rows - 10}, cv::Scalar{0});
+      cv::bitwise_xor(roadProcessed, road2, roadProcessed);
     } else
     {
       roadProcessed = roadImageProc(inImgPtr->image);

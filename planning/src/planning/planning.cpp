@@ -54,14 +54,15 @@ void Planning::planning()
     {
         ROS_WARN("Cannot get max_velocity from ParameterServer, use default = 30.0f");
     }
+    planningWhileDriveStraight(min_speed, max_speed);
 
-    if (turningState != TurningState::DONE)
-    {
-        planningWhileTurning(min_speed, max_speed);
-    } else
-    {
-        planningWhileDriveStraight(min_speed, max_speed);
-    }
+    // if (turningState != TurningState::DONE)
+    // {
+    //     planningWhileTurning(min_speed, max_speed);
+    // } else
+    // {
+    //     planningWhileDriveStraight(min_speed, max_speed);
+    // }
 }
 
 void Planning::planningWhileDriveStraight(const float& min_speed, const float& max_speed)
@@ -69,6 +70,7 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
     if (!leftParams && !rightParams)
     {
         ROS_WARN("Both lanes not found. Not planning");
+        publishMessage(lastDrivePoint, 0);
         return;
     }
 
@@ -82,31 +84,18 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
     else if (leftParams)
     {
         ROS_DEBUG("Only left found.");
-        // if (requestRecover(RIGHT))
-        // {
-        //     drivePoint = driveStraight();
-        // }
-        // else
-        {
-            drivePoint = driveCloseToLeft();
-        }
+        drivePoint = driveCloseToLeft();
     }
     else if (rightParams)
     {
         ROS_DEBUG("Only right found.");
-        // if (requestRecover(LEFT))
-        // {
-        //     drivePoint = driveStraight();
-        // }
-        // else
-        {
-            drivePoint = driveCloseToRight();
-        }
+        drivePoint = driveCloseToRight();
     }
 
     ROS_INFO_STREAM("drivePoint: " << drivePoint);
 
     publishMessage(drivePoint, max_speed);
+    lastDrivePoint = drivePoint;
 }
 
 void Planning::planningWhileTurning(const float& min_speed, const float& max_speed)
@@ -164,7 +153,7 @@ cv::Point Planning::driveCloseToLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 30;
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 50;
     }
     return leftDrive;
 }
@@ -175,7 +164,7 @@ cv::Point Planning::driveCloseToRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 30;
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 50;
     }
     return rightDrive;
 }
@@ -231,6 +220,7 @@ cv::Point Planning::driveStraight()
         return driveCloseToRight();
     } else
     {
+        // ROS_DEBUG_STREAM("LEFT %.2f %.2f %.2f ");
         LineParams midParams = (*leftParams + *rightParams) / 2.0;
         int x = getXByY(midParams, drivePointY);
         return cv::Point{x, drivePointY};

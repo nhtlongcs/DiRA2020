@@ -57,6 +57,8 @@ private:
     cv::Point turnLeft();
     cv::Point turnRight();
 
+    cv::Point lastDrivePoint;
+
 private:
     ros::NodeHandle _nh;
     ros::Publisher _controlPub;

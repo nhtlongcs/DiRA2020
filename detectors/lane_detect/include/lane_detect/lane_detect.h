@@ -11,6 +11,8 @@
 #include "cds_msgs/IsTurnable.h"
 #include "cds_msgs/ResetLane.h"
 #include "cds_msgs/RecoverLane.h"
+#include "lane_detect/lane_width_calculator.h"
+
 
 class LaneDetect
 {
@@ -18,10 +20,13 @@ public:
     LaneDetect(bool isDebug);
     ~LaneDetect();
     void detect();
+    void redetect();
+
 public:
     void configCallback(lane_detect::LaneConfig &config, uint32_t level);
     void updateDepthCallback(const sensor_msgs::ImageConstPtr& msg);
-    void updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg);
+    void updateLaneSegCallback(const sensor_msgs::ImageConstPtr &msg);
+    void updateRoadSegCallback(const sensor_msgs::ImageConstPtr &msg);
 
     bool isTurnable(cds_msgs::IsTurnableRequest& req, cds_msgs::IsTurnableResponse& res);
     bool resetLaneSrv(cds_msgs::ResetLaneRequest& req, cds_msgs::ResetLaneResponse& res);
@@ -41,15 +46,18 @@ private:
     cv::Point Hough(const cv::Mat &img, const cv::Mat &src);
 
     bool isNeedRedetect(const LaneLine& left, const LaneLine& right) const;
+    bool isCorrect(LaneLine* lane, const cv::Mat& roadSeg, int direct) const;
 
     LeftLane left;
     RightLane right;
+    LaneWidthCalculator laneWidthCalc;
 
     cv::Mat binary;
     cv::Mat birdview;
     cv::Mat birdviewTransformMatrix;
     cv::Mat debugImage;
     cv::Mat depth;
+    cv::Mat roadSeg;
 
     int roadInside_min[3] = {0, 0, 0};
     int roadInside_max[3] = {179, 40, 140};
@@ -72,8 +80,6 @@ private:
     int votes = 60;
     int minLinlength = 60;
     int maxLineGap = 5;
-    size_t sumLaneWidth = 0;
-    size_t frameCount = 0;
 
     bool usebirdview = true;
     bool showDetectRegion = true;
@@ -95,7 +101,8 @@ private:
     ros::ServiceServer _recoverLaneSrv;
 
     image_transport::ImageTransport _image_transport;
-    image_transport::Subscriber _binaryImageSub;
+    image_transport::Subscriber _laneSegSub;
+    image_transport::Subscriber _roadSegSub;
     image_transport::Subscriber _depthImageSub;
 
     dynamic_reconfigure::Server<lane_detect::LaneConfig> _configServer;

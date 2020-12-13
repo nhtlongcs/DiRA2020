@@ -10,6 +10,7 @@
 #include "lane_detect/lane_detect.h"
 #include "lane_detect/laneline.h"
 #include "lane_detect/LaneConfig.h"
+#include "lane_detect/lane_width_calculator.h"
 
 using namespace cv;
 using namespace std;
@@ -18,20 +19,23 @@ constexpr const char *CONF_BIRDVIEW_WINDOW = "Birdview";
 constexpr const char *LANE_WINDOW = "LaneDetect";
 
 LaneDetect::LaneDetect(bool isDebug)
-    : frameCount{0}, sumLaneWidth{0}, _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
+    : _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
+    , laneWidthCalc{10}
     , left{debugImage}, right{debugImage}
 {
     _isTurnableSrv = _nh.advertiseService("IsTurnable", &LaneDetect::isTurnable, this);
 
-    std::string lane_seg_topic, depth_topic, lane_output_topic, transport_hint_str;
+    std::string lane_seg_topic, road_seg_topic, depth_topic, lane_output_topic, transport_hint_str;
     ROS_ASSERT(ros::param::get("/lane_segmentation_topic", lane_seg_topic));
+    ROS_ASSERT(ros::param::get("/road_segmentation_topic", road_seg_topic));
     ROS_ASSERT(ros::param::get("/lane_detect_topic", lane_output_topic));
     ROS_ASSERT(ros::param::get("/depth_topic", depth_topic));
     ROS_ASSERT(ros::param::get("/transport_hint", transport_hint_str));
 
     _lanePub = _nh.advertise<cds_msgs::lane>(lane_output_topic, 1);
     image_transport::TransportHints transport_hint{transport_hint_str};
-    _binaryImageSub = _image_transport.subscribe(lane_seg_topic, 1, &LaneDetect::updateBinaryCallback, this, transport_hint);
+    _laneSegSub = _image_transport.subscribe(lane_seg_topic, 1, &LaneDetect::updateLaneSegCallback, this, transport_hint);
+    _roadSegSub = _image_transport.subscribe(road_seg_topic, 1, &LaneDetect::updateRoadSegCallback, this, transport_hint);
     _depthImageSub = _image_transport.subscribe(depth_topic, 1, &LaneDetect::updateDepthCallback, this, transport_hint);
     _configServer.setCallback(std::bind(&LaneDetect::configCallback, this, std::placeholders::_1, std::placeholders::_2));
 
@@ -135,113 +139,79 @@ void LaneDetect::detect()
     left.update(birdview);
     right.update(birdview);
 
-    if (left.isFound() && right.isFound())
+    if (roadSeg.empty())
     {
-        // TODO: reset if both 
-        // std::cout << '\t' << "LeftConfScore: " << left.getConfScore() << " RightConfScore " << right.getConfScore() << std::endl;
-        if (isNeedRedetect(left, right))
+        return;
+    }
+
+    if (right.isFound() && !isCorrect(&right, roadSeg, RIGHT))
+    {
+        ROS_DEBUG("RightLane is not correct");
+        right.reset();
+    }
+
+    if (left.isFound() && !isCorrect(&left, roadSeg, LEFT))
+    {
+        ROS_DEBUG("LeftLane is not correct");
+        left.reset();
+    }
+
+    if (isNeedRedetect(left, right))
+    {
+        ROS_DEBUG("Need Redetect due to closed lanes");
+        if (left.getConfScore() < right.getConfScore())
         {
-            // std::cout << "Redetect!!!" << std::endl;
-
+            ROS_DEBUG("Reset Left");
+            left.reset();
+            // left.update(birdview);
+            if (left.recoverFrom(right, initLaneWidth))
             {
-                // Plan 1: Reset 1 lane
-                if (left.getConfScore() < right.getConfScore())
-                {
-                    // std::cout << "Reset LEFT" << std::endl;
-                    left.reset();
-                    // left.update(birdview);
-                    if (left.recoverFrom(right, 90))
-                    {
-                        countRedetectLane = 0;
-                        // std::cout << "Recovered left from right!" <<  std::endl;
-                    } else
-                    {
-                        countRedetectLane++;
-                        // std::cout << "Cannot recover left from right!" <<  std::endl;
-                    }
-                } else if (right.getConfScore() < left.getConfScore())
-                {
-                    // std::cout << "Reset RIGHT" << std::endl;
-                    right.reset();
-                    // right.update(birdview);
-                    if (right.recoverFrom(left, 90))
-                    {
-                        // std::cout << "Recovered right from left" << std::endl;
-                        countRedetectLane = 0;
-                    } else
-                    {
-                        countRedetectLane++;
-                        // std::cout << "Cannot recover right from left" << std::endl;
-                    }
-                }
-            }
-
-            // std::cout << "Count Reset = " << countRedetectLane << std::endl;
+                countRedetectLane = 0;
+                // std::cout << "Recovered left from right!" <<  std::endl;
+            } else
             {
-                if (countRedetectLane < maxCountRedetectLane)
-                {
-                    if (left.getConfScore() < right.getConfScore())
-                    {
-                        // std::cout << "Reset LEFT" << std::endl;
-                        left.reset();
-                    } else if (right.getConfScore() < left.getConfScore())
-                    {
-                        // std::cout << "Reset RIGHT" << std::endl;
-                        right.reset();
-                    }
-                }
-                else
-                {
-                    // std::cout << "Plan 2" << std::endl;
-                    countRedetectLane = 0; // reset counting
-                    // Plan 2: Reset 2 lanes
-                    cv::Mat newLaneDebug;
-                    cv::cvtColor(this->birdview, newLaneDebug, cv::COLOR_GRAY2BGR);
-
-                    LeftLane newLeft{newLaneDebug};
-                    RightLane newRight{newLaneDebug};
-
-                    newLeft.update(birdview);
-                    newRight.update(birdview);
-                    if (newLeft.isFound() && newRight.isFound())
-                    {
-                        if (isNeedRedetect(newLeft, newRight))
-                        {
-                            // std::cout << "Plan 2 still need redetect!!!" << std::endl;
-                            if (left.getConfScore() < right.getConfScore())
-                            {
-                                // std::cout << "Reset LEFT" << std::endl;
-                                left.reset();
-                            } else if (right.getConfScore() < left.getConfScore())
-                            {
-                                // std::cout << "Reset RIGHT" << std::endl;
-                                right.reset();
-                            }
-                        } else
-                        {
-                            // std::cout << "Use new lanes" << std::endl;
-                            left.setLineParams(newLeft.getLineParams());
-                            right.setLineParams(newRight.getLineParams());
-                        }
-                    } else if (newLeft.isFound())
-                    {
-                        left.setLineParams(newLeft.getLineParams());
-                        right.reset();
-                    } else if (newRight.isFound())
-                    {
-                        left.reset();
-                        right.setLineParams(newRight.getLineParams());
-                    } else
-                    {
-                        left.reset();
-                        right.reset();
-                        // std::cout << "BOTH LANE NOT FOUND!" << std::endl;
-                    }
-                }
+                countRedetectLane++;
+                // std::cout << "Cannot recover left from right!" <<  std::endl;
             }
+        } else if (right.getConfScore() < left.getConfScore())
+        {
+            ROS_DEBUG("Reset Right");
+            right.reset();
+            // right.update(birdview);
+            if (right.recoverFrom(left, initLaneWidth))
+            {
+                // std::cout << "Recovered right from left" << std::endl;
+                countRedetectLane = 0;
+            } else
+            {
+                countRedetectLane++;
+                // std::cout << "Cannot recover right from left" << std::endl;
+            }
+        }
+        if (isNeedRedetect(left, right))
+            redetect();
 
+        if (isNeedRedetect(left, right)){
+            if (left.getConfScore() < right.getConfScore())
+                left.reset();
+            else 
+                right.reset();
         }
     }
+    // else if (left.isFound()){
+    //     right.recoverFrom(left,initLaneWidth*2);
+    // }
+    // else if (right.isFound()){
+    //     left.recoverFrom(right,initLaneWidth*2);
+    // }
+
+    // if (left.isFound() && right.isFound())
+    // {
+        
+    // } else if (left.isFound())
+    // {
+
+    // }
 
     if (isDebug)
     {
@@ -257,6 +227,111 @@ void LaneDetect::detect()
 -       cv::waitKey(1);
     }
 }
+
+bool LaneDetect::isCorrect(LaneLine* lane, const cv::Mat& roadSeg, int direct) const
+{
+    cv::Mat M;
+    cv::Mat roadBirdview = birdviewTransform(roadSeg, M);
+    cv::Mat drawBirdview;
+    cv::cvtColor(roadBirdview, drawBirdview, cv::COLOR_GRAY2BGR);
+    // cv::imshow("Road Birdview", roadBirdview);
+    // cv::waitKey(1);
+
+    auto laneParams = lane->getLineParams();
+    // ROS_INFO("1");
+    int sumLeftArea = 0, sumRightArea = 0;
+    int height = 10;
+    cv::Rect imageRect{0, 0, roadBirdview.cols - 1, roadBirdview.rows - 1};
+    for (int y = 0; y < roadBirdview.rows; y += height)
+    {
+        // ROS_INFO("2");
+        int x = std::max(0, getXByY(laneParams, y * 1.0));
+        cv::Rect roiLeft{0, y, x, height}; // left side
+        roiLeft &= imageRect;
+        // ROS_INFO("3");
+        // ROS_DEBUG_STREAM("roiLeft " << roiLeft);
+        // cv::rectangle(drawBirdview, roiLeft, cv::Scalar{0, 255, 0}, 3);
+        if (roiLeft.height * roiLeft.width != 0)
+        {
+            sumLeftArea += cv::countNonZero(roadBirdview(roiLeft));
+        }
+    }
+    // ROS_INFO("4");
+    sumRightArea = cv::countNonZero(roadBirdview) - sumLeftArea;
+    // ROS_DEBUG_STREAM("sumArea " << sumLeftArea << ' ' << sumRightArea);
+
+    // ROS_INFO("5");
+    cv::imshow("Road Birdview", drawBirdview);
+    cv::waitKey(1);
+    // ROS_INFO("6");
+    return ((direct == LEFT) && (sumRightArea > sumLeftArea)) || 
+            ((direct == RIGHT) && (sumRightArea < sumLeftArea));
+
+}
+
+void LaneDetect::redetect()
+{
+    this->birdview = birdviewTransformation(this->binary, birdwidth, birdheight, skyline, offsetLeft, offsetRight, birdviewTransformMatrix);
+    birdview(cv::Rect(0, 0, birdview.cols, dropTop)) = cv::Scalar{0};
+
+    cv::Mat newLaneDebug;
+    cv::cvtColor(this->birdview, newLaneDebug, cv::COLOR_GRAY2BGR);
+
+    LeftLane newLeft{newLaneDebug};
+    RightLane newRight{newLaneDebug};
+
+    newLeft.update(birdview);
+    newRight.update(birdview);
+
+    if (newLeft.isFound() && newRight.isFound())
+    {
+        if (isNeedRedetect(newLeft, newRight))
+        {
+            // std::cout << "Plan 2 still need redetect!!!" << std::endl;
+            if (left.getConfScore() < right.getConfScore())
+            {
+                // std::cout << "Reset LEFT" << std::endl;
+                left.reset();
+            } else if (right.getConfScore() < left.getConfScore())
+            {
+                // std::cout << "Reset RIGHT" << std::endl;
+                right.reset();
+            }
+        } else
+        {
+            // std::cout << "Use new lanes" << std::endl;
+            left.setLineParams(newLeft.getLineParams());
+            right.setLineParams(newRight.getLineParams());
+        }
+    } else if (newLeft.isFound())
+    {
+        left.setLineParams(newLeft.getLineParams());
+        right.reset();
+    } else if (newRight.isFound())
+    {
+        left.reset();
+        right.setLineParams(newRight.getLineParams());
+    } else
+    {
+        left.reset();
+        right.reset();
+        // std::cout << "BOTH LANE NOT FOUND!" << std::endl;
+    }
+
+    if (right.isFound() && !isCorrect(&right, roadSeg, RIGHT))
+    {
+        ROS_DEBUG("RightLane is not correct");
+        right.reset();
+    }
+
+    if (left.isFound() && !isCorrect(&left, roadSeg, LEFT))
+    {
+        ROS_DEBUG("LeftLane is not correct");
+        left.reset();
+    }
+
+}
+
 
 cv::Mat LaneDetect::extractFeatureY(cv::Mat img) const
 {
@@ -479,7 +554,7 @@ Mat LaneDetect::preprocess(const Mat &src)
     return binary;
 }
 
-void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
+void LaneDetect::updateLaneSegCallback(const sensor_msgs::ImageConstPtr &msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
     try
@@ -497,6 +572,24 @@ void LaneDetect::updateBinaryCallback(const sensor_msgs::ImageConstPtr &msg)
         ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
     }
 }
+
+void LaneDetect::updateRoadSegCallback(const sensor_msgs::ImageConstPtr &msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        if (!cv_ptr->image.empty())
+        {
+            this->roadSeg = cv_ptr->image.clone();
+        }
+    }
+    catch (cv_bridge::Exception &e)
+    {
+        ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
+    }
+}
+
 
 void LaneDetect::updateDepthCallback(const sensor_msgs::ImageConstPtr& msg)
 {
