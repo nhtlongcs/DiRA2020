@@ -50,6 +50,7 @@ public:
     void laneCallback(const cds_msgs::lane &msg);
     void signCallback(const cds_msgs::sign &msg);
     void objectCallback(const std_msgs::Int8 &msg);
+    void turnCallback(const std_msgs::Int8 &msg);
 
 private:
     void requestResetLane(int lane);
@@ -81,6 +82,7 @@ private:
     ros::Subscriber _laneSub;
     ros::Subscriber _signSub;
     ros::Subscriber _objSub;
+    ros::Subscriber _crossroadSub;
 
     ros::ServiceClient _recoverClient, _resetLaneClient;
     dynamic_reconfigure::Server<planning::PlanningConfig> _configServer;
@@ -108,7 +110,7 @@ private:
 
     int turnSign = 0;
     std::list<int> short_term_memory;
-
+    bool isTurnable = false;
     int lastPriority = 0;
 };
 

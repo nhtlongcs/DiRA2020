@@ -20,11 +20,12 @@ Planning::Planning()
     , leftParams{nullptr}
     , rightParams{nullptr}
 {
-    std::string control_topic, sign_topic, lane_topic, object_topic;
+    std::string control_topic, crossroad_topic, sign_topic, lane_topic, object_topic;
     ROS_ASSERT(ros::param::get("/lane_detect_topic", lane_topic));
     ROS_ASSERT(ros::param::get("/signid_topic", sign_topic));
     ROS_ASSERT(ros::param::get("/object_topic", object_topic));
     ROS_ASSERT(ros::param::get("/control_topic", control_topic));
+    ROS_ASSERT(ros::param::get("/crossroad", crossroad_topic));
 
     std::string recoverSrvTopic;
     ROS_ASSERT(ros::param::get("/recover_lane_srv", recoverSrvTopic));
@@ -36,6 +37,7 @@ Planning::Planning()
     _laneSub = _nh.subscribe(lane_topic, 1, &Planning::laneCallback, this);
     _signSub = _nh.subscribe(sign_topic, 1, &Planning::signCallback, this);
     _objSub = _nh.subscribe(object_topic, 1, &Planning::objectCallback, this);
+    _crossroadSub = _nh.subscribe(crossroad_topic, 1, &Planning::turnCallback, this);
 
     _configServer.setCallback(std::bind(&Planning::configCallback, this, std::placeholders::_1, std::placeholders::_2));
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime / 10.0f}, &Planning::onObjectTimeout, this, true);
@@ -108,10 +110,10 @@ void Planning::planningWhileTurning(const float& min_speed, const float& max_spe
         {
             ROS_DEBUG("TurningState: NOT_TURNING");
             // bool isTurnable = requestIsAbleToTurn(sign);
-            bool isTurnable = true;
+            isTurnable = true;
             ROS_DEBUG("Is turnable = %d", isTurnable);
 
-            if (isTurnable)
+            // if (isTurnable)
             {
                 _turnTimer.stop();
                 _turnTimer.setPeriod(ros::Duration{turningTime / 10.0f});
@@ -120,11 +122,12 @@ void Planning::planningWhileTurning(const float& min_speed, const float& max_spe
                 turningState = TurningState::IS_TURNING;
                 // turningDirect = sign;
             }
-            break;
+            // break;
         }
         case TurningState::IS_TURNING:
         {
             ROS_DEBUG("TurningState: IS_TURNING");
+            if (isTurnable){
             if (sign == SignState::RIGHT)
             {
                 drivePoint = turnRight();
@@ -142,7 +145,7 @@ void Planning::planningWhileTurning(const float& min_speed, const float& max_spe
                 drivePoint = cv::Point{160,10000};
                 publishMessage(drivePoint, 0);
                 return;
-            }
+            }}
             break;
         }
         case TurningState::DONE:
@@ -311,7 +314,8 @@ cv::Point Planning::turnLeft()
     }
     else
     {
-        return cv::Point{0, drivePointY};
+        return driveStraight();
+        // return cv::Point{0, drivePointY};
     }
 }
 
@@ -325,7 +329,9 @@ cv::Point Planning::turnRight()
     }
     else
     {
-        return cv::Point{319, drivePointY};
+        // return cv::Point{319, drivePointY};
+        return driveStraight();
+
     }
 }
 
@@ -393,6 +399,11 @@ void Planning::signCallback(const cds_msgs::sign &msg)
         ROS_DEBUG("Receive Sign = %d", sign);
         turningState = TurningState::NOT_TURNING;
     }
+}
+
+void Planning::turnCallback(const std_msgs::Int8 &msg)
+{
+    isTurnable = bool(msg.data);
 }
 
 void Planning::objectCallback(const std_msgs::Int8 &msg)
