@@ -15,7 +15,8 @@ YoloOnnxTrt::YoloOnnxTrt(ros::NodeHandle const& nh, YoloParams const& params,
       mNh(nh),
       mIt(nh),
       mBatchSize(params.batchSize),
-      mVisualize(!pubTopic.empty()) {
+      mVisualize(!pubTopic.empty()),
+      counter{10} {
   std::string transport_hint;
   ROS_ASSERT(ros::param::get("/transport_hint", transport_hint));
   mImgSub = mIt.subscribe(subTopic, 4, &YoloOnnxTrt::imgCallback, this, image_transport::TransportHints{transport_hint});
@@ -77,9 +78,40 @@ void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
   cv::Mat inputImage, outputImage;
   cv::cvtColor(inImgPtr->image, inputImage, cv::COLOR_BGR2RGB);
   auto bboxes = yolo.detectImg(inputImage);
+
+  {
+    // debug history
+    std::string log;
+    const auto& history = counter.getHistory();
+    for (const auto& h : history)
+    {
+      log += std::to_string(h) + " ";
+    }
+    ROS_DEBUG_STREAM("History: " << log);
+  }
+
+
+  {
+    // debug counter
+    std::string log1, log2;
+    const auto& c = counter.getCounter();
+    for (const auto& pair : c)
+    {
+      log1 += std::to_string(pair.first) + " ";
+      log2 += std::to_string(pair.second) + " ";
+    }
+    ROS_DEBUG_STREAM("Counter: " << log1);
+    ROS_DEBUG_STREAM("Counter: " << log2);
+  }
+
   if (bboxes.size() > 0)
   {
-    signID_msg.sign_id = bboxes[0].cls + 1;
+    counter.update(bboxes[0].cls + 1);
+    int maxCount, signId;
+    if (counter.getMaxCount(signId, maxCount))
+    {
+      signID_msg.sign_id = signId;
+    }
     signPub.publish(signID_msg);
   }
   // ROS_INFO_STREAM("BBOXES LENGTH = " << bboxes.size());

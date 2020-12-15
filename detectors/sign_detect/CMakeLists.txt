@@ -3,7 +3,7 @@ project(sign_detect LANGUAGES CUDA CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport roscpp
+find_package(catkin REQUIRED COMPONENTS cv_bridge image_transport roscpp common
                                         sensor_msgs dynamic_reconfigure)
 find_package(CUDAToolkit REQUIRED)
 find_package(TensorRT REQUIRED)

@@ -11,7 +11,6 @@
 #include "cds_msgs/IsTurnable.h"
 #include "cds_msgs/ResetLane.h"
 #include "cds_msgs/RecoverLane.h"
-#include "lane_detect/lane_width_calculator.h"
 
 
 class LaneDetect
@@ -50,7 +49,6 @@ private:
 
     LeftLane left;
     RightLane right;
-    LaneWidthCalculator laneWidthCalc;
 
     cv::Mat binary;
     cv::Mat birdview;

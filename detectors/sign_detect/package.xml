@@ -13,6 +13,7 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>roscpp</depend>
+  <depend>common</depend>
   <depend>sensor_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->

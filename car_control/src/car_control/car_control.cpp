@@ -13,7 +13,7 @@ CarControl::CarControl()
     _configServer.setCallback(boost::bind(&CarControl::configCallback, this, _1, _2));
 
     carPos.x = 165;
-    carPos.y = 180;
+    carPos.y = 230;
 
     std::string speed_topic, steer_topic, control_topic;
     ROS_ASSERT(ros::param::get("/set_speed_topic", speed_topic));

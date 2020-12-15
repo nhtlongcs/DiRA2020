@@ -10,7 +10,6 @@
 #include "lane_detect/lane_detect.h"
 #include "lane_detect/laneline.h"
 #include "lane_detect/LaneConfig.h"
-#include "lane_detect/lane_width_calculator.h"
 
 using namespace cv;
 using namespace std;
@@ -20,7 +19,6 @@ constexpr const char *LANE_WINDOW = "LaneDetect";
 
 LaneDetect::LaneDetect(bool isDebug)
     : _nh{"lane_detect"}, _image_transport{_nh}, _configServer{_nh}, isDebug{isDebug}
-    , laneWidthCalc{10}
     , left{debugImage}, right{debugImage}
 {
     _isTurnableSrv = _nh.advertiseService("IsTurnable", &LaneDetect::isTurnable, this);

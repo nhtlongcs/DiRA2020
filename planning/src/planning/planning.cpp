@@ -57,7 +57,10 @@ void Planning::planning()
         ROS_WARN("Cannot get max_velocity from ParameterServer, use default = 30.0f");
     }
     // planningWhileDriveStraight(min_speed, max_speed);
-
+    if (leftParams)
+        ROS_INFO_STREAM("Have left");
+    else if (rightParams)
+        ROS_INFO_STREAM("Have right");
     if (turningState != TurningState::DONE)
     {
         planningWhileTurning(min_speed, max_speed);
@@ -77,7 +80,8 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
         return;
     }
 
-    cv::Point drivePoint;
+    // cv::Point drivePoint;
+    cv::Point drivePoint = cv::Point{165,180};
 
     if (leftParams || rightParams)
         drivePoint = driveStraight();
@@ -95,7 +99,8 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
     //     drivePoint = driveCloseToRight();
     // }
 
-    ROS_INFO_STREAM("drivePoint: " << drivePoint);
+    ROS_INFO_STREAM("DrivePoint: " << drivePoint);
+    
 
     publishMessage(drivePoint, max_speed);
     lastDrivePoint = drivePoint;
@@ -103,7 +108,7 @@ void Planning::planningWhileDriveStraight(const float& min_speed, const float& m
 
 void Planning::planningWhileTurning(const float& min_speed, const float& max_speed)
 {
-    cv::Point drivePoint;
+    cv::Point drivePoint = cv::Point{165,180};
     switch (turningState)
     {
         case TurningState::NOT_TURNING:
@@ -126,8 +131,10 @@ void Planning::planningWhileTurning(const float& min_speed, const float& max_spe
         }
         case TurningState::IS_TURNING:
         {
-            ROS_DEBUG("TurningState: IS_TURNING");
+            isTurnable = true;
+            // ROS_DEBUG("TurningState: %d" << isTurnable);
             if (isTurnable){
+            ROS_DEBUG("TurningState: IS_TURNING");
             if (sign == SignState::RIGHT)
             {
                 drivePoint = turnRight();
@@ -161,6 +168,7 @@ void Planning::planningWhileTurning(const float& min_speed, const float& max_spe
     }
     
     publishMessage(drivePoint, min_speed);
+    lastDrivePoint = drivePoint;
 }
 
 cv::Point Planning::driveCloseToLeft()
@@ -169,7 +177,7 @@ cv::Point Planning::driveCloseToLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 20;
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 30;
     }
     return leftDrive;
 }
@@ -185,7 +193,8 @@ cv::Point Planning::driveCloseToRightFromLeft()
 }
 cv::Point Planning::driveStraightFromLeft()
 {
-    // ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    ROS_DEBUG("DRIVE STRAIGHT");
+
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
@@ -197,7 +206,7 @@ cv::Point Planning::driveStraightFromLeft()
 
 cv::Point Planning::driveStraightFromRight()
 {
-    // ROS_DEBUG("DRIVE CLOSE TO THE RIGHT SIDE");
+    ROS_DEBUG("DRIVE STRAIGHT");
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
@@ -211,7 +220,7 @@ cv::Point Planning::driveCloseToRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 20;
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 30;
     }
     return rightDrive;
 }
@@ -229,7 +238,7 @@ cv::Point Planning::driveCloseToLeftFromRight()
 cv::Point Planning::driveStraight()
 {
     ROS_DEBUG_COND(object != 0, "DRIVE STRAIGHT OBJECT = %d", object);
-    ROS_DEBUG_COND(object != 0, "OBJECT STATE = %d", objectState);
+    ROS_DEBUG_COND(object != 0, "OBJECT STATE = %d", static_cast<int>(objectState));
     switch (objectState)
     {
         case AvoidObjectState::READY:
@@ -300,7 +309,12 @@ cv::Point Planning::driveStraight()
         }
         else if (leftParams){
             return driveStraightFromLeft();
+        } else
+        {
+            return cv::Point{165,180}; // car position
+            // drivePoint = prevPoint;
         }
+        
     }
 }
 
@@ -315,6 +329,7 @@ cv::Point Planning::turnLeft()
     else
     {
         return driveStraight();
+        // return lastDrivePoint;
         // return cv::Point{0, drivePointY};
     }
 }
@@ -329,9 +344,10 @@ cv::Point Planning::turnRight()
     }
     else
     {
-        // return cv::Point{319, drivePointY};
         return driveStraight();
-
+        // return lastDrivePoint;
+        // return cv::Point{319, drivePointY};
+ 
     }
 }
 
@@ -396,7 +412,7 @@ void Planning::signCallback(const cds_msgs::sign &msg)
 
     if (sign != SignState::NOSIGN)
     {
-        ROS_DEBUG("Receive Sign = %d", sign);
+        ROS_DEBUG("Receive Sign = %d", msg.sign_id);
         turningState = TurningState::NOT_TURNING;
     }
 }

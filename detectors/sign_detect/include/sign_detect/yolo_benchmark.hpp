@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
+#include "common/slidingwindow.h"
 
 class YoloOnnxTrt {
  public:
@@ -32,4 +33,5 @@ class YoloOnnxTrt {
   std::vector<std::string> mClsNames;
 
   YoloV4Tiny yolo;
+  SlidingCounter<int> counter;
 };

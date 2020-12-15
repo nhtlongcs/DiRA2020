@@ -11,7 +11,6 @@
 #include <common/libcommon.h>
 #include <list>
 #include <memory>
-#define KENTODEEPTRY 5
 
 enum class TurningState : int{
     NOT_TURNING,
@@ -93,13 +92,13 @@ private:
 
     TurningState turningState;
     int turningDirect;
-    int turningTime = 40; // 1/10 seconds
+    int turningTime = 25; // 1/10 seconds
     
     AvoidObjectState objectState;
     int objectDirect;
     int avoidObjectTime = 35; // 1/10 seconds
 
-    int drivePointY = 240 - 70;
+    int drivePointY = 240 - 30;
 
     int countTurning, delay; // for turning
     SignState prevSign, sign;      // for signDetect
@@ -109,7 +108,6 @@ private:
     int laneToDriveCloseTo;
 
     int turnSign = 0;
-    std::list<int> short_term_memory;
     bool isTurnable = false;
     int lastPriority = 0;
 };
