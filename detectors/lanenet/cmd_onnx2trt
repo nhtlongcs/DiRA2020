@@ -1,1 +1,0 @@
-trtexec --onnx=mobilenet_unet.onnx --workspace=3072 --saveEngine=mobilenet_unet.trt --explicitBatch

@@ -1,30 +1,12 @@
 <launch>
-    <!-- Use simulator or not -->
-    <arg name="use_sim" value="true" />
     <!-- Turn off debug mode for better performance -->
     <param name="debug_mode" value="true" />
 
-    <!-- Input topics if using simulator -->
-    <group if="$(arg use_sim)">
-        <param name="rgb_topic" value="/team220/camera/rgb" />
-        <param name="depth_topic" value="/team220/camera/depth" />
-        <param name="transport_hint" value="compressed" />
-        <param name="set_speed_topic" value="/team220/set_speed" />
-        <param name="set_angle_topic" value="/team220/set_angle" />
-        <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
-            <arg name="address" value="127.0.0.1" />
-            <arg name="port" value="9090" />
-        </include>
-    </group>
-
-    <!-- Input topics if not using simulator -->
-    <group unless="$(arg use_sim)">
-        <param name="rgb_topic" value="/camera/rgb/image_raw" />
-        <param name="depth_topic" value="/camera/depth/image_raw" />
-        <param name="transport_hint" value="raw" />
-        <param name="set_speed_topic" value="/set_speed" />
-        <param name="set_angle_topic" value="/set_angle" />
-    </group>
+    <param name="rgb_topic" value="/camera/rgb/image_raw" />
+    <param name="depth_topic" value="/camera/depth/image_raw" />
+    <param name="transport_hint" value="raw" />
+    <param name="set_speed_topic" value="/set_speed" />
+    <param name="set_angle_topic" value="/set_angle" />
 
     <!-- Common publish topics -->
     <param name="control_topic" value="/control" />
@@ -42,8 +24,9 @@
     <param name="reset_lane_srv" value="/reset_lane_srv" />
     <param name="recover_lane_srv" value="/recover_lane_srv" />
 
+    <include file="$(find astra_camera)/launch/astra.launch" />
     <!-- <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" /> -->
-
+<!-- 
     <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
@@ -69,6 +52,10 @@
     </node>
 
     <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" />
+
+	<node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">
+		<param name="pwm_pca9685" value="100"/>
+	</node> -->
 
     <!-- Logging -->
     <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->

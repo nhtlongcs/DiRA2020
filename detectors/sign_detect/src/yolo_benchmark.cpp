@@ -74,10 +74,9 @@ void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     ROS_ERROR_STREAM("cv_bridge exception: " << e.what());
     return;
   }
-  auto start = std::chrono::high_resolution_clock::now();
   cv::Mat inputImage, outputImage;
-  cv::cvtColor(inImgPtr->image, inputImage, cv::COLOR_BGR2RGB);
-  auto bboxes = yolo.detectImg(inputImage);
+  // cv::cvtColor(inImgPtr->image, inputImage, cv::COLOR_BGR2RGB);
+  auto bboxes = yolo.detectImg(inImgPtr->image);
 
   if (bboxes.size() > 0)
   {
@@ -94,7 +93,6 @@ void YoloOnnxTrt::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
   }
 
   // ROS_INFO_STREAM("BBOXES LENGTH = " << bboxes.size());
-  auto end = std::chrono::high_resolution_clock::now();
   if (mVisualize && ++inferCount == 3) {
     cv_bridge::CvImage outImg;
     outImg.encoding = "bgr8";

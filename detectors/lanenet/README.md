@@ -1,0 +1,1 @@
+trtexec --onnx=mobilenet_unet.onnx --saveEngine=mobilenet_unet.trt --explicitBatch --fp16
