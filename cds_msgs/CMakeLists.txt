@@ -4,14 +4,8 @@ project(cds_msgs)
 find_package(catkin REQUIRED COMPONENTS message_generation sensor_msgs std_msgs
                                         geometry_msgs)
 
-add_message_files(
-  FILES
-  sign.msg
-  lane.msg
-  CircleObstacle.msg
-  SegmentObstacle.msg
-  Obstacles.msg
-  PclObstacles.msg)
+add_message_files(FILES sign.msg lane.msg circle_obstacle.msg
+                  segment_obstacle.msg obstacles.msg)
 
 add_service_files(FILES ResetLane.srv RecoverLane.srv IsTurnable.srv)
 

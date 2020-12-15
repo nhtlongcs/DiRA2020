@@ -4,18 +4,25 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS common cv_bridge image_transport roscpp
                                         sensor_msgs std_srvs)
 find_package(OpenCV 4 REQUIRED COMPONENTS core imgproc highgui)
+find_package(CUDAToolkit REQUIRED)
+find_package(TensorRT REQUIRED)
 
-# TODO ???
 catkin_package(
-   INCLUDE_DIRS include LIBRARIES sign_detect CATKIN_DEPENDS cv_bridge
-   image_transport roscpp sensor_msgs DEPENDS CUDAToolkit TensorRT OpenCV std_srvs
-)
-
-include_directories(
+  INCLUDE_DIRS
   include
-  ${common_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-)
+  CATKIN_DEPENDS
+  common
+  cv_bridge
+  image_transport
+  roscpp
+  sensor_msgs
+  DEPENDS
+  CUDAToolkit
+  TensorRT
+  OpenCV
+  std_srvs)
+
+include_directories(include ${common_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 add_subdirectory(src)
 

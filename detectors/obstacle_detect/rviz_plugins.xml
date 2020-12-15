@@ -1,0 +1,12 @@
+<library path="lib/libobstacle_detect_gui">
+
+  <class name="Obstacle Configuration" type="obstacles_display::ObstacleDetectPanel" base_class_type="rviz::Panel">
+    <description>Obstacle detect panel</description>
+  </class>
+
+  <class name="Obstacles" type="obstacles_display::ObstaclesDisplay" base_class_type="rviz::Display">
+    <description>Obstacles</description>
+    <message_type>cds_msgs/obstacles</message_type>
+  </class>
+
+</library>
