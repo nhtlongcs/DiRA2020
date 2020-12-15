@@ -1,11 +1,12 @@
 #pragma once
 #include <list>
+#include <map>
 
 template <typename T>
-class SlidingWindow
+class SlidingCounter
 {
 public:
-    SlidingWindow(int maxHistory) : maxHistory{maxHistory}
+    SlidingCounter(int maxHistory) : maxHistory{maxHistory}
     {
     }
 
@@ -13,22 +14,60 @@ public:
     {
         if (history.size() > maxHistory)
         {
+            T val = history.front();
             history.pop_front();
+            counter[val]--;
         }
         history.push_back(value);
+        if (counter.find(value) != counter.end())
+        {
+            counter[value]++;
+        }
+        else
+        {
+            counter[value] = 1;
+        }
     }
 
-    int getMaxHistory() const
+    bool getMaxCount(T& obj, int& count) const
     {
-        return maxHistory;
+        int maxCount = 0;
+        const T* objPtr = nullptr;
+        for (const auto& pair : counter)
+        {
+            if (pair.second > maxCount)
+            {
+                maxCount = pair.second;
+                objPtr = &(pair.first);
+            }
+        }
+        if (maxCount > 0)
+        {
+            obj = *objPtr;
+            count = maxCount;
+            return true;
+        }
+        return false;
     }
 
     void reset()
     {
         history.clear();
+        counter.clear();
+    }
+
+    std::list<T> getHistory() const
+    {
+        return history;
+    }
+
+    std::map<T, int> getCounter() const
+    {
+        return counter;
     }
 
 protected:
-    std::list<int> history;
+    std::map<T, int> counter;
+    std::list<T> history;
     int maxHistory;
 };
