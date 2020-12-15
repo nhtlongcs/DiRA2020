@@ -39,7 +39,7 @@ target_link_libraries(${PROJECT_NAME}
   TensorRT::nvonnxparser
   stdc++fs)
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17 cuda_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17 cuda_std_14)
 
 install(TARGETS ${PROJECT_NAME} ${ADDITIONAL_EXECUTABLES}
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
