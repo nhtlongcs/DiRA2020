@@ -594,7 +594,7 @@ void LaneDetect::updateDepthCallback(const sensor_msgs::ImageConstPtr& msg)
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO16);
         if (!cv_ptr->image.empty())
         {
             this->depth = cv_ptr->image.clone();

@@ -23,6 +23,9 @@
         <param name="radius_enlargement" value="0.3"/>
 
         <param name="frame_id" value="laser_frame"/>
+        <param name="x_min" value="-0.2" />
+        <param name="x_max" value="0.2" />
+        <param name="y_max" value="0.5" />
     </node>
     <!-- <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" args="obstacle_detect" if="$(arg debug)"/> -->
     <node name="rviz" pkg="rviz" type="rviz" output="screen" args="-d $(find obstacle_detect)/rviz/obstacle_detect.rviz" if="$(arg debug)"/>

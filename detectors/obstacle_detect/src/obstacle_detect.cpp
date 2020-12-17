@@ -36,6 +36,7 @@
 #include "obstacle_detect/obstacle_detect.hpp"
 #include "utilities/figure_fitting.hpp"
 #include "cds_msgs/obstacles.h"
+#include <std_msgs/Bool.h>
 
 namespace obstacle_detect {
 
@@ -61,11 +62,15 @@ ObstacleDetect::ObstacleDetect(ros::NodeHandle& nh) {
 
   ros::param::get("~frame_id", frameId_);
 
+  ros::param::get("~y_max", y_max);
+  ros::param::get("~x_min", x_min);
+  ros::param::get("~x_max", x_max);
+
   std::string topic;
   ros::param::param<std::string>("~laser_topic", topic, "/scan");
   scanSub_ = nh.subscribe(topic, 5, &ObstacleDetect::lidarCallback, this);
-  ros::param::param<std::string>("~obstacles_topic", topic, "/obstacles");
-  obstaclePub_ = nh.advertise<cds_msgs::obstacles>(topic, 5);
+  ros::param::param<std::string>("~object_topic", topic, "/object");
+  obstaclePub_ = nh.advertise<std_msgs::Bool>(topic, 5);
 
   if (debug_) {
     drServerPtr_ = std::make_unique<dynamic_reconfigure::Server<cfg_t>>();
@@ -326,26 +331,32 @@ bool ObstacleDetect::compareCircles(Circle const& c1, Circle const& c2,
 }
 
 void ObstacleDetect::publishObstacles() {
-  cds_msgs::obstaclesPtr obstaclesMsg(new cds_msgs::obstacles);
+  // cds_msgs::obstaclesPtr obstaclesMsg(new cds_msgs::obstacles);
+  std_msgs::Bool obstaclesMsg;
 
-  obstaclesMsg->header.stamp = stamp_;
-  obstaclesMsg->header.frame_id = frameId_;
+  // for (Segment const& s : segments_) {
+  //   cds_msgs::segment_obstacle segment;
+  //   segment.first_point.x = s.first_point.x;
+  //   segment.first_point.y = s.first_point.y;
+  //   segment.last_point.x = s.last_point.x;
+  //   segment.last_point.y = s.last_point.y;
+  //   obstaclesMsg->segments.emplace_back(segment);
+  // }
 
-  for (Segment const& s : segments_) {
-    cds_msgs::segment_obstacle segment;
-    segment.first_point.x = s.first_point.x;
-    segment.first_point.y = s.first_point.y;
-    segment.last_point.x = s.last_point.x;
-    segment.last_point.y = s.last_point.y;
-    obstaclesMsg->segments.emplace_back(segment);
-  }
+  bool isObstacleDetect = false;
   for (Circle const& c : circles_) {
     cds_msgs::circle_obstacle circle;
     circle.center.x = c.center.x;
     circle.center.y = c.center.y;
     circle.radius = c.radius;
-    obstaclesMsg->circles.emplace_back(circle);
+
+    if (circle.center.x > x_min && circle.center.x < x_max && circle.center.y >= 0 && circle.center.y < y_max)
+    {
+      isObstacleDetect = true;
+    }
+    // obstaclesMsg->circles.emplace_back(circle);
   }
+  obstaclesMsg.data = isObstacleDetect;
   obstaclePub_.publish(obstaclesMsg);
 }
 

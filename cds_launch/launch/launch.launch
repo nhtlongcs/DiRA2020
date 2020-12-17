@@ -23,25 +23,46 @@
     <param name="road_seg_mode_trigger_srv" value="/road_seg_mode_trigger_srv" />
     <param name="reset_lane_srv" value="/reset_lane_srv" />
     <param name="recover_lane_srv" value="/recover_lane_srv" />
+    <param name="inc_dec_max_vel_srv" value ="/inc_dec_max_vel_srv" />
+    <param name="inc_dec_min_vel_srv" value ="/inc_dec_min_vel_srv" />
+    <param name="set_map_srv" value ="/set_map" />
+
+    <param name="button1_topic" value="/bt1_status" />
+    <param name="button2_topic" value="/bt2_status" />
+    <param name="button3_topic" value="/bt3_status" />
+    <param name="button4_topic" value="/bt4_status" />
+    <param name="lcd_topic" value="/lcd_print" />
+    <param name="laser_topic" value="/ss2_status" />
+
+    <!-- <include file="$(find peripheral_controller)/launch/.launch" /> -->
+
+
+    <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
+    <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" />
 
     <include file="$(find astra_camera)/launch/astra.launch" />
-    <!-- <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" /> -->
-<!-- 
+
+    <!-- <node name="rplidar" pkg="rplidar_ros" type="rplidar_ros_node" output="screen" required="true">
+        <param name="serial_port" type="string" value="/dev/ttyUSB0"/>
+        <param name="serial_baudrate" type="int" value="115200"/>
+        <param name="frame_id" type="string" value="laser_frame"/>
+        <param name="inverted" type="bool" value="false"/>
+        <param name="angle_compensate" type="bool" value="true"/>
+    </node> -->
+
+    <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" />
+
     <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
         <param name="height" value="224"/>
         <param name="width" value="224"/>
-        <param name="engineFile" value="data/mobilenet_unet_v2.trt"/>
+        <param name="engineFile" value="data/mobilenet_unet.trt"/>
     </node>
 
-    <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" />
-    
     <node pkg="road_shape_detect" name="road_shape_detect_node" type="road_shape_detect_node" required="true" output="screen" />
 
-    <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
-
-    <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
+    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
         <param name="height" value="288"/>
@@ -49,13 +70,14 @@
         <param name="keepTopK" value="1"/>
         <param name="nbCls" value="6"/>
         <param name="engineFile" value="data/yolov4.trt"/>
-    </node>
+    </node> -->
 
-    <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" />
+    <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" /> -->
+    <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" /> -->
 
 	<node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">
 		<param name="pwm_pca9685" value="100"/>
-	</node> -->
+	</node>
 
     <!-- Logging -->
     <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->

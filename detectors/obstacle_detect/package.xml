@@ -12,6 +12,8 @@
 
   <depend>cds_msgs</depend>
   <depend>dynamic_reconfigure</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>nodelet</depend>
   <depend>roscpp</depend>
   <depend>rviz</depend>

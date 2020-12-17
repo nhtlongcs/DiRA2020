@@ -81,5 +81,7 @@ class ObstacleDetect {
   std::unique_ptr<dynamic_reconfigure::Server<cfg_t>> drServerPtr_;
   void drCallback(cfg_t& cfg, uint32_t level);
   cfg_t cfg_;
+
+  int y_max, x_min, x_max;
 };
 }  // namespace obstacle_detect

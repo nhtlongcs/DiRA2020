@@ -1,26 +1,75 @@
 <launch>
     <!-- Turn off debug mode for better performance -->
-    <arg name="use_sim" value="true" />
     <param name="debug_mode" value="true" />
-    <param     if="$(arg use_sim)" name="transport_hint" value="compressed" />
-    <param unless="$(arg use_sim)" name="transport_hint" value="raw" />
 
-    <node pkg="lane_detect" name="lane_detect" type="lane_detect_node" args="_image_transport:=compressed" required="true" output="screen">
-        <remap from="/mobile_net/lane_seg/compressed" to="/camera/rgb/image_raw/compressed" />
-        <param name="offset_birdview_left" value="100" />
-        <param name="offset_birdview_right" value="100" />
-        <param name="skyline" value="100" />
+    <param name="rgb_topic" value="/team220/camera/rgb" />
+    <param name="depth_topic" value="/team220/camera/depth" />
+    <param name="transport_hint" value="compressed" />
+    <param name="set_speed_topic" value="/team220/set_speed" />
+    <param name="set_angle_topic" value="/team220/set_angle" />
+
+    <!-- Common publish topics -->
+    <param name="control_topic" value="/control" />
+    <param name="lane_segmentation_topic" value="/lane_segmentation" />
+    <param name="sign_topic" value="/sign" />
+    <param name="signid_topic" value="/sign_id" />
+    <param name="crossroad" value="/is_turnable" />
+    <param name="lane_detect_topic" value="/lane" />
+    <param name="object_topic" value="/object" />
+    <param name="road_segmentation_topic" value="/road_segmentation" />
+
+    <!-- Common publish services -->
+    <param name="lane_seg_mode_trigger_srv" value="/lane_seg_mode_trigger_srv" />
+    <param name="road_seg_mode_trigger_srv" value="/road_seg_mode_trigger_srv" />
+    <param name="reset_lane_srv" value="/reset_lane_srv" />
+    <param name="recover_lane_srv" value="/recover_lane_srv" />
+
+
+    <!-- <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" /> -->
+    <!-- <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" /> -->
+
+    <!-- <include file="$(find astra_camera)/launch/astra.launch" /> -->
+
+    <!-- <node name="rplidar" pkg="rplidar_ros" type="rplidar_ros_node" output="screen">
+        <param name="serial_port" type="string" value="/dev/ttyUSB0"/>
+        <param name="serial_baudrate" type="int" value="115200"/>
+        <param name="frame_id" type="string" value="laser_frame"/>
+        <param name="inverted" type="bool" value="false"/>
+        <param name="angle_compensate" type="bool" value="true"/>
+    </node> -->
+
+    <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" />
+<!-- 
+    <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
+        <param name="batchSize" value="1"/>
+        <param name="channel" value="3"/>
+        <param name="height" value="224"/>
+        <param name="width" value="224"/>
+        <param name="engineFile" value="data/mobilenet_unet_v2.trt"/>
     </node>
 
-    <node pkg="camera_record" name="video_publisher" type="publish.py">
-        <param name="video_path" value="$(find camera_record)/seg.avi" />
-        <param name="pause" value="true" />
-    </node>
-    <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
     
-    <!-- Logging -->
-    <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" />
+    <node pkg="road_shape_detect" name="road_shape_detect_node" type="road_shape_detect_node" required="true" output="screen" />
 
-    <node pkg="rviz" name="rviz" type="rviz" />
+    
+
+    <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
+        <param name="batchSize" value="1"/>
+        <param name="channel" value="3"/>
+        <param name="height" value="288"/>
+        <param name="width" value="384"/>
+        <param name="keepTopK" value="1"/>
+        <param name="nbCls" value="6"/>
+        <param name="engineFile" value="data/yolov4.trt"/>
+    </node>
+
+    <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" />
+
+	<node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">
+		<param name="pwm_pca9685" value="100"/>
+	</node> -->
+
+    <!-- Logging -->
+    <!-- <node pkg="rqt_logger_level" name="rqt_logger_level" type="rqt_logger_level" /> -->
     
 </launch>

@@ -1,0 +1,6 @@
+int8 MODE_INC=0
+int8 MODE_DEC=1
+
+int8 mode
+---
+int8 currentSpeed

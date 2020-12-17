@@ -6,6 +6,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   roscpp
+  cds_msgs
   std_msgs
   message_generation
 )

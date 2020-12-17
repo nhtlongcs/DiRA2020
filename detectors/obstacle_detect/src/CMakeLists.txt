@@ -13,4 +13,4 @@ target_link_libraries(${PROJECT_NAME}_node PRIVATE ${PROJECT_NAME}
                                                    ${catkin_LIBRARIES})
 target_compile_features(${PROJECT_NAME}_node PRIVATE cxx_std_17)
 
-add_subdirectory(displays)
+# add_subdirectory(displays)

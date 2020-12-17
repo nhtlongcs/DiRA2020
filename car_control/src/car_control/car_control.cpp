@@ -15,13 +15,17 @@ CarControl::CarControl()
     carPos.x = 165;
     carPos.y = 230;
 
-    std::string speed_topic, steer_topic, control_topic;
+    std::string speed_topic, steer_topic, control_topic, max_speed_srv, min_speed_srv;
     ROS_ASSERT(ros::param::get("/set_speed_topic", speed_topic));
     ROS_ASSERT(ros::param::get("/set_angle_topic", steer_topic));
     ROS_ASSERT(ros::param::get("/control_topic", control_topic));
+    ROS_ASSERT(ros::param::get("/inc_dec_max_vel_srv", max_speed_srv));
+    ROS_ASSERT(ros::param::get("/inc_dec_min_vel_srv", min_speed_srv));
     speed_publisher = _nh.advertise<std_msgs::Float32>(speed_topic, 1);
     steer_publisher = _nh.advertise<std_msgs::Float32>(steer_topic, 1);
     control_subscriber = _nh.subscribe(control_topic, 1, &CarControl::driveCallback, this);
+    _incDecMaxVelSrv = _nh.advertiseService(max_speed_srv, &CarControl::incDecMaxVelSrvCallback, this);
+    _incDecMinVelSrv = _nh.advertiseService(min_speed_srv, &CarControl::incDecMinVelSrvCallback, this);
 }
 
 void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t level)
@@ -39,6 +43,40 @@ void CarControl::configCallback(car_control::CarControlConfig &config, uint32_t 
     minVelocity = config.min_velocity;
     maxVelocity = config.max_velocity;
 }
+
+bool CarControl::incDecMaxVelSrvCallback(cds_msgs::IncDecSpeed::Request& req, cds_msgs::IncDecSpeed::Response& res)
+{
+    if (req.mode == req.MODE_INC)
+    {
+        maxVelocity += 5;
+    } else if (req.mode == req.MODE_DEC)
+    {
+        maxVelocity -= 5;
+    } else
+    {
+        ROS_WARN("Unknow mode");
+    }
+    
+    res.currentSpeed = maxVelocity;
+    return true;
+}
+
+bool CarControl::incDecMinVelSrvCallback(cds_msgs::IncDecSpeed::Request& req, cds_msgs::IncDecSpeed::Response& res)
+{
+    if (req.mode == req.MODE_INC)
+    {
+        minVelocity += 5;
+    } else if (req.mode == req.MODE_DEC)
+    {
+        minVelocity -= 5;
+    } else
+    {
+        ROS_WARN("Unknow mode");
+    }
+    res.currentSpeed = minVelocity;
+    return true;
+}
+
 
 void CarControl::driveCallback(const geometry_msgs::Twist &msg)
 {
@@ -83,10 +121,11 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
     ROS_DEBUG("Send speed = %.2f, steer = %.2f", speed, error);
 
     // speed.data = velocity;
-    speed_msg.data = speed;
+    // speed_msg.data = speed; // TODO: Debug
+    speed_msg.data = 0.0f;
     preError = error;
 
-    angle_msg.data = error;
+    angle_msg.data = error; // TODO: car reverse
     speed_msg.data = speed;// speed;
 
     steer_publisher.publish(angle_msg);

@@ -50,11 +50,16 @@ void LaneNetDemo::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     if (isRoadUseDeep)
     {
       cv::convertScaleAbs(laneImgs.second, roadProcessed, 255, 0);
-      cv::resize(roadProcessed, roadProcessed, inImgPtr->image.size());
+      // cv::resize(roadProcessed, roadProcessed, inImgPtr->image.size());
+      cv::resize(roadProcessed, roadProcessed, cv::Size{320, 240});
 
       cv::Mat road2 = roadProcessed.clone();
-      cv::floodFill(road2, cv::Point{roadProcessed.cols / 2, roadProcessed.rows - 10}, cv::Scalar{0});
-      cv::bitwise_xor(roadProcessed, road2, roadProcessed);
+      auto point = cv::Point{roadProcessed.cols / 2, roadProcessed.rows - 10};
+      if (road2.at<uint8_t>(point) > 250)
+      {
+        cv::floodFill(road2, cv::Point{roadProcessed.cols / 2, roadProcessed.rows - 10}, cv::Scalar{0});
+        cv::bitwise_xor(roadProcessed, road2, roadProcessed);
+      }
     } else
     {
       roadProcessed = roadImageProc(inImgPtr->image);
@@ -63,7 +68,8 @@ void LaneNetDemo::imgCallback(sensor_msgs::ImageConstPtr const& msg) {
     if (isLaneUseDeep)
     {
       cv::convertScaleAbs(laneImgs.first, laneProcessed, 255, 0);
-      cv::resize(laneProcessed, laneProcessed, inImgPtr->image.size());
+      // cv::resize(laneProcessed, laneProcessed, inImgPtr->image.size());
+      cv::resize(laneProcessed, laneProcessed, cv::Size{320, 240});
     } else
     {
       laneProcessed = laneImageProc(inImgPtr->image);

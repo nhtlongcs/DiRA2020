@@ -14,7 +14,7 @@ static cv::Mat debugImage;
 constexpr const char *CONF_PLAN_WINDOW = "ConfigPlanning";
 
 Planning::Planning()
-    : _nh{"planning"}, _configServer{_nh}, prevObject{0}, object{0}, laneToDriveCloseTo{RIGHT}
+    : _nh{"planning"}, _configServer{_nh}, objectDirect{Direct::NONE}, laneToDriveCloseTo{RIGHT}
     , objectState{AvoidObjectState::DONE}
     , turningState{TurningState::DONE}
     , leftParams{nullptr}
@@ -177,7 +177,7 @@ cv::Point Planning::driveCloseToLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 30;
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 45;
     }
     return leftDrive;
 }
@@ -187,7 +187,7 @@ cv::Point Planning::driveCloseToRightFromLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 100;
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 135;
     }
     return leftDrive;
 }
@@ -198,7 +198,7 @@ cv::Point Planning::driveStraightFromLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 50;
+        leftDrive.x = getXByY(*leftParams, drivePointY) + 85;
     }
     return leftDrive;
 }
@@ -210,7 +210,7 @@ cv::Point Planning::driveStraightFromRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 50;
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 85;
     }
     return rightDrive;
 }
@@ -220,7 +220,7 @@ cv::Point Planning::driveCloseToRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 30;
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 45;
     }
     return rightDrive;
 }
@@ -230,7 +230,7 @@ cv::Point Planning::driveCloseToLeftFromRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 100;
+        rightDrive.x = getXByY(*rightParams, drivePointY) - 135;
     }
     return rightDrive;
 }
@@ -355,6 +355,7 @@ void Planning::onObjectTimeout(const ros::TimerEvent &event)
 {
     ROS_DEBUG("Object timeout");
     objectState = AvoidObjectState::DONE;
+    objectDirect = Direct::NONE;
 }
 
 void Planning::onTurnTimeout(const ros::TimerEvent &event)
@@ -422,12 +423,28 @@ void Planning::turnCallback(const std_msgs::Int8 &msg)
     isTurnable = bool(msg.data);
 }
 
-void Planning::objectCallback(const std_msgs::Int8 &msg)
+void Planning::objectCallback(const std_msgs::Bool &msg)
 {
-    prevObject = object;
-    object = msg.data;
-
-    if (object != 0)
+    // prevObject = object;
+    // object = msg.data;
+    bool isObjDetected = msg.data;
+    if (isObjDetected)
+    {
+        if(laneToDriveCloseTo == Direct::LEFT)
+        {
+            object = Direct::LEFT;
+        } else if (laneToDriveCloseTo == Direct::RIGHT)
+        {
+            object = Direct::RIGHT;
+        } else
+        {
+            ROS_WARN("NotImplemented");
+        }
+    }
+    else {
+        object = Direct::NONE;
+    }
+    if (object != Direct::NONE)
     {
         ROS_DEBUG("Receive Object = %d", object);
         objectState = AvoidObjectState::READY;
@@ -554,7 +571,8 @@ void Planning::publishMessage(const cv::Point& drivePoint, float speed)
     ROS_DEBUG("Planning speed = %.2f, steer = %.2f", speed, angle);
 
     geometry_msgs::Twist msg;
-    msg.linear.x = speed;
+    // msg.linear.x = speed; // TODO: speed = 0
+    msg.linear.x = 0.0f;
     msg.angular.z = angle * M_PI / 180.0f;
 
     _controlPub.publish(msg);

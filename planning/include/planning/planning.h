@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <cds_msgs/lane.h>
 #include <cds_msgs/sign.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
@@ -48,7 +49,7 @@ public:
     void configCallback(planning::PlanningConfig &config, uint32_t level);
     void laneCallback(const cds_msgs::lane &msg);
     void signCallback(const cds_msgs::sign &msg);
-    void objectCallback(const std_msgs::Int8 &msg);
+    void objectCallback(const std_msgs::Bool &msg);
     void turnCallback(const std_msgs::Int8 &msg);
 
 private:
@@ -98,11 +99,12 @@ private:
     int objectDirect;
     int avoidObjectTime = 35; // 1/10 seconds
 
-    int drivePointY = 240 - 30;
+    int drivePointY = 240 - 100;
 
     int countTurning, delay; // for turning
     SignState prevSign, sign;      // for signDetect
-    int prevObject, object;  // for signDetect
+    int object;  // for signDetect
+
     int rate;
 
     int laneToDriveCloseTo;

@@ -1,0 +1,28 @@
+<launch>
+    <!-- Turn off debug mode for better performance -->
+    <param name="debug_mode" value="true" />
+
+    <param name="rgb_topic" value="/camera/rgb/image_raw" />
+    <param name="depth_topic" value="/camera/depth/image_raw" />
+    <param name="transport_hint" value="raw" />
+    <param name="set_speed_topic" value="/set_speed" />
+    <param name="set_angle_topic" value="/set_angle" />
+
+    <!-- Common publish topics -->
+    <param name="control_topic" value="/control" />
+    <param name="lane_segmentation_topic" value="/lane_segmentation" />
+    <param name="sign_topic" value="/sign" />
+    <param name="signid_topic" value="/sign_id" />
+    <param name="crossroad" value="/is_turnable" />
+    <param name="lane_detect_topic" value="/lane" />
+    <param name="object_topic" value="/object" />
+    <param name="road_segmentation_topic" value="/road_segmentation" />
+
+    <!-- Common publish services -->
+    <param name="lane_seg_mode_trigger_srv" value="/lane_seg_mode_trigger_srv" />
+    <param name="road_seg_mode_trigger_srv" value="/road_seg_mode_trigger_srv" />
+    <param name="reset_lane_srv" value="/reset_lane_srv" />
+    <param name="recover_lane_srv" value="/recover_lane_srv" />
+
+    
+</launch>

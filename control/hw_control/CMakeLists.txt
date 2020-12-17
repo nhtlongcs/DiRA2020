@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  cds_msgs
 )
 
 # find_package(Boost REQUIRED COMPONENTS system)

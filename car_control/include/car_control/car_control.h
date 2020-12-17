@@ -4,6 +4,7 @@
 #include <dynamic_reconfigure/server.h>
 #include "car_control/CarControlConfig.h"
 #include <opencv2/opencv.hpp>
+#include "cds_msgs/IncDecSpeed.h"
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Twist.h>
@@ -16,6 +17,8 @@ public:
 public:
     void configCallback(car_control::CarControlConfig &config, uint32_t level);
     void driveCallback(const geometry_msgs::Twist &msg);
+    bool incDecMaxVelSrvCallback(cds_msgs::IncDecSpeed::Request& req, cds_msgs::IncDecSpeed::Response& res);
+    bool incDecMinVelSrvCallback(cds_msgs::IncDecSpeed::Request& req, cds_msgs::IncDecSpeed::Response& res);
 
 private:
     ros::NodeHandle _nh;
@@ -23,6 +26,7 @@ private:
     ros::Publisher speed_publisher;
     ros::Subscriber control_subscriber;
     dynamic_reconfigure::Server<car_control::CarControlConfig> _configServer;
+    ros::ServiceServer _incDecMinVelSrv, _incDecMaxVelSrv;
 
 private:
     cv::Point carPos;

@@ -37,8 +37,8 @@ void RoadShapeDetector::roadSegCallback(const sensor_msgs::ImageConstPtr& msg)
     cv::floodFill(image2, cv::Point{image.cols / 2, image.rows - 10}, cv::Scalar{0});
     cv::bitwise_xor(image, image2, image);
 
-    cv::imshow("Bottom", image);
-    cv::waitKey(1);
+    // cv::imshow("Bottom", image);
+    // cv::waitKey(1);
     float area = cv::countNonZero(image) * 1.0f / (image.rows * image.cols);
     // ROS_INFO("Road Area %.2f", area);
     crossroad_msg.data = 0;

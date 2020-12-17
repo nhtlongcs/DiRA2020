@@ -6,7 +6,9 @@
 class Button
 {
 public:
-    Button(): _name{""}, _isPressed{false} {}
+    typedef void(*Callback)(bool);
+
+    Button(Callback cb, const std::string& name = ""): _name{name}, _isPressed{false}, _callback{cb} {}
 
     bool isPressed() const {
         return _isPressed;
@@ -25,12 +27,14 @@ public:
             {
                 ROS_DEBUG_STREAM("Button " << _name << " Released");
             }
+            _callback(_isPressed);
         }
     }
 
 private:
     std::string _name;
     bool _isPressed;
+    Callback _callback;
 };
 
 

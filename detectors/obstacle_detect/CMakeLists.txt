@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(obstacle_detect)
 
 find_package(catkin REQUIRED COMPONENTS cds_msgs dynamic_reconfigure nodelet
-                                        roscpp rviz)
+                                        roscpp rviz geometry_msgs std_msgs)
 find_package(OpenCV 4 REQUIRED COMPONENTS core)
 find_package(Qt5 5 REQUIRED Core Widgets)
 
