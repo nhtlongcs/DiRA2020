@@ -38,6 +38,8 @@
 #include "cds_msgs/obstacles.h"
 #include <std_msgs/Bool.h>
 
+#include <vector>
+
 namespace obstacle_detect {
 
 ObstacleDetect::ObstacleDetect(ros::NodeHandle& nh) {
@@ -90,10 +92,20 @@ void ObstacleDetect::lidarCallback(
     sensor_msgs::LaserScan::ConstPtr const& scanMsg) {
   frameId_ = scanMsg->header.frame_id;
   stamp_ = scanMsg->header.stamp;
-  double phi = scanMsg->angle_min;
-  for (auto const& r : scanMsg->ranges) {
+  double phi = scanMsg->angle_min, cphi = cos(phi), sphi = sin(phi);
+
+  std::vector<double> tempRanges;
+  int rangeSize = scanMsg->ranges.size();
+  for (int i = 3 * rangeSize / 4; i < rangeSize; ++i) {
+    tempRanges.push_back(scanMsg->ranges[i]);
+  }
+  for (int i = 0; i < rangeSize / 4; ++i) {
+    tempRanges.push_back(scanMsg->ranges[i]);
+  }
+
+  for (auto const& r : tempRanges) {
     if (cfg_.min_range <= r && r <= cfg_.max_range)
-      inPts_.emplace_back(r * cos(phi), r * sin(phi));
+      inPts_.emplace_back(r * cphi, r * sphi);
     phi += scanMsg->angle_increment;
   }
 
@@ -350,8 +362,8 @@ void ObstacleDetect::publishObstacles() {
     circle.center.y = c.center.y;
     circle.radius = c.radius;
 
-    if (circle.center.x > x_min && circle.center.x < x_max && circle.center.y >= 0 && circle.center.y < y_max)
-    {
+    if (circle.center.x > x_min && circle.center.x < x_max &&
+        circle.center.y >= 0 && circle.center.y < y_max) {
       isObstacleDetect = true;
     }
     // obstaclesMsg->circles.emplace_back(circle);
