@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <cds_msgs/lane.h>
 #include <cds_msgs/sign.h>
+#include <cds_msgs/SetMap.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <ros/ros.h>
@@ -36,6 +37,11 @@ enum class AvoidObjectState : int{
     DONE,
 };
 
+enum class Map : int {
+    RED = 0,
+    BLUE = 1,
+};
+
 class Planning
 {
 public:
@@ -53,6 +59,8 @@ public:
     void turnCallback(const std_msgs::Int8 &msg);
 
 private:
+    bool setMapService(cds_msgs::SetMap::Request& req, cds_msgs::SetMap::Response& resp);
+
     void requestResetLane(int lane);
     bool requestRecover(int lane);
     bool requestIsAbleToTurn(int direction);
@@ -84,6 +92,7 @@ private:
     ros::Subscriber _objSub;
     ros::Subscriber _crossroadSub;
 
+    ros::ServiceServer _setMapSrv;
     ros::ServiceClient _recoverClient, _resetLaneClient;
     dynamic_reconfigure::Server<planning::PlanningConfig> _configServer;
     ros::Timer _objectTimer, _turnTimer;
@@ -100,6 +109,7 @@ private:
     int avoidObjectTime = 35; // 1/10 seconds
 
     int drivePointY = 240 - 100;
+    int clipMinX = 0, clipMaxX = 320;
 
     int countTurning, delay; // for turning
     SignState prevSign, sign;      // for signDetect
@@ -112,6 +122,9 @@ private:
     int turnSign = 0;
     bool isTurnable = false;
     int lastPriority = 0;
+
+    Map currentMap;
+    
 };
 
 #endif

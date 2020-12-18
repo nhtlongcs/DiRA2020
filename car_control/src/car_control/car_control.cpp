@@ -122,11 +122,11 @@ void CarControl::driveCallback(const geometry_msgs::Twist &msg)
 
     // speed.data = velocity;
     // speed_msg.data = speed; // TODO: Debug
-    speed_msg.data = 0.0f;
     preError = error;
 
     angle_msg.data = error; // TODO: car reverse
-    speed_msg.data = speed;// speed;
+    // speed_msg.data = speed;// speed;
+    speed_msg.data = 0;// speed;
 
     steer_publisher.publish(angle_msg);
     speed_publisher.publish(speed_msg);

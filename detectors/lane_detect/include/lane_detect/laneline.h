@@ -66,6 +66,8 @@ protected:
     int confident_score=-1;
     int offsetX = 0;
     int width = 160;
+    int clipMinX = 0;
+    int clipMaxX = 320;
 };
 
 class LeftLane : public LaneLine

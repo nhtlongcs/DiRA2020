@@ -25,7 +25,7 @@
     <param name="recover_lane_srv" value="/recover_lane_srv" />
     <param name="inc_dec_max_vel_srv" value ="/inc_dec_max_vel_srv" />
     <param name="inc_dec_min_vel_srv" value ="/inc_dec_min_vel_srv" />
-    <param name="set_map_srv" value ="/set_map" />
+    <param name="set_map" value ="/set_map" />
 
     <param name="button1_topic" value="/bt1_status" />
     <param name="button2_topic" value="/bt2_status" />
@@ -34,7 +34,7 @@
     <param name="lcd_topic" value="/lcd_print" />
     <param name="laser_topic" value="/ss2_status" />
 
-    <!-- <include file="$(find peripheral_controller)/launch/.launch" /> -->
+    <include file="$(find peripheral_controller)/launch/peripheral_controller.launch" />
 
 
     <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
@@ -62,7 +62,7 @@
 
     <node pkg="road_shape_detect" name="road_shape_detect_node" type="road_shape_detect_node" required="true" output="screen" />
 
-    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
+    <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
         <param name="height" value="288"/>
@@ -70,9 +70,8 @@
         <param name="keepTopK" value="1"/>
         <param name="nbCls" value="6"/>
         <param name="engineFile" value="data/yolov4.trt"/>
-    </node> -->
+    </node>
 
-    <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" /> -->
     <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" /> -->
 
 	<node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">

@@ -4,8 +4,10 @@
 #include <ros/package.h>
 #include <geometry_msgs/Twist.h>
 #include <opencv2/opencv.hpp>
+#include <std_srvs/Trigger.h>
 #include "cds_msgs/ResetLane.h"
 #include "cds_msgs/RecoverLane.h"
+#include "planning/interpolate_lane.h"
 #include "cds_msgs/IsTurnable.h"
 #include "common/libcommon.h"
 using namespace std;
@@ -27,8 +29,9 @@ Planning::Planning()
     ROS_ASSERT(ros::param::get("/control_topic", control_topic));
     ROS_ASSERT(ros::param::get("/crossroad", crossroad_topic));
 
-    std::string recoverSrvTopic;
+    std::string recoverSrvTopic, set_map_topic;
     ROS_ASSERT(ros::param::get("/recover_lane_srv", recoverSrvTopic));
+    ROS_ASSERT(ros::param::get("/set_map", set_map_topic));
 
     _resetLaneClient = _nh.serviceClient<cds_msgs::ResetLane>("reset_lane");
     _recoverClient = _nh.serviceClient<cds_msgs::RecoverLane>(recoverSrvTopic);
@@ -42,6 +45,8 @@ Planning::Planning()
     _configServer.setCallback(std::bind(&Planning::configCallback, this, std::placeholders::_1, std::placeholders::_2));
     _objectTimer = _nh.createTimer(ros::Duration{avoidObjectTime / 10.0f}, &Planning::onObjectTimeout, this, true);
     _turnTimer = _nh.createTimer(ros::Duration{turningTime / 10.0f}, &Planning::onTurnTimeout, this, true);
+
+    _setMapSrv = _nh.advertiseService(set_map_topic, &Planning::setMapService, this);
 }
 
 void Planning::planning()
@@ -177,7 +182,7 @@ cv::Point Planning::driveCloseToLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 45;
+        leftDrive.x = getXByY(*leftParams, drivePointY, &clipMinX, &clipMaxX) + 45;
     }
     return leftDrive;
 }
@@ -187,7 +192,7 @@ cv::Point Planning::driveCloseToRightFromLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 135;
+        leftDrive.x = getXByY(*leftParams, drivePointY, &clipMinX, &clipMaxX) + 135;
     }
     return leftDrive;
 }
@@ -198,7 +203,7 @@ cv::Point Planning::driveStraightFromLeft()
     cv::Point leftDrive{0, drivePointY};
     if (leftParams != nullptr)
     {
-        leftDrive.x = getXByY(*leftParams, drivePointY) + 85;
+        leftDrive.x = getXByY(*leftParams, drivePointY, &clipMinX, &clipMaxX) + 85;
     }
     return leftDrive;
 }
@@ -210,7 +215,7 @@ cv::Point Planning::driveStraightFromRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 85;
+        rightDrive.x = getXByY(*rightParams, drivePointY, &clipMinX, &clipMaxX) - 85;
     }
     return rightDrive;
 }
@@ -220,7 +225,7 @@ cv::Point Planning::driveCloseToRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 45;
+        rightDrive.x = getXByY(*rightParams, drivePointY, &clipMinX, &clipMaxX) - 45;
     }
     return rightDrive;
 }
@@ -230,7 +235,7 @@ cv::Point Planning::driveCloseToLeftFromRight()
     cv::Point rightDrive{319, drivePointY};
     if (rightParams != nullptr)
     {
-        rightDrive.x = getXByY(*rightParams, drivePointY) - 135;
+        rightDrive.x = getXByY(*rightParams, drivePointY, &clipMinX, &clipMaxX) - 135;
     }
     return rightDrive;
 }
@@ -301,7 +306,7 @@ cv::Point Planning::driveStraight()
     {
         if (rightParams && leftParams){ 
             LineParams midParams = (*leftParams + *rightParams) / 2.0;
-            int x = getXByY(midParams, drivePointY);
+            int x = getXByY(midParams, drivePointY, &clipMinX, &clipMaxX);
             return cv::Point{x, drivePointY};
         }
         else if (rightParams){
@@ -571,9 +576,27 @@ void Planning::publishMessage(const cv::Point& drivePoint, float speed)
     ROS_DEBUG("Planning speed = %.2f, steer = %.2f", speed, angle);
 
     geometry_msgs::Twist msg;
-    // msg.linear.x = speed; // TODO: speed = 0
-    msg.linear.x = 0.0f;
+    msg.linear.x = speed; // TODO: speed = 0
+    // msg.linear.x = 0.0f;
     msg.angular.z = angle * M_PI / 180.0f;
 
     _controlPub.publish(msg);
+}
+
+bool Planning::setMapService(cds_msgs::SetMap::Request& req, cds_msgs::SetMap::Response& resp)
+{
+    if (req.map == req.RED)
+    {
+        currentMap = static_cast<Map>(Map::RED);
+    } else if (req.map == req.BLUE)
+    {
+        currentMap = static_cast<Map>(Map::BLUE);
+    } else
+    {
+        ROS_ERROR("Unknow map");
+        return false;
+    }
+
+    resp.currentMap = static_cast<int>(currentMap);
+    return true;
 }

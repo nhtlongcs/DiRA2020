@@ -1,0 +1,6 @@
+int8 RED=0
+int8 BLUE=1
+
+int8 map
+---
+int8 currentMap

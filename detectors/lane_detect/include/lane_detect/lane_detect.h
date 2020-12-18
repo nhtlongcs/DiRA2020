@@ -91,6 +91,8 @@ private:
     int birdheight = 240;
     int skyline = 120;
 
+    int clipMinX = 0, clipMaxX = 320;
+
 private:
     ros::NodeHandle _nh;
     ros::Publisher _lanePub;

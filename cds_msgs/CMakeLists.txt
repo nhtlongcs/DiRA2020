@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation sensor_msgs std_msgs
 add_message_files(FILES sign.msg lane.msg circle_obstacle.msg
                   segment_obstacle.msg obstacles.msg)
 
-add_service_files(FILES ResetLane.srv RecoverLane.srv IsTurnable.srv IncDecSpeed.srv)
+add_service_files(FILES ResetLane.srv RecoverLane.srv IsTurnable.srv IncDecSpeed.srv SetMap.srv)
 
 generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 

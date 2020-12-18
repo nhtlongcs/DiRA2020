@@ -15,13 +15,18 @@ void button1Callback(bool isPressed)
 {
     static bool isMapRed = false;
     std_msgs::String msg;
-    int constexpr x = 1;
-    int constexpr y = 1;
+    int constexpr x = 13;
+    int y = 0;
     if (isPressed)
     {
         isMapRed = !isMapRed;
         std::ostringstream ss;
-        ss << x << ':' << y << ':' << "Map " << (isMapRed ? "RED" : "BLUE");
+        if(!isMapRed) y = 1;
+        ss << x << ':' << 1-y << ':' << " ";
+        msg.data = ss.str();
+        lcdPub.publish(msg);
+        ss.clear();
+        ss << x << ':' << y << ':' << "*";
         msg.data = ss.str();
         lcdPub.publish(msg);
         ROS_INFO("%s", ss.str().c_str());
@@ -44,6 +49,9 @@ void button2Callback(bool isPressed)
             y = 1;
         }
         ss << x << ':' << 1-y << ':' << " ";
+        msg.data = ss.str();
+        lcdPub.publish(msg);
+        ss.clear();
         ss << x << ':' << y << ':' << "*";
         ROS_INFO("%s", ss.str().c_str());
         msg.data = ss.str();
@@ -145,7 +153,7 @@ void button4Callback(bool isPressed)
             else
             {
                 ROS_ERROR("Failed to call service for min speed");
-            }    
+            }
         }
     }
 }
@@ -186,9 +194,13 @@ int main(int argc, char** argv)
 
     ROS_INFO("HW_Control Node started!");
     std_msgs::String msg;
-    msg.data = "1:0:MIN";
+    msg.data = std::string("1:0:MIN");
     lcdPub.publish(msg);
-    msg.data = "1:1:MAX";
+    msg.data = std::string("1:1:MAX");
+    lcdPub.publish(msg);
+    msg.data = std::string("9:0:RED");
+    lcdPub.publish(msg);
+    msg.data = std::string("9:1:BLUE");
     lcdPub.publish(msg);
     ros::spin();
     return 0;

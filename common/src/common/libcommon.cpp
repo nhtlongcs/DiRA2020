@@ -64,9 +64,18 @@ LineParams calcLineParams(const std::vector<cv::Point> &listPoint)
                     static_cast<float>(coeff[0])};
 }
 
-int getXByY(const LineParams &params, double y)
+int getXByY(const LineParams &params, double y, int const* minX, int const* maxX)
 {
-  return static_cast<int>(params[0] * y * y + params[1] * y + params[2]);
+  int x = static_cast<int>(params[0] * y * y + params[1] * y + params[2]);
+  if (minX != nullptr)
+  {
+    x = std::max(x, *minX);
+  }
+  if (maxX != nullptr)
+  {
+    x = std::min(x, *maxX);
+  }
+  return x;
 }
 
 cv::Mat kmean(cv::Mat image, size_t clusterCount)

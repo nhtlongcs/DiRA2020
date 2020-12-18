@@ -74,8 +74,8 @@ bool LaneDetect::isNeedRedetect(const LaneLine& left, const LaneLine& right) con
         const auto &rightParams = right.getLineParams();
         for (size_t y = 0; y < birdview.rows; y++)
         {
-            int xleft = getXByY(leftParams, y * 1.0);
-            int xright = getXByY(rightParams, y * 1.0);
+            int xleft = getXByY(leftParams, y * 1.0, nullptr, nullptr);
+            int xright = getXByY(rightParams, y * 1.0, nullptr, nullptr);
             diff.push_back(abs(xleft - xright));
         }
         return std::any_of(diff.begin(), diff.end(), [this](const int &amount) {
