@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- Default is 0x38 == 56-DEC-->
+	<arg name="lcd_i2c_adr" default="38"/>
+	<!-- Start dira_lcd_controller_node -->
+	<node name="lcd_ros" pkg="lcd_ros" type="lcd_ros_node" output="screen" respawn="true">
+		<param name="lcd_i2c_adr" value="$(arg lcd_i2c_adr)" type="str"/>
+	</node>
+</launch>

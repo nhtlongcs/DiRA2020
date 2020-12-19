@@ -1,0 +1,8 @@
+<launch>
+
+    <include file="$(find dira_peripheral_controller)/launch/dira_peripheral_controller.launch">
+    </include>
+
+    <node name="button_control" pkg="button_control" type="button_control_node.py" output="screen"/>
+
+</launch>

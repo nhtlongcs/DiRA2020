@@ -1,0 +1,23 @@
+<launch>
+
+    <!-- <include file="$(find dira_pca9685_controller)/launch/run_car.launch">
+    </include> -->
+
+    <include file="$(find dira_peripheral_controller)/launch/dira_peripheral_controller.launch">
+    </include>
+
+	<arg name="speed_topic" value="set_speed" />
+	<arg name="steer_topic" value="set_angle" />
+
+    <include file="$(find astra_camera)/launch/astra.launch" />
+
+	<node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen">
+		<param name="speed_topic" value="$(arg speed_topic)"/>
+		<param name="steer_topic" value="$(arg steer_topic)"/>
+		<param name="pwm_pca9685" value="100"/>
+	</node>
+
+    <node name="car_control_console" pkg="car_control_console" type="car_control_console_node_v3.py" output="screen"/>
+
+
+</launch>
