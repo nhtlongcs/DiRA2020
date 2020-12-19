@@ -35,7 +35,7 @@
     <param name="laser_topic" value="/ss2_status" />
 
     <node pkg="planning" name="planning_node" type="planning_node" required="true" output="screen" />
-    <!-- <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" /> -->
+    <node pkg="lane_detect" name="lane_detect_node" type="lane_detect_node" required="true" output="screen" />
 
     <include file="$(find astra_camera)/launch/astra.launch" />
 
@@ -49,17 +49,17 @@
 
     <node pkg="car_control" name="car_control_node" type="car_control_node" required="true" output="screen" />
 
-    <!-- <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
+    <node name="lanenet_demo" pkg="lanenet" type="lanenet_benchmark" output="screen" required="true">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
         <param name="height" value="224"/>
         <param name="width" value="224"/>
         <param name="engineFile" value="data/mobilenet_unet.trt"/>
-    </node> -->
+    </node>
 
-    <!-- <node pkg="road_shape_detect" name="road_shape_detect_node" type="road_shape_detect_node" required="true" output="screen" /> -->
+    <node pkg="road_shape_detect" name="road_shape_detect_node" type="road_shape_detect_node" required="true" output="screen" />
 
-    <!-- <node pkg="sign_detect" name="sign_detect_node" type="sign_detect_node" required="true" output="screen">
+    <!-- <node pkg="sign_detect" name="sign_detect_node" type="yolo-benchmark" required="true" output="screen">
         <param name="batchSize" value="1"/>
         <param name="channel" value="3"/>
         <param name="height" value="288"/>
@@ -71,12 +71,16 @@
 
     <!-- <node pkg="object_detect" name="object_detect_node" type="object_detect_node" required="true" output="screen" /> -->
 
-    <!-- <node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">
+    <node name="gear_control" pkg="gear_control" type="gear_control_node" output="screen" required="true">
         <param name="pwm_pca9685" value="100"/>
-    </node> -->
+    </node>
 
     <node name="gpio_control" pkg="gpio_control" type="gpio_control.py" output="screen"/>
-
+	<!-- Start dira_lcd_controller_node -->
+	<arg name="lcd_i2c_adr" default="38"/>
+	<node name="lcd_ros" pkg="lcd_ros" type="lcd_ros_node" output="screen" respawn="true">
+		<param name="lcd_i2c_adr" value="$(arg lcd_i2c_adr)" type="str"/>
+	</node>
     <node name="button_control" pkg="button_control" type="button_control_node" output="screen" />
 
     <!-- Logging -->

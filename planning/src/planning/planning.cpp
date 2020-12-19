@@ -548,8 +548,8 @@ void Planning::publishMessage(const cv::Point& drivePoint, float speed) {
 
   cv::circle(debugImage, drivePoint, 20, cv::Scalar{0, 255, 255}, -1);
   cv::circle(debugImage, carPos, 20, cv::Scalar{0, 0, 255}, -1);
-  cv::imshow("Driving", debugImage);
-  cv::waitKey(1);
+  // cv::imshow("Driving", debugImage);
+  // cv::waitKey(1);
 
   float angle = errorAngle(carPos, drivePoint);
   ROS_DEBUG("Planning speed = %.2f, steer = %.2f", speed, angle);
