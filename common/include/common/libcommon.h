@@ -17,6 +17,7 @@ enum Direct {
 LineParams calcLineParams(const std::vector<cv::Point> &listPoint);
 
 int getXByY(const LineParams &params, double y, int const* minX = nullptr, int const* maxX = nullptr);
+int getXByY(const std::array<float,3> &params, double y, int const* minX = nullptr, int const* maxX = nullptr);
 
 cv::Mat kmean(cv::Mat image, size_t kCluster);
 

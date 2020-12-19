@@ -66,6 +66,11 @@ LineParams calcLineParams(const std::vector<cv::Point> &listPoint)
 
 int getXByY(const LineParams &params, double y, int const* minX, int const* maxX)
 {
+  return getXByY(params.getParams(), y, minX, maxX);
+}
+
+int getXByY(const std::array<float,3> &params, double y, int const* minX, int const* maxX)
+{
   int x = static_cast<int>(params[0] * y * y + params[1] * y + params[2]);
   if (minX != nullptr)
   {

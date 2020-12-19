@@ -52,6 +52,11 @@ public:
         return result;
     }
 
+    ImplType getParams() const
+    {
+        return params;
+    }
+
 private:
     ImplType params;  
 };
