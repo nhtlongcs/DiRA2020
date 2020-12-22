@@ -1,8 +1,0 @@
-int8 BOTH=0
-int8 LEFT=-1
-int8 RIGHT=1
-
-int8 lane
----
-float32[] left_params
-float32[] right_params

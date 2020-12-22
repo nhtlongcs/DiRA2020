@@ -1,6 +1,0 @@
-left
-forward
-right
-nleft
-nright
-stop

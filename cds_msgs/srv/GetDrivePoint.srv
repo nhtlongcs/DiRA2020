@@ -1,4 +1,0 @@
-int8 lane
----
-bool found
-geometry_msgs/Point point
